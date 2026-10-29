@@ -298,6 +298,7 @@ function build(slug, outArg) {
   // Datos de ejemplo y cliente falso: solo en comunidades con integrations.demoLogin
   const demo = cfg.integrations.demoLogin === true;
   if (!demo) skipFiles.add(path.join('js', 'demo.js'));
+  const DEMO_IMG = path.join('img', 'demo') + path.sep;   // carteles de ejemplo (js/demo.js)
 
   fs.rmSync(out, { recursive: true, force: true });
   fs.mkdirSync(out, { recursive: true });
@@ -305,7 +306,7 @@ function build(slug, outArg) {
   const written = new Set();
   for (const rel of walk(SRC)) {
     const top = rel.split(path.sep)[0];
-    if (skipFiles.has(rel) || skipDirs.has(top)) continue;
+    if (skipFiles.has(rel) || skipDirs.has(top) || (!demo && rel.startsWith(DEMO_IMG))) continue;
     const src = path.join(SRC, rel), dst = path.join(out, rel);
     fs.mkdirSync(path.dirname(dst), { recursive: true });
     if (!TEXT_EXT.has(path.extname(rel).toLowerCase()) || RAW_DIRS.has(top)) {

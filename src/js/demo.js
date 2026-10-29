@@ -19,7 +19,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 1;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 3;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -28,7 +28,7 @@
   const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const dia = (offset) => { const d = new Date(); d.setDate(d.getDate() + offset); return ymd(d); };
   const hace = (dias, hora = 10) => { const d = new Date(); d.setDate(d.getDate() - dias); d.setHours(hora, 0, 0, 0); return d.toISOString(); };
-  /** Próximo día de la semana (0 = domingo … 5 = viernes) a partir de hoy + desde. */
+  /** Próximo día de la semana (0 = domingo … 5 = viernes) a partir de hoy + desde (1 = nunca hoy: el evento podría haber pasado ya). */
   const proximo = (dow, desde = 0) => { const d = new Date(); d.setDate(d.getDate() + desde); while (d.getDay() !== dow) d.setDate(d.getDate() + 1); return ymd(d); };
 
   // ─── Imágenes: ilustraciones SVG con los colores de la comunidad ──
@@ -71,10 +71,12 @@
       created_at: hace(10), ...extra,
     });
     const eventos = [
-      ev('ev-1', 'Cena de Shabat comunitaria', proximo(5), '20:00', 'Salón principal', 'Shabat', 'jala', 0, {
+      ev('ev-1', 'Cena de Shabat comunitaria', proximo(5, 1), '20:00', 'Salón principal', 'Shabat', 'jala', 0, {
+        imagen_url: 'img/demo/evento-cena-shabat.jpg',
         descripcion: 'Una cena de Shabat para toda la comunidad: kidush, jalot caseras, menú de tres platos y canciones. Ideal para conocer a nuevas familias.',
         aforo: 80, precio: 25 }),
-      ev('ev-2', 'Shiur semanal de Parashá', proximo(2), '19:30', 'Sala de estudio', 'Estudio', 'libro', 1, {
+      ev('ev-2', 'Shiur semanal de Parashá', proximo(4, 1), '19:30', 'Sala de estudio', 'Estudio', 'libro', 1, {
+        imagen_url: 'img/demo/evento-shiur-parasha.jpg',
         descripcion: 'Estudio de la porción semanal con preguntas abiertas y debate. No hace falta conocimiento previo.', aforo: 30 }),
       ev('ev-3', 'Taller de jalot para familias', proximo(0, 9), '11:00', 'Cocina comunitaria', 'Educación', 'jala', 2, {
         descripcion: 'Aprende a trenzar jalot con tus hijos. Incluye ingredientes, delantal y una jalá para llevar a casa.', aforo: 24 }),
@@ -84,7 +86,8 @@
         descripcion: 'Networking informal para jóvenes de 22 a 35 años, con picoteo kosher y una charla breve.', aforo: 50 }),
       ev('ev-6', 'Celebración de Tu Bishvat', dia(23), '18:00', 'Jardín del centro', 'Festividad', 'hoja', 1, {
         descripcion: 'Séder de frutos con las siete especies, actividades para niños y plantación simbólica.', aforo: 100 }),
-      ev('ev-7', 'Clase de hebreo para principiantes', dia(4), '18:30', 'Aula 2', 'Educación', 'libro', 2, {
+      ev('ev-7', 'Clase de hebreo para principiantes', proximo(2, 1), '19:30', 'Aula 2', 'Educación', 'libro', 2, {
+        imagen_url: 'img/demo/evento-clase-hebreo.jpg',
         descripcion: 'Primer módulo de hebreo conversacional: alefato, saludos y frases útiles del día a día.', aforo: 15 }),
     ];
 
@@ -391,6 +394,8 @@
     return null;
   }
   const ok = (data = null) => Promise.resolve({ data, error: null });
+  // Rutas relativas (img/demo/…) → URL absoluta: algunas páginas solo pintan imágenes http(s)
+  const absUrl = (p) => (/^(data:|blob:|https?:)/.test(p) ? p : new URL(p, location.href).href);
   const fail = (data = null) => Promise.resolve({ data, error: NO_DISPONIBLE });
 
   function createDemoSupabase() {
@@ -403,9 +408,9 @@
       functions: { invoke: () => fail() },
       storage: {
         from: () => ({
-          getPublicUrl: (p) => ({ data: { publicUrl: p } }),
-          createSignedUrl: (p) => ok({ signedUrl: p, path: p }),
-          createSignedUrls: (paths) => ok(paths.map((p) => ({ path: p, signedUrl: p, error: null }))),
+          getPublicUrl: (p) => ({ data: { publicUrl: absUrl(p) } }),
+          createSignedUrl: (p) => ok({ signedUrl: absUrl(p), path: p }),
+          createSignedUrls: (paths) => ok(paths.map((p) => ({ path: p, signedUrl: absUrl(p), error: null }))),
           upload: () => fail(),
           remove: () => ok([]),
           download: () => fail(),
