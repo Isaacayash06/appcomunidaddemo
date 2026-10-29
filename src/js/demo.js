@@ -20,7 +20,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 8;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 9;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -194,9 +194,10 @@
         { nombre: 'Arvit', hora: '18:15', tipo: 'semana' }, { nombre: 'Kabalat Shabat', hora: '18:00', tipo: 'shabat' },
         { nombre: 'Shajarit de Shabat', hora: '09:30', tipo: 'shabat' }, { nombre: 'Havdalá', hora: '19:05', tipo: 'shabat' },
       ] }],
-      // Carrusel «Momentos inolvidables» del inicio
-      banner_slides: [1, 2, 3, 4, 5, 6].map((n) => ({
-        id: 'bs-' + n, tipo: 'fotos_comunidad', activo: true, orden: n, imagen_url: `img/demo/momento-${n}.jpg`,
+      // Carrusel «Momentos inolvidables» del inicio: se ven de 3 en 3, el fútbol (exterior) en medio
+      // de la primera vista para dar contraste con las fotos de interior
+      banner_slides: [1, 4, 3, 2, 5, 6].map((n, i) => ({
+        id: 'bs-' + n, tipo: 'fotos_comunidad', activo: true, orden: i + 1, imagen_url: `img/demo/momento-${n}.jpg`,
       })),
       // Solo imagen: los textos de cada área ya vienen en donativos.html
       don_areas: [
