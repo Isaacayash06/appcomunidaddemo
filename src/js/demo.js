@@ -20,7 +20,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 10;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 11;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -227,7 +227,8 @@
       children: [],
       servicios_config: ['barmitzvah', 'britmila', 'bodas', 'najalah', 'tenyad']
         .map((id) => ({ id, image_url: `img/demo/servicio-${id}.jpg` })),
-      app_config: [],
+      // Cabecera del mikve (mikve.html)
+      app_config: [1, 2, 3].map((n) => ({ key: `mikve_galeria_${n}`, value: `img/demo/mikve-${n}.jpg` })),
     };
   }
 

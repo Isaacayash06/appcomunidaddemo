@@ -383,7 +383,23 @@
   const booking = { step:1, gender:'mujer', date:null, service:null, time:null, notes:'', donation:0, donationLabel:'No', card:null, confirmed:false,
                     kelim: { tipos: [], otro: '', ayuda: null } };
 
-  function __mikveInit() { requireAuth(); initNav('mikve'); getMikveServices(); renderStep(); }
+  function __mikveInit() { requireAuth(); initNav('mikve'); getMikveServices(); renderStep(); loadMikveGallery(); }
+
+  /* Fotos de la cabecera: app_config mikve_galeria_1..3 (URL o ruta dentro de la app); sin ellas, se quedan los placeholders */
+  async function loadMikveGallery() {
+    if (!sb) return;
+    try {
+      const keys = ['mikve_galeria_1', 'mikve_galeria_2', 'mikve_galeria_3'];
+      const { data } = await sb.from('app_config').select('key,value').in('key', keys);
+      const imgs = document.querySelectorAll('.mk-gallery img');
+      for (const row of data || []) {
+        const img = imgs[keys.indexOf(row.key)];
+        if (!img || !row.value) continue;
+        const url = typeof resolveMediaUrl === 'function' ? await resolveMediaUrl('community media', row.value) : row.value;
+        if (url) img.src = url;
+      }
+    } catch (_) { /* sin fotos: placeholders */ }
+  }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', __mikveInit);
   } else {
