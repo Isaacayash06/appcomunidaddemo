@@ -20,7 +20,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 4;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 5;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -44,6 +44,7 @@
     musica: '<path d="M-12 26V-30l40-10v52" fill="none" stroke="#fff" stroke-width="5"/><circle cx="-20" cy="26" r="10" fill="#C9A84C"/><circle cx="20" cy="14" r="10" fill="#C9A84C"/>',
     hoja: '<path d="M-30 30C-30-20 10-40 36-40c0 30-20 70-66 70zM-30 30 20-20" fill="none" stroke="#C9A84C" stroke-width="5" stroke-linecap="round"/>',
     corazon: '<path d="M0 34S-40 10-40-14c0-12 9-20 20-20 9 0 16 6 20 14 4-8 11-14 20-14 11 0 20 8 20 20C40 10 0 34 0 34z" fill="#C9A84C"/>',
+    balon: '<circle r="40" fill="#fff"/><path d="M0-14 13-4 8 12H-8l-5-16z" fill="#1B2E5E"/><path d="M0-14V-40M13-4 37-12M8 12l15 22M-8 12l-15 22M-13-4-37-12" stroke="#1B2E5E" stroke-width="4"/><circle r="40" fill="none" stroke="#C9A84C" stroke-width="5"/>',
     tienda: '<path d="M-40-10h80l-8-24h-64zM-34-10v42h68v-42" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><rect x="-10" y="8" width="20" height="24" fill="#C9A84C"/>',
   };
   function arte(icono, variante = 0, texto = '') {
@@ -82,8 +83,8 @@
       ev('ev-3', 'Taller de jalot para familias', proximo(0, 9), '11:00', 'Cocina comunitaria', 'Educación', 'jala', 2, {
         imagen_url: 'img/demo/evento-taller-jalot.jpg',
         descripcion: 'Aprende a trenzar jalot con tus hijos. Incluye ingredientes, delantal y una jalá para llevar a casa.', aforo: 24 }),
-      ev('ev-4', 'Concierto de música jasídica', dia(16), '20:30', 'Auditorio del centro', 'Cultura', 'musica', 3, {
-        descripcion: 'Una noche de niguním y música en directo con un trío de clarinete, violín y piano.', aforo: 120 }),
+      ev('ev-4', 'Torneo de fútbol comunitario', proximo(0, 20), '10:00', 'Polideportivo municipal', 'Comunidad', 'balon', 3, {
+        descripcion: 'Torneo de fútbol 7 por equipos mixtos de todas las edades. Inscríbete solo o con tu equipo; al terminar, entrega de trofeos y barbacoa kosher.', aforo: 56 }),
       ev('ev-5', 'Encuentro de jóvenes profesionales', proximo(3, 1), '19:30', 'Terraza del centro', 'Comunidad', 'personas', 0, {
         imagen_url: 'img/demo/evento-jovenes-profesionales.jpg',
         descripcion: 'Networking informal para jóvenes de 22 a 35 años, con picoteo kosher y una charla breve.', aforo: 50 }),
@@ -242,8 +243,8 @@
     'Estudio de la porción semanal con preguntas abiertas y debate. No hace falta conocimiento previo.': 'Study of the weekly Torah portion with open questions and discussion. No prior knowledge needed.',
     'Taller de jalot para familias': 'Challah workshop for families',
     'Aprende a trenzar jalot con tus hijos. Incluye ingredientes, delantal y una jalá para llevar a casa.': 'Learn to braid challah with your kids. Ingredients, an apron and a challah to take home are included.',
-    'Concierto de música jasídica': 'Chassidic music concert',
-    'Una noche de niguním y música en directo con un trío de clarinete, violín y piano.': 'An evening of niggunim and live music with a clarinet, violin and piano trio.',
+    'Torneo de fútbol comunitario': 'Community football tournament',
+    'Torneo de fútbol 7 por equipos mixtos de todas las edades. Inscríbete solo o con tu equipo; al terminar, entrega de trofeos y barbacoa kosher.': '7-a-side football tournament with mixed teams of all ages. Sign up on your own or with your team; trophies and a kosher barbecue afterwards.',
     'Encuentro de jóvenes profesionales': 'Young professionals meetup',
     'Networking informal para jóvenes de 22 a 35 años, con picoteo kosher y una charla breve.': 'Informal networking for 22 to 35-year-olds, with kosher snacks and a short talk.',
     'Celebración de Tu Bishvat': 'Tu BiShvat celebration',
@@ -252,7 +253,7 @@
     'Primer módulo de hebreo conversacional: alefato, saludos y frases útiles del día a día.': 'First module of conversational Hebrew: the alef-bet, greetings and useful everyday phrases.',
     '¡Te esperamos! Recibirás un recordatorio el día antes.': "We'll see you there! You'll get a reminder the day before.",
     'Salón principal': 'Main hall', 'Sala de estudio': 'Study room', 'Cocina comunitaria': 'Community kitchen',
-    'Auditorio del centro': 'Center auditorium', 'Terraza del centro': 'Center terrace', 'Jardín del centro': 'Center garden', 'Aula 2': 'Classroom 2',
+    'Polideportivo municipal': 'Municipal sports center', 'Terraza del centro': 'Center terrace', 'Jardín del centro': 'Center garden', 'Aula 2': 'Classroom 2',
     // Noticias
     'Abrimos inscripciones para la cena de Shabat comunitaria': 'Sign-ups are open for the community Shabbat dinner',
     'Más de 80 plazas, menú de tres platos y un ambiente familiar. Reserva tu sitio desde la sección de eventos.': 'Over 80 seats, a three-course menu and a family atmosphere. Book your place from the events section.',
