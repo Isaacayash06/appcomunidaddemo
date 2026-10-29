@@ -1453,6 +1453,12 @@
 
 
     /* ─── FORMULARIO LOGIN ─── */
+    // Modo demo: credenciales rellenas para que baste con pulsar «Entrar».
+    if (typeof DEMO_LOGIN !== 'undefined' && DEMO_LOGIN) {
+      document.getElementById('login-email').value = 'demo@example.com';
+      document.getElementById('login-password').value = 'demo';
+    }
+
     document.getElementById('login-form').addEventListener('submit', function (e) {
       e.preventDefault();
       clearLoginMessage();

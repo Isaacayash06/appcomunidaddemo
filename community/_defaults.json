@@ -97,7 +97,8 @@
     "supabaseUrl": "https://tu-proyecto.supabase.co",
     "supabaseAnonKey": "tu-anon-key",
     "supabaseProxy": false,
-    "stripePublishableKey": "pk_test_placeholder"
+    "stripePublishableKey": "pk_test_placeholder",
+    "demoLogin": false
   },
 
   "modules": {

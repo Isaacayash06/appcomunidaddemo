@@ -13,6 +13,7 @@
     "privacyEmail": "privacidad@demo.example.com",
     "donationsEmail": "donativos@demo.example.com"
   },
+  "integrations": { "demoLogin": true },
   "app": {
     "scheme": "comunidaddemo",
     "androidPackage": "com.example.comunidaddemo",

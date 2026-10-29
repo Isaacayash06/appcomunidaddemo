@@ -261,6 +261,10 @@
         },
         "stripePublishableKey": {
           "type": "string"
+        },
+        "demoLogin": {
+          "type": "boolean",
+          "description": "Solo demos: «Entrar» funciona con cualquier email/contraseña, sin Supabase. Nunca en producción."
         }
       },
       "additionalProperties": false

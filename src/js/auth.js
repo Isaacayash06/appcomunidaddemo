@@ -43,6 +43,13 @@ const SUPABASE_URL = SUPABASE_USE_PROXY ? window.location.origin + '/sb' : SUPAB
 const SUPABASE_STORAGE_KEY = 'sb-{{integrations.supabaseRef}}-auth-token';
 const SUPABASE_ANON_KEY = '{{integrations.supabaseAnonKey}}';
 
+// Modo demo (integrations.demoLogin): «Entrar» acepta cualquier email/contraseña
+// y crea una sesión local falsa, sin Supabase. Solo para enseñar la app; las
+// pantallas no tendrán datos. NUNCA activarlo en una comunidad real.
+const DEMO_LOGIN = {{integrations.demoLogin}};
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
+const _isDemoUser = (u) => DEMO_LOGIN && !!u && u.source === 'demo';
+
 // Cliente Supabase
 let _supabase = null;
 /**
@@ -217,6 +224,21 @@ async function trackEvent(event, props = {}) {
  */
 async function login(email, password, captchaToken = '') {
   const normalizedEmail = email.toLowerCase().trim();
+  if (DEMO_LOGIN) {
+    SESSION_STORAGE.setItem(SESSION_KEY, JSON.stringify({
+      userId: DEMO_USER_ID,
+      name: 'Usuario Demo',
+      email: normalizedEmail,
+      role: 'miembro',
+      status: 'active',
+      comunidad: '{{name}}',
+      initials: 'UD',
+      areas: [],
+      loginAt: new Date().toISOString(),
+      source: 'demo'
+    }));
+    return { ok: true, status: 'active' };
+  }
   const sb = getSupabase();
   if (!sb) return { ok: false, error: 'No hay conexión con el servidor.' };
 
@@ -468,6 +490,8 @@ function _bindAuthListener(sb) {
  * @returns {Promise<object|null>}
  */
 function ensureSession() {
+  const demoUser = getCurrentUser();
+  if (_isDemoUser(demoUser)) return Promise.resolve({ user: { id: demoUser.userId, email: demoUser.email } });
   const sb = getSupabase();
   if (!sb) return Promise.resolve(null);
   if (!_sessionPromise) {
