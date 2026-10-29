@@ -10,7 +10,8 @@
  *  - Lecturas: select / eq / gte / order / limit / single… sobre tablas en memoria.
  *  - Escrituras (inscribirse, preguntar al rav…): se guardan en este navegador
  *    (localStorage `kehila_demo_db`) y se reinician cada día, para que las
- *    fechas de ejemplo sigan siendo futuras.
+ *    fechas de ejemplo sigan siendo futuras, y al cambiar de idioma (ES/EN).
+ *  - En inglés, los textos de ejemplo se sirven traducidos (mapa EN).
  *  - Subidas de archivos, pagos y funciones edge: devuelven un error amable.
  *
  * Todo es ficticio: nombres inventados, dominios example.com, teléfonos +34 600 000 0xx.
@@ -225,17 +226,120 @@
     };
   }
 
+  // ─── Inglés (botón ES/EN): los datos de ejemplo se sirven ya traducidos ──
+  // Solo textos de contenido. Los códigos que la app compara (categoría de evento,
+  // de negocio o de pregunta, estado…) se quedan en español: los traduce lang-en-dict.js al pintarlos.
+  const LANG = (() => { try { return localStorage.getItem('kehila_lang') === 'en' ? 'en' : 'es'; } catch (_) { return 'es'; } })();
+  const DEMO_NAME = LANG === 'en' ? 'Demo User' : 'Usuario Demo';
+  const EN = {
+    // Eventos
+    'Cena de Shabat comunitaria': 'Community Shabbat dinner',
+    'Una cena de Shabat para toda la comunidad: kidush, jalot caseras, menú de tres platos y canciones. Ideal para conocer a nuevas familias.': 'A Shabbat dinner for the whole community: kiddush, homemade challah, a three-course menu and songs. A great way to meet new families.',
+    'Shiur semanal de Parashá': 'Weekly Parasha shiur',
+    'Estudio de la porción semanal con preguntas abiertas y debate. No hace falta conocimiento previo.': 'Study of the weekly Torah portion with open questions and discussion. No prior knowledge needed.',
+    'Taller de jalot para familias': 'Challah workshop for families',
+    'Aprende a trenzar jalot con tus hijos. Incluye ingredientes, delantal y una jalá para llevar a casa.': 'Learn to braid challah with your kids. Ingredients, an apron and a challah to take home are included.',
+    'Concierto de música jasídica': 'Chassidic music concert',
+    'Una noche de niguním y música en directo con un trío de clarinete, violín y piano.': 'An evening of niggunim and live music with a clarinet, violin and piano trio.',
+    'Encuentro de jóvenes profesionales': 'Young professionals meetup',
+    'Networking informal para jóvenes de 22 a 35 años, con picoteo kosher y una charla breve.': 'Informal networking for 22 to 35-year-olds, with kosher snacks and a short talk.',
+    'Celebración de Tu Bishvat': 'Tu BiShvat celebration',
+    'Séder de frutos con las siete especies, actividades para niños y plantación simbólica.': 'A fruit seder with the seven species, activities for kids and a symbolic tree planting.',
+    'Clase de hebreo para principiantes': 'Hebrew class for beginners',
+    'Primer módulo de hebreo conversacional: alefato, saludos y frases útiles del día a día.': 'First module of conversational Hebrew: the alef-bet, greetings and useful everyday phrases.',
+    '¡Te esperamos! Recibirás un recordatorio el día antes.': "We'll see you there! You'll get a reminder the day before.",
+    'Salón principal': 'Main hall', 'Sala de estudio': 'Study room', 'Cocina comunitaria': 'Community kitchen',
+    'Auditorio del centro': 'Center auditorium', 'Terraza del centro': 'Center terrace', 'Jardín del centro': 'Center garden', 'Aula 2': 'Classroom 2',
+    // Noticias
+    'Abrimos inscripciones para la cena de Shabat comunitaria': 'Sign-ups are open for the community Shabbat dinner',
+    'Más de 80 plazas, menú de tres platos y un ambiente familiar. Reserva tu sitio desde la sección de eventos.': 'Over 80 seats, a three-course menu and a family atmosphere. Book your place from the events section.',
+    'Este viernes celebramos una nueva cena de Shabat comunitaria en el salón principal.\n\nHabrá kidush, jalot caseras, un menú de tres platos preparado bajo supervisión y un rato de canciones al final. Es una ocasión ideal para conocer a las familias que se han unido en los últimos meses.\n\nLas plazas son limitadas: inscríbete desde la sección de eventos de la app.': "This Friday we're holding another community Shabbat dinner in the main hall.\n\nThere will be kiddush, homemade challah, a supervised three-course menu and some singing at the end. It's the perfect chance to meet the families who have joined in recent months.\n\nSeats are limited: sign up from the events section of the app.",
+    'Nuevo horario de tefilot durante el invierno': 'New winter prayer times',
+    'Con el cambio de hora ajustamos Minjá y Arvit. Consulta los nuevos horarios en la página de inicio.': "With the clock change we've adjusted Mincha and Maariv. Check the new times on the home page.",
+    'A partir de esta semana, Minjá y Arvit se adelantan para adaptarse a la puesta de sol de invierno.\n\nLos horarios actualizados están siempre en la página de inicio de la app, en el apartado de horarios de la sinagoga.': 'From this week, Mincha and Maariv move earlier to follow the winter sunset.\n\nThe updated times are always on the app home page, under the synagogue times.',
+    '¿Cómo kasherizar la cocina después de una mudanza?': 'How to kasher your kitchen after a move',
+    'Una guía práctica, paso a paso, para preparar una cocina nueva según la halajá.': 'A practical, step-by-step guide to setting up a new kitchen according to halacha.',
+    'Mudarse a una casa nueva es un buen momento para revisar la kashrut de la cocina.\n\nEn este artículo repasamos qué utensilios se pueden kasherizar, cuáles conviene sustituir y cómo organizar los espacios de carne y leche.\n\nSi tienes dudas concretas, puedes preguntar al rabino desde la sección «Pregunta al Rav».': 'Moving into a new home is a good time to review the kashrut of your kitchen.\n\nIn this article we go over which utensils can be kashered, which are better replaced, and how to organize meat and dairy areas.\n\nIf you have specific questions, you can ask the rabbi from the "Ask the Rav" section.',
+    'Las leyes de Shabat en la vida moderna': 'Shabbat laws in modern life',
+    'Ascensores, luces automáticas y teléfonos: respuestas a las preguntas más frecuentes.': 'Elevators, automatic lights and phones: answers to the most common questions.',
+    'Cada semana recibimos preguntas sobre cómo aplicar las leyes de Shabat a la tecnología actual.\n\nHemos recopilado las más frecuentes con respuestas claras y fuentes para quien quiera profundizar.': 'Every week we get questions about applying the laws of Shabbat to today\'s technology.\n\nWe\'ve collected the most common ones, with clear answers and sources for anyone who wants to go deeper.',
+    'Gran éxito del festival de Janucá': 'A great Chanukah festival',
+    'Más de 300 personas encendieron con nosotros la última vela. ¡Gracias a todos los voluntarios!': 'More than 300 people lit the last candle with us. Thank you to all the volunteers!',
+    'El festival de Janucá reunió a más de 300 personas en la plaza del centro.\n\nHubo sufganiot, música en directo y talleres para los más pequeños. Gracias a todos los voluntarios que lo hicieron posible.': 'The Chanukah festival brought more than 300 people together in the center plaza.\n\nThere were sufganiyot, live music and workshops for the little ones. Thank you to all the volunteers who made it happen.',
+    'Misión solidaria a Israel: abiertas las plazas': 'Volunteer mission to Israel: places now open',
+    'Una semana de voluntariado y visitas. Plazas limitadas para mayores de 18 años.': 'A week of volunteering and visits. Limited places, ages 18 and over.',
+    'Organizamos una misión solidaria de una semana a Israel con actividades de voluntariado, visitas y encuentros.\n\nLas plazas son limitadas; escríbenos desde la sección de contacto para recibir el programa completo.': "We're organizing a one-week volunteer mission to Israel with volunteering, visits and meetings.\n\nPlaces are limited; write to us from the contact section to get the full program.",
+    'Secretaría': 'Office', 'Rabinato': 'Rabbinate', 'Equipo de eventos': 'Events team',
+    // Negocios
+    'Panadería Shalom': 'Shalom Bakery', 'Restaurante Jerusalén': 'Jerusalem Restaurant', 'Asesoría Levi & Asociados': 'Levi & Associates Law',
+    'Clínica Dental Sonrisa': 'Sonrisa Dental Clinic', 'Hogar Inmobiliaria': 'Hogar Real Estate', 'Academia Alef': 'Alef Academy',
+    'Miembro de la comunidad': 'Community member',
+    'Jalot, rugelaj y bollería kosher parve horneada cada mañana. Encargos para Shabat hasta el jueves.': 'Challah, rugelach and pareve kosher pastries baked every morning. Shabbat orders until Thursday.',
+    'Cocina mediterránea e israelí bajo supervisión. Menú del día, comida para llevar y catering para eventos.': 'Supervised Mediterranean and Israeli cuisine. Daily set menu, takeaway and event catering.',
+    'Derecho de familia, sucesiones y extranjería. Primera consulta gratuita para miembros de la comunidad.': 'Family law, inheritance and immigration. First consultation free for community members.',
+    'Odontología general, ortodoncia e implantes. Descuento del 10 % para familias de la comunidad.': 'General dentistry, orthodontics and implants. 10% discount for community families.',
+    'Compra, venta y alquiler cerca de la sinagoga. Te ayudamos a encontrar casa a distancia caminando.': 'Buying, selling and renting near the synagogue. We help you find a home within walking distance.',
+    'Desarrollo web y apps para pequeños negocios y entidades. Webs, tiendas online y mantenimiento.': 'Web and app development for small businesses and organizations. Websites, online stores and maintenance.',
+    'Clases particulares de hebreo, matemáticas e inglés para todas las edades. Online o presencial.': 'Private lessons in Hebrew, math and English for all ages. Online or in person.',
+    // Shiurim
+    'La parashá de la semana en 15 minutos': 'The weekly parasha in 15 minutes',
+    'Introducción a las bendiciones de los alimentos': 'Introduction to the blessings over food',
+    'Preparar Shabat sin estrés': 'Preparing for Shabbat without stress',
+    'Historia de las comunidades sefardíes': 'History of the Sephardic communities',
+    'Hoja semanal: ideas para la mesa de Shabat': 'Weekly sheet: ideas for the Shabbat table',
+    'Hoja semanal: jaguim y tradiciones': 'Weekly sheet: holidays and traditions',
+    'Rabanit Demo': 'Rebbetzin Demo', 'Prof. Invitado': 'Guest lecturer',
+    // Galería
+    'Shabat': 'Shabbat', 'Eventos': 'Events', 'Janucá': 'Chanukah', 'Estudio': 'Study', 'Voluntariado': 'Volunteering',
+    'Cena de Shabat': 'Shabbat dinner', 'Concierto de primavera': 'Spring concert', 'Encendido en la plaza': 'Lighting in the plaza',
+    'Encuentro de familias': 'Family gathering', 'Shiur de los martes': 'Tuesday shiur', 'Velas de Shabat': 'Shabbat candles',
+    'Tu Bishvat en el jardín': 'Tu BiShvat in the garden', 'Kidush comunitario': 'Community kiddush', 'Reparto solidario': 'Charity delivery',
+    // Calendario
+    'Reunión de la junta': 'Board meeting', 'Reunión mensual abierta a socios.': 'Monthly meeting, open to members.', 'Sala de juntas': 'Boardroom',
+    'Talmud Torah: entrega de notas': 'Talmud Torah: report cards', 'Aulas': 'Classrooms',
+    'Bar Mitzvá en la sinagoga': 'Bar Mitzvah at the synagogue', '¡Mazal tov a la familia!': 'Mazal tov to the family!', 'Sinagoga': 'Synagogue',
+    // Rav
+    '¿Se puede dejar una luz con temporizador encendida durante Shabat?': 'Can I leave a light on a timer during Shabbat?',
+    'Sí, siempre que el temporizador se programe antes de que empiece Shabat y no se modifique después. Es una solución muy habitual.': "Yes, as long as the timer is set before Shabbat begins and isn't changed afterwards. It's a very common solution.",
+    '¿Qué hechsher es fiable para el chocolate que se vende en supermercados?': 'Which hechsher is reliable for chocolate sold in supermarkets?',
+    // Donaciones, citas, horarios, avisos, perfil
+    'Fondo general': 'General fund', 'Ayuda social': 'Social aid', 'Consulta personal': 'Personal consultation',
+    'Shajarit': 'Shacharit', 'Minjá': 'Mincha', 'Arvit': 'Maariv', 'Kabalat Shabat': 'Kabbalat Shabbat', 'Shajarit de Shabat': 'Shabbat Shacharit', 'Havdalá': 'Havdalah',
+    'Nuevo evento: Cena de Shabat comunitaria': 'New event: Community Shabbat dinner',
+    'Ya puedes inscribirte. Plazas limitadas.': 'Sign-ups are open. Limited places.',
+    'El rabino ha respondido a tu pregunta': 'The rabbi has answered your question',
+    '¿Se puede dejar una luz con temporizador…?': 'Can I leave a light on a timer…?',
+    'Nuevo horario de tefilot': 'New prayer times', 'Consulta los horarios de invierno.': 'Check the winter times.',
+    'Usuario Demo': 'Demo User', 'España': 'Spain',
+  };
+  // Campos que son códigos: la app los compara ('Shabat', 'Estudio'…), no se traducen
+  const CODIGOS = new Set(['id', 'categoria', 'estado', 'tipo', 'apartado', 'servicio', 'modalidad', 'role', 'status', 'usuario_id', 'user_id', 'evento_id']);
+  /** Traduce en profundidad los textos de las tablas (coincidencia exacta). */
+  function localize(v) {
+    if (LANG !== 'en') return v;
+    if (typeof v === 'string') return Object.prototype.hasOwnProperty.call(EN, v) ? EN[v] : v;
+    if (Array.isArray(v)) return v.map(localize);
+    if (v && typeof v === 'object') { for (const k of Object.keys(v)) if (!CODIGOS.has(k)) v[k] = localize(v[k]); }
+    return v;
+  }
+
+  // El nombre del usuario demo sigue al idioma (se guardó al entrar, quizá en el otro idioma)
+  try {
+    const u = JSON.parse(localStorage.getItem('kehila_user') || 'null');
+    if (u && u.source === 'demo' && u.name !== DEMO_NAME) localStorage.setItem('kehila_user', JSON.stringify({ ...u, name: DEMO_NAME }));
+  } catch (_) { /* ignorar */ }
+
   // ─── Base de datos en memoria (persistida en este navegador) ──
   let db;
   function loadDb() {
     try {
       const saved = JSON.parse(localStorage.getItem(DB_KEY) || 'null');
-      if (saved && saved.v === SEED_VERSION && saved.day === dia(0) && saved.tables) return saved.tables;
+      if (saved && saved.v === SEED_VERSION && saved.lang === LANG && saved.day === dia(0) && saved.tables) return saved.tables;
     } catch (_) { /* ignorar */ }
-    return seed();
+    return localize(seed());
   }
   function saveDb() {
-    try { localStorage.setItem(DB_KEY, JSON.stringify({ v: SEED_VERSION, day: dia(0), tables: db })); } catch (_) { /* ignorar */ }
+    try { localStorage.setItem(DB_KEY, JSON.stringify({ v: SEED_VERSION, lang: LANG, day: dia(0), tables: db })); } catch (_) { /* ignorar */ }
   }
   const table = (name) => (db[name] ||= []);
   const clone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));

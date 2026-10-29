@@ -228,7 +228,8 @@
   }
 
   function doAttrs(el) {
-    if (skipEl(el)) return;
+    // Un <textarea> no se traduce por dentro (lo escribe el usuario), pero su placeholder/title sí
+    if (skipEl(el.nodeName === 'TEXTAREA' ? el.parentNode : el)) return;
     for (var i = 0; i < ATTRS.length; i++) {
       var v = el.getAttribute(ATTRS[i]);
       if (v) { var r = translate(v); if (r !== null && r !== v) el.setAttribute(ATTRS[i], r); }

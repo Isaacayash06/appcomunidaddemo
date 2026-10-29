@@ -50,6 +50,18 @@ Para **añadir un módulo**: página en `src/`, entrada en `MODULES` (build) y e
   `seed()`, sube `SEED_VERSION`. Subidas, pagos y funciones edge devuelven «No disponible en la demo».
 - Sin `demoLogin`, `js/demo.js` no se copia: nunca llega a una comunidad real.
 
+### Inglés (botón ES/EN)
+`js/lang-en.js` traduce en el navegador todo el texto visible con el diccionario `js/lang-en-dict.js`
+(`exact` frase a frase + `patterns` para frases con datos: «Tienes 3 solicitudes…»). Lo que no está en el
+diccionario se queda en español. **Al añadir o cambiar un texto visible, añade su traducción** y comprueba:
+
+    node tools/build.mjs demo && node tools/i18n-missing.mjs demo [--strict]
+
+Lista lo que sigue en español por fichero. Quedan siempre algunos falsos positivos: nombres propios
+(ciudades, «Kehilá …»), «No», mensajes de consola. Los datos de la base de datos no se traducen (en la
+demo, `js/demo.js` sirve los de ejemplo ya en inglés). El texto de los rezos del sidur sigue en español:
+haría falta una fuente inglesa para regenerarlo.
+
 ### Escapado de tokens
 Se hace según el contexto: HTML normal → entidades; dentro de `<script>` y `.js` → string JS;
 dentro de `onclick="…"` → JS y luego HTML; `.json` → JSON. Un nombre con `'`, `"` o `&` no rompe nada

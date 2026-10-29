@@ -232,7 +232,7 @@ async function login(email, password, captchaToken = '') {
   if (DEMO_LOGIN) {
     SESSION_STORAGE.setItem(SESSION_KEY, JSON.stringify({
       userId: DEMO_USER_ID,
-      name: 'Usuario Demo',
+      name: (localStorage.getItem('kehila_lang') === 'en') ? 'Demo User' : 'Usuario Demo',
       email: normalizedEmail,
       role: 'miembro',
       status: 'active',

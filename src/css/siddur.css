@@ -37,6 +37,9 @@ html, html body { background: var(--sd-paper); }
 html { scroll-behavior: auto; scroll-padding-top: calc(var(--sd-top) + .5rem); }
 html.sd-dark body::before { background: var(--sd-paper); }
 
+/* El sidebar es fixed: la rejilla de .app-layout dejaba el sidur en una columna de 240px */
+.app-layout { display: block; }
+
 .sd.main-content {
   margin-left: var(--sidebar-width);
   min-height: 100vh;
