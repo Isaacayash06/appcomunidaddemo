@@ -20,7 +20,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 13;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 14;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -195,12 +195,7 @@
         id: 'bs-' + n, tipo: 'fotos_comunidad', activo: true, orden: i + 1, imagen_url: `img/demo/momento-${n}.jpg`,
       })),
       // Solo imagen: los textos de cada área ya vienen en donativos.html
-      don_areas: [
-        { id: 'educativo', imagen_url: arte('libro', 0) },
-        { id: 'religioso', imagen_url: arte('vela', 1) },
-        { id: 'social', imagen_url: arte('corazon', 2) },
-        { id: 'israel', imagen_url: arte('estrella', 3) },
-      ],
+      don_areas: ['educativo', 'religioso', 'social', 'israel'].map((id) => ({ id, imagen_url: `img/demo/donativo-${id}.jpg` })),
       donaciones: [
         { id: 'd-1', usuario_id: DEMO_USER_ID, usuario_nombre: 'Usuario Demo', campana_nombre: 'Fondo general', cantidad: 36, recurrente: false, created_at: hace(15) },
         { id: 'd-2', usuario_id: DEMO_USER_ID, usuario_nombre: 'Usuario Demo', campana_nombre: 'Ayuda social', cantidad: 18, recurrente: true, created_at: hace(45) },
