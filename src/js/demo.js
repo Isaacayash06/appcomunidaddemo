@@ -20,7 +20,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 3;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 4;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -80,12 +80,15 @@
         imagen_url: 'img/demo/evento-shiur-parasha.jpg',
         descripcion: 'Estudio de la porción semanal con preguntas abiertas y debate. No hace falta conocimiento previo.', aforo: 30 }),
       ev('ev-3', 'Taller de jalot para familias', proximo(0, 9), '11:00', 'Cocina comunitaria', 'Educación', 'jala', 2, {
+        imagen_url: 'img/demo/evento-taller-jalot.jpg',
         descripcion: 'Aprende a trenzar jalot con tus hijos. Incluye ingredientes, delantal y una jalá para llevar a casa.', aforo: 24 }),
       ev('ev-4', 'Concierto de música jasídica', dia(16), '20:30', 'Auditorio del centro', 'Cultura', 'musica', 3, {
         descripcion: 'Una noche de niguním y música en directo con un trío de clarinete, violín y piano.', aforo: 120 }),
-      ev('ev-5', 'Encuentro de jóvenes profesionales', dia(9), '19:00', 'Terraza del centro', 'Comunidad', 'personas', 0, {
+      ev('ev-5', 'Encuentro de jóvenes profesionales', proximo(3, 1), '19:30', 'Terraza del centro', 'Comunidad', 'personas', 0, {
+        imagen_url: 'img/demo/evento-jovenes-profesionales.jpg',
         descripcion: 'Networking informal para jóvenes de 22 a 35 años, con picoteo kosher y una charla breve.', aforo: 50 }),
-      ev('ev-6', 'Celebración de Tu Bishvat', dia(23), '18:00', 'Jardín del centro', 'Festividad', 'hoja', 1, {
+      ev('ev-6', 'Celebración de Tu Bishvat', proximo(0, 16), '11:00', 'Jardín del centro', 'Festividad', 'hoja', 1, {
+        imagen_url: 'img/demo/evento-tu-bishvat.jpg',
         descripcion: 'Séder de frutos con las siete especies, actividades para niños y plantación simbólica.', aforo: 100 }),
       ev('ev-7', 'Clase de hebreo para principiantes', proximo(2, 1), '19:30', 'Aula 2', 'Educación', 'libro', 2, {
         imagen_url: 'img/demo/evento-clase-hebreo.jpg',
