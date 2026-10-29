@@ -34,6 +34,15 @@ o, mejor, usa `var(--color-primary)` / `var(--color-gold)`.
 Para **añadir un módulo**: página en `src/`, entrada en `MODULES` (build) y en `PAGE_MODULE`
 (`community.js`), id en `NAV_ID_MODULE` (`nav.js`) y clave en `_defaults.json` → `modules`.
 
+### Modo demo
+`integrations.demoLogin: true` (solo en `community/demo.json`) hace que la app funcione sin backend:
+- «Entrar» acepta cualquier email/contraseña y crea un usuario local `source: 'demo'` (`login()` en `auth.js`).
+- El build copia `js/demo.js` y lo carga en el `<head>`; `getSupabase()` devuelve su cliente falso, que
+  responde `from().select().eq()…` con datos de ejemplo (fechas relativas a hoy, imágenes SVG con el tema).
+- Las escrituras se guardan en `localStorage` (`kehila_demo_db`) y se reinician cada día. Si cambias
+  `seed()`, sube `SEED_VERSION`. Subidas, pagos y funciones edge devuelven «No disponible en la demo».
+- Sin `demoLogin`, `js/demo.js` no se copia: nunca llega a una comunidad real.
+
 ### Escapado de tokens
 Se hace según el contexto: HTML normal → entidades; dentro de `<script>` y `.js` → string JS;
 dentro de `onclick="…"` → JS y luego HTML; `.json` → JSON. Un nombre con `'`, `"` o `&` no rompe nada

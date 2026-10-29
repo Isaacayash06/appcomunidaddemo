@@ -288,6 +288,9 @@ function build(slug, outArg) {
     (def.dirs || []).forEach((d) => skipDirs.add(d));
   }
   if (!HUB_PAGE.needs.some((m) => moduleOn(cfg, m))) skipFiles.add(HUB_PAGE.page);
+  // Datos de ejemplo y cliente falso: solo en comunidades con integrations.demoLogin
+  const demo = cfg.integrations.demoLogin === true;
+  if (!demo) skipFiles.add(path.join('js', 'demo.js'));
 
   fs.rmSync(out, { recursive: true, force: true });
   fs.mkdirSync(out, { recursive: true });
@@ -304,7 +307,10 @@ function build(slug, outArg) {
     let s = fs.readFileSync(src, 'utf8');
     s = transformText(src, s, cfg, cm, pub, problems);
     // <script> de la configuración en el <head> de cada página completa
-    if (path.extname(rel) === '.html' && /<\/head>/i.test(s)) s = s.replace(/<\/head>/i, '  <script src="js/community.js"></script>\n</head>');
+    if (path.extname(rel) === '.html' && /<\/head>/i.test(s)) {
+      const tags = '  <script src="js/community.js"></script>\n' + (demo ? '  <script src="js/demo.js"></script>\n' : '');
+      s = s.replace(/<\/head>/i, tags + '</head>');
+    }
     fs.writeFileSync(dst, s);
     written.add(rel);
   }

@@ -59,6 +59,11 @@ let _supabase = null;
  */
 function getSupabase() {
   if (_supabase) return _supabase;
+  // Modo demo: cliente falso con datos de ejemplo (js/demo.js, solo en builds de demo)
+  if (DEMO_LOGIN && typeof window.createDemoSupabase === 'function') {
+    _supabase = window.createDemoSupabase();
+    return _supabase;
+  }
   // El CDN de Supabase v2 expone supabase.createClient en window
   const lib = window.supabase || (window.supabaseJs) || null;
   if (lib && lib.createClient) {
