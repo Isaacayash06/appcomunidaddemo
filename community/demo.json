@@ -1,0 +1,21 @@
+{
+  "$schema": "./community.schema.json",
+  "slug": "demo",
+  "name": "Comunidad Demo",
+  "shortName": "Demo",
+  "appName": "Kehilá Demo",
+  "centerName": "Centro Comunitario Demo",
+  "city": "Madrid",
+  "domain": "demo.example.com",
+  "mikve": { "name": "Mikve Demo" },
+  "contact": {
+    "email": "info@demo.example.com",
+    "privacyEmail": "privacidad@demo.example.com",
+    "donationsEmail": "donativos@demo.example.com"
+  },
+  "app": {
+    "scheme": "comunidaddemo",
+    "androidPackage": "com.example.comunidaddemo",
+    "iosBundleId": "com.example.comunidaddemo"
+  }
+}

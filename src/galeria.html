@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Galería</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+    .galeria-inner { max-width: 1100px; margin: 0 auto; padding: 32px 32px 80px; }
+    @media (max-width: 768px) { .galeria-inner { padding: 20px 14px 96px; } }
+
+    /* ─── Header con acciones ─── */
+    .galeria-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .galeria-stats {
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+    }
+
+    /* ─── Filtros de álbum ─── */
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 24px;
+      scrollbar-width: none;
+    }
+    .filter-chips::-webkit-scrollbar { display: none; }
+    .chip {
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border: 1.5px solid var(--color-border);
+      color: var(--color-text-muted);
+      cursor: pointer;
+      background: var(--color-white);
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .chip.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+    /* ─── Grid masonry ─── */
+    .galeria-grid {
+      columns: 4;
+      column-gap: 10px;
+    }
+    @media (max-width: 1024px) { .galeria-grid { columns: 3; } }
+    @media (max-width: 640px)  { .galeria-grid { columns: 2; } }
+
+    .galeria-item {
+      break-inside: avoid;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      background: var(--color-bg);
+    }
+    .galeria-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      transition: transform 0.3s ease, opacity 0.2s;
+    }
+    .galeria-item:hover img { transform: scale(1.03); }
+    .galeria-item-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.25s;
+      display: flex;
+      align-items: flex-end;
+      padding: 10px 12px;
+    }
+    .galeria-item:hover .galeria-item-overlay { opacity: 1; }
+    .galeria-item-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.3;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    /* ─── Skeleton loader ─── */
+    .galeria-skeleton {
+      columns: 4;
+      column-gap: 10px;
+    }
+    @media (max-width: 1024px) { .galeria-skeleton { columns: 3; } }
+    @media (max-width: 640px)  { .galeria-skeleton { columns: 2; } }
+    .skeleton-photo {
+      break-inside: avoid;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ─── Empty state ─── */
+    .galeria-empty {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--color-text-muted);
+    }
+    .galeria-empty svg { width: 56px; height: 56px; opacity: 0.3; margin-bottom: 16px; }
+    .galeria-empty h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: var(--color-text); }
+    .galeria-empty p { font-size: 0.875rem; }
+
+    /* ─── Lightbox ─── */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.92);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 16px;
+    }
+    #lightbox.open { display: flex; }
+    .lb-img-wrap {
+      position: relative;
+      max-width: min(90vw, 1000px);
+      max-height: calc(100vh - 120px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #lb-img {
+      max-width: 100%;
+      max-height: calc(100vh - 120px);
+      border-radius: 8px;
+      object-fit: contain;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+    }
+    .lb-nav-btn {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      z-index: 1001;
+    }
+    .lb-nav-btn:hover { background: rgba(255,255,255,0.22); }
+    .lb-nav-btn svg { width: 20px; height: 20px; }
+    #lb-prev { left: 16px; }
+    #lb-next { right: 16px; }
+    #lb-close {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1002;
+    }
+    #lb-close svg { width: 18px; height: 18px; }
+    .lb-info {
+      margin-top: 14px;
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+    }
+    .lb-info-title { font-size: 0.9375rem; font-weight: 600; margin-bottom: 4px; }
+    .lb-info-meta  { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+    .lb-counter {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.45);
+      margin-top: 6px;
+    }
+
+    /* ─── Modal upload (admin) ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 800;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--color-white);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 100%;
+      max-width: 520px;
+      margin: 16px;
+      box-shadow: var(--shadow-xl);
+    }
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 20px;
+    }
+    .upload-area {
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 16px;
+    }
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--color-primary);
+      background: rgba(27,46,94,0.04);
+    }
+    .upload-area svg { width: 40px; height: 40px; color: var(--color-text-muted); margin-bottom: 10px; }
+    .upload-area p { font-size: 0.875rem; color: var(--color-text-muted); margin: 0; }
+    .upload-area p strong { color: var(--color-primary); }
+    .upload-preview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .upload-preview img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 0.8125rem; font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: var(--color-text);
+      background: var(--color-white);
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .form-input:focus, .form-select:focus { outline: none; border-color: var(--color-primary); }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    .btn-secondary {
+      padding: 9px 18px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: none;
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .progress-bar-wrap {
+      height: 4px;
+      background: var(--color-border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--color-primary);
+      border-radius: 4px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+  </style>
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div class="app-layout">
+    <div id="sidebar-placeholder"></div>
+
+    <main class="main-content">
+      <div class="galeria-inner">
+
+        <!-- Header -->
+        <div class="galeria-topbar">
+          <div>
+            <h1 style="font-size:1.5rem;font-weight:700;color:var(--color-text);margin:0 0 4px;">Galería de fotos</h1>
+            <p id="galeria-stats" class="galeria-stats">Cargando fotos...</p>
+          </div>
+          <button id="btn-upload" class="btn btn-primary" style="display:none;" onclick="abrirModalUpload()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
+            </svg>
+            Subir fotos
+          </button>
+        </div>
+
+        <!-- Filtros de álbum -->
+        <div class="filter-chips" id="album-chips">
+          <button class="chip active" data-album="todos" onclick="filtrarAlbum(this, 'todos')">Todos</button>
+        </div>
+
+        <!-- Grid masonry (skeleton mientras carga) -->
+        <div id="skeleton-grid" class="galeria-skeleton"></div>
+        <div id="galeria-grid" class="galeria-grid" style="display:none;"></div>
+        <div id="galeria-empty" class="galeria-empty" style="display:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+          <h3>No hay fotos todavía</h3>
+          <p>Las fotos de la comunidad aparecerán aquí.</p>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" onclick="cerrarLightbox(event)">
+    <button id="lb-close" onclick="cerrarLightbox()" title="Cerrar">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+    </button>
+    <button class="lb-nav-btn" id="lb-prev" onclick="navegarLightbox(-1)">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+    </button>
+    <div class="lb-img-wrap">
+      <img id="lb-img" src="" alt="">
+    </div>
+    <div class="lb-info">
+      <div class="lb-info-title" id="lb-titulo"></div>
+      <div class="lb-info-meta" id="lb-meta"></div>
+      <div class="lb-counter" id="lb-counter"></div>
+    </div>
+    <button class="lb-nav-btn" id="lb-next" onclick="navegarLightbox(1)">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+    </button>
+  </div>
+
+  <!-- Modal Upload (solo admin) -->
+  <div class="modal-overlay" id="modal-upload">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <h2 class="modal-title">Subir fotos</h2>
+
+      <div class="upload-area" id="upload-area"
+           onclick="document.getElementById('file-input').click()"
+           ondragover="onDragOver(event)"
+           ondragleave="onDragLeave(event)"
+           ondrop="onDrop(event)">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+        <p><strong>Haz clic o arrastra fotos aqui</strong></p>
+        <p style="margin-top:4px;font-size:0.75rem;">JPG, PNG, WEBP — máx. 5 MB por foto</p>
+      </div>
+      <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="onFilesSelected(this.files)">
+
+      <div id="upload-preview" class="upload-preview" style="display:none;"></div>
+
+      <div class="progress-bar-wrap" id="progress-wrap">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="input-titulo">Título (opcional)</label>
+        <input type="text" id="input-titulo" class="form-input" placeholder="Ej: Januca 2025">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="input-album">Álbum</label>
+        <input type="text" id="input-album" class="form-input" placeholder="Ej: Eventos, Shabat, Januca...">
+        <div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:4px;">Escribe el nombre del álbum o elige uno existente.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="input-desc">Descripción (opcional)</label>
+        <input type="text" id="input-desc" class="form-input" placeholder="Descripción breve de las fotos">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModalUpload()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-subir" onclick="subirFotos()">Subir fotos</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/supabase.min.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+  <script>
+    // ─── Config Supabase ───────────────────────────────────────────────────────
+    const STORAGE_BUCKET = 'galeria';
+
+    // ─── Estado global ────────────────────────────────────────────────────────
+    let todasFotos   = [];   // todas las fotos cargadas
+    let fotosVisibles = [];  // fotos del álbum activo
+    let albumActivo  = 'todos';
+    let lbIndex      = 0;    // índice actual en el lightbox
+    let archivosSeleccionados = [];
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+    async function __galeriaInit() {
+      requireAuth();
+      initNav('galeria');
+
+      const user = getCurrentUser();
+      // Mostrar botón upload solo a admins
+      if (user && ['admin', 'super_admin', 'staff'].includes(user.role)) {
+        document.getElementById('btn-upload').style.display = 'flex';
+      }
+
+      renderSkeleton();
+      await cargarFotos();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', __galeriaInit);
+    } else {
+      __galeriaInit();
+    }
+
+    // ─── Skeleton loader ──────────────────────────────────────────────────────
+    function renderSkeleton() {
+      const heights = [160,220,180,200,140,260,190,170,210,150,230,180,
+                       165,200,175,185,155,240,195,160,215,170,205,190];
+      const grid = document.getElementById('skeleton-grid');
+      grid.innerHTML = heights.map(h =>
+        `<div class="skeleton-photo" style="height:${h}px;"></div>`
+      ).join('');
+    }
+
+    // ─── Cargar fotos desde Supabase ──────────────────────────────────────────
+    async function cargarFotos() {
+      try {
+        const { data, error } = await sb
+          .from('fotos')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        todasFotos = data || [];
+        renderAlbumChips();
+        filtrarAlbum(null, 'todos');
+
+      } catch (err) {
+        console.error('Error cargando fotos:', err);
+        document.getElementById('skeleton-grid').style.display = 'none';
+        document.getElementById('galeria-empty').style.display = 'block';
+        document.getElementById('galeria-stats').textContent = 'Error al cargar fotos';
+      }
+    }
+
+    // ─── Chips de álbum ───────────────────────────────────────────────────────
+    function renderAlbumChips() {
+      const albums = [...new Set(todasFotos.map(f => f.album).filter(Boolean))].sort();
+      const container = document.getElementById('album-chips');
+
+      // Limpiar chips extra (dejar solo "Todos")
+      container.querySelectorAll('.chip:not([data-album="todos"])').forEach(c => c.remove());
+
+      albums.forEach(album => {
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.dataset.album = album;
+        btn.textContent = escHtml(album);
+        btn.onclick = () => filtrarAlbum(btn, album);
+        container.appendChild(btn);
+      });
+    }
+
+    // ─── Filtrar por álbum ────────────────────────────────────────────────────
+    function filtrarAlbum(btn, album) {
+      albumActivo = album;
+
+      // Marcar chip activo
+      document.querySelectorAll('#album-chips .chip').forEach(c => c.classList.remove('active'));
+      const target = btn || document.querySelector(`[data-album="${album}"]`);
+      if (target) target.classList.add('active');
+
+      fotosVisibles = album === 'todos'
+        ? todasFotos
+        : todasFotos.filter(f => f.album === album);
+
+      renderGrid();
+    }
+
+    // ─── Render grid masonry ─────────────────────────────────────────────────
+    function renderGrid() {
+      const skeleton = document.getElementById('skeleton-grid');
+      const grid     = document.getElementById('galeria-grid');
+      const empty    = document.getElementById('galeria-empty');
+      const stats    = document.getElementById('galeria-stats');
+
+      skeleton.style.display = 'none';
+
+      if (fotosVisibles.length === 0) {
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+        stats.textContent = 'Sin fotos en este álbum';
+        return;
+      }
+
+      empty.style.display = 'none';
+      grid.style.display = 'block';
+      stats.textContent = `${fotosVisibles.length} foto${fotosVisibles.length !== 1 ? 's' : ''}`;
+
+      grid.innerHTML = fotosVisibles.map((foto, i) => {
+        const url   = getFotoUrl(foto.storage_path);
+        const label = escHtml(foto.titulo || foto.album || '');
+        return `
+          <div class="galeria-item" onclick="abrirLightbox(${i})" role="button" tabindex="0">
+            <img
+              src="${url}"
+              alt="${label}"
+              loading="lazy"
+              decoding="async"
+              onload="this.style.opacity=1"
+              style="opacity:0;transition:opacity 0.3s;"
+            >
+            <div class="galeria-item-overlay">
+              ${label ? `<div class="galeria-item-label">${label}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ─── URL pública de una foto ──────────────────────────────────────────────
+    function getFotoUrl(path) {
+      const { data } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+      return data.publicUrl;
+    }
+
+    // ─── Lightbox ─────────────────────────────────────────────────────────────
+    function abrirLightbox(index) {
+      lbIndex = index;
+      mostrarFotoLightbox();
+      document.getElementById('lightbox').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function mostrarFotoLightbox() {
+      const foto = fotosVisibles[lbIndex];
+      if (!foto) return;
+
+      const img = document.getElementById('lb-img');
+      img.style.opacity = '0';
+      img.src = getFotoUrl(foto.storage_path);
+      img.onload = () => { img.style.transition = 'opacity 0.2s'; img.style.opacity = '1'; };
+
+      document.getElementById('lb-titulo').textContent  = foto.titulo || foto.album || '';
+      document.getElementById('lb-meta').textContent    = foto.descripcion || '';
+      document.getElementById('lb-counter').textContent =
+        `${lbIndex + 1} / ${fotosVisibles.length}`;
+
+      // Ocultar botones en extremos
+      document.getElementById('lb-prev').style.visibility = lbIndex === 0 ? 'hidden' : 'visible';
+      document.getElementById('lb-next').style.visibility = lbIndex === fotosVisibles.length - 1 ? 'hidden' : 'visible';
+    }
+
+    function navegarLightbox(dir) {
+      lbIndex = Math.max(0, Math.min(fotosVisibles.length - 1, lbIndex + dir));
+      mostrarFotoLightbox();
+    }
+
+    function cerrarLightbox(event) {
+      if (event && event.target !== document.getElementById('lightbox') &&
+          event.target !== document.getElementById('lb-close')) return;
+      document.getElementById('lightbox').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Teclado
+    document.addEventListener('keydown', e => {
+      const lb = document.getElementById('lightbox');
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'ArrowLeft')  navegarLightbox(-1);
+      if (e.key === 'ArrowRight') navegarLightbox(1);
+      if (e.key === 'Escape')     { lb.classList.remove('open'); document.body.style.overflow = ''; }
+    });
+
+    // ─── Modal upload ─────────────────────────────────────────────────────────
+    function abrirModalUpload() {
+      document.getElementById('modal-upload').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarModalUpload() {
+      document.getElementById('modal-upload').classList.remove('open');
+      document.body.style.overflow = '';
+      archivosSeleccionados = [];
+      document.getElementById('upload-preview').style.display = 'none';
+      document.getElementById('upload-preview').innerHTML = '';
+      document.getElementById('progress-wrap').style.display = 'none';
+      document.getElementById('progress-fill').style.width = '0%';
+      document.getElementById('file-input').value = '';
+    }
+
+    function onDragOver(e) {
+      e.preventDefault();
+      document.getElementById('upload-area').classList.add('drag-over');
+    }
+    function onDragLeave(e) {
+      document.getElementById('upload-area').classList.remove('drag-over');
+    }
+    function onDrop(e) {
+      e.preventDefault();
+      document.getElementById('upload-area').classList.remove('drag-over');
+      onFilesSelected(e.dataTransfer.files);
+    }
+
+    function onFilesSelected(files) {
+      archivosSeleccionados = Array.from(files).filter(f => f.type.startsWith('image/'));
+      if (archivosSeleccionados.length === 0) return;
+
+      const preview = document.getElementById('upload-preview');
+      preview.innerHTML = '';
+      preview.style.display = 'grid';
+
+      archivosSeleccionados.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.alt = file.name;
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function subirFotos() {
+      if (archivosSeleccionados.length === 0) {
+        showToast('Selecciona al menos una foto', 'warning');
+        return;
+      }
+
+      const user   = getCurrentUser();
+      const titulo = document.getElementById('input-titulo').value.trim();
+      const album  = document.getElementById('input-album').value.trim() || 'General';
+      const desc   = document.getElementById('input-desc').value.trim();
+
+      const btn = document.getElementById('btn-subir');
+      btn.disabled = true;
+      btn.textContent = 'Subiendo...';
+
+      const progressWrap = document.getElementById('progress-wrap');
+      const progressFill = document.getElementById('progress-fill');
+      progressWrap.style.display = 'block';
+
+      let subidas = 0;
+      const total = archivosSeleccionados.length;
+
+      for (const file of archivosSeleccionados) {
+        try {
+          const ext      = file.name.split('.').pop().toLowerCase();
+          const fileName = `${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+          const path     = `${album}/${fileName}`;
+
+          // Subir a Storage
+          const { error: storageErr } = await sb.storage
+            .from(STORAGE_BUCKET)
+            .upload(path, file, { cacheControl: '3600', upsert: false });
+
+          if (storageErr) throw storageErr;
+
+          // Guardar metadatos en tabla fotos
+          const { error: dbErr } = await sb.from('fotos').insert({
+            titulo:       titulo || file.name.replace(/\.[^.]+$/, ''),
+            album:        album,
+            descripcion:  desc,
+            storage_path: path,
+            uploaded_by:  user.userId
+          });
+
+          if (dbErr) throw dbErr;
+
+          subidas++;
+          progressFill.style.width = `${Math.round((subidas / total) * 100)}%`;
+
+        } catch (err) {
+          console.error('Error subiendo foto:', err);
+          showToast(`Error subiendo ${file.name}`, 'error');
+        }
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Subir fotos';
+
+      if (subidas > 0) {
+        showToast(`${subidas} foto${subidas !== 1 ? 's' : ''} subida${subidas !== 1 ? 's' : ''} correctamente`, 'success');
+        cerrarModalUpload();
+        await cargarFotos();
+      }
+    }
+  </script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

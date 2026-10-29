@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>Política de Cookies — {{name}}</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body { background: var(--color-bg); }
+    .priv-wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+    .priv-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+    .priv-logo img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+    .priv-logo-name { font-size: 1.1rem; font-weight: 700; color: var(--color-primary); }
+    .priv-hero { background: var(--color-primary); color: #fff; border-radius: var(--radius-lg); padding: 32px 36px; margin-bottom: 36px; }
+    .priv-hero h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; font-family: var(--font-brand); }
+    .priv-hero p { font-size: 0.9rem; opacity: 0.8; line-height: 1.6; }
+    .priv-updated { font-size: 0.8rem; opacity: 0.65; margin-top: 8px; }
+    .priv-section { background: var(--color-white); border-radius: var(--radius-md); padding: 28px 32px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+    .priv-section h2 { font-size: 1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .priv-section h2 .priv-num { background: var(--color-primary); color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .priv-section p, .priv-section li { font-size: 0.9rem; color: var(--color-text); line-height: 1.7; }
+    .priv-section ul { padding-left: 20px; margin: 10px 0; }
+    .priv-section li { margin-bottom: 5px; }
+    .priv-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin-top: 12px; }
+    .priv-table th { text-align: left; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--color-text-muted); padding: 8px 12px; border-bottom: 2px solid var(--color-border); background: var(--color-bg); }
+    .priv-table td { padding: 10px 12px; border-bottom: 1px solid var(--color-border-light); color: var(--color-text); vertical-align: top; }
+    .priv-table tr:last-child td { border-bottom: none; }
+    .badge-green { background: #d1fae5; color: #065f46; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+    .priv-highlight-green { background: #f0fdf4; border-left: 4px solid var(--color-success); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 14px 18px; margin: 16px 0; font-size: 0.875rem; color: #065f46; line-height: 1.6; }
+    .priv-footer { text-align: center; font-size: 0.8rem; color: var(--color-text-muted); margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+    @media (max-width: 600px) { .priv-section { padding: 20px 18px; } .priv-hero { padding: 24px 20px; } .priv-hero h1 { font-size: 1.3rem; } }
+  </style>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+<div class="priv-wrap">
+
+  <div class="priv-logo">
+    <img src="img/icon-192.png" alt="{{name}}">
+    <span class="priv-logo-name">{{name}}</span>
+  </div>
+
+  <div class="priv-hero">
+    <h1>Política de Cookies</h1>
+    <p>Esta política explica qué tecnologías de almacenamiento local utiliza la plataforma {{name}} y con qué finalidad, conforme al Reglamento (UE) 2016/679 y la Ley 34/2002 (LSSI-CE).</p>
+    <p class="priv-updated">Última actualización: abril de 2026</p>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">1</span> ¿Qué son las cookies?</h2>
+    <p>Las cookies son pequeños archivos de texto que un sitio web almacena en tu dispositivo cuando lo visitas. Esta plataforma no utiliza cookies tradicionales, sino <strong>almacenamiento local del navegador</strong> (localStorage), que cumple una función técnicamente equivalente pero sin enviar datos al servidor en cada petición.</p>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">2</span> ¿Qué almacenamiento usamos?</h2>
+    <div class="priv-highlight-green">
+      Esta plataforma <strong>no utiliza cookies de terceros, publicidad ni rastreo externo</strong>. Solo se usa almacenamiento estrictamente necesario para el funcionamiento de la app.
+    </div>
+    <table class="priv-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Finalidad</th>
+          <th>Duración</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>kehila_user</code></td>
+          <td>localStorage</td>
+          <td>Mantener la sesión activa del usuario tras el login (nombre, email, rol). No contiene contraseñas.</td>
+          <td>Hasta cerrar sesión</td>
+        </tr>
+        <tr>
+          <td><code>sb-{{integrations.supabaseRef}}-auth-token</code></td>
+          <td>localStorage</td>
+          <td>Token de autenticación cifrado de Supabase (proveedor de base de datos). Necesario para mantener la sesión segura.</td>
+          <td>Hasta cerrar sesión / expiración (1 hora renovable)</td>
+        </tr>
+        <tr>
+          <td><code>kehila_lang</code></td>
+          <td>localStorage</td>
+          <td>Guardar el idioma seleccionado (español / inglés / hebreo)</td>
+          <td>Persistente</td>
+        </tr>
+        <tr>
+          <td><code>kehila_pending</code></td>
+          <td>localStorage</td>
+          <td>Almacena temporalmente los datos de la solicitud de registro durante el proceso de alta. Se elimina tras completar el registro.</td>
+          <td>Temporal (durante el registro)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px;">Todos estos elementos son de <strong>uso técnico estrictamente necesario</strong> para el correcto funcionamiento de la plataforma. Según la normativa vigente, no requieren consentimiento previo del usuario.</p>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">3</span> ¿Cómo desactivarlas o eliminarlas?</h2>
+    <p>Puedes eliminar el almacenamiento local de la app en cualquier momento desde la configuración de tu navegador:</p>
+    <ul>
+      <li><strong>Chrome:</strong> Configuración → Privacidad y seguridad → Borrar datos de navegación → Almacenamiento local</li>
+      <li><strong>Safari:</strong> Preferencias → Privacidad → Gestionar datos de sitios web</li>
+      <li><strong>Firefox:</strong> Configuración → Privacidad y seguridad → Cookies y datos del sitio → Limpiar datos</li>
+      <li><strong>Edge:</strong> Configuración → Privacidad, búsqueda y servicios → Borrar datos de exploración</li>
+    </ul>
+    <p style="margin-top:10px;">Ten en cuenta que eliminar estos datos cerrará tu sesión y perderás las preferencias guardadas.</p>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">4</span> Cambios en esta política</h2>
+    <p>Si en el futuro incorporamos nuevas tecnologías de almacenamiento (por ejemplo, para pagos o mapas), actualizaremos esta política y te lo notificaremos desde la propia app.</p>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">5</span> Contacto</h2>
+    <p>Para cualquier consulta sobre esta política: <a href="mailto:{{contact.email}}" style="color:var(--color-primary);">{{contact.email}}</a></p>
+  </div>
+
+  <div class="priv-footer">
+    <p>© 2026 {{name}} ·
+      <a href="privacidad.html" style="color:var(--color-primary);">Privacidad</a> ·
+      <a href="aviso-legal.html" style="color:var(--color-primary);">Aviso Legal</a> ·
+      <a href="home.html" style="color:var(--color-primary);">Volver a la app</a>
+    </p>
+  </div>
+
+</div>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

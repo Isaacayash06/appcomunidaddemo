@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Cita con el Rav</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: var(--color-bg); }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+    .page-inner { max-width: 1100px; margin: 0 auto; padding: 32px 32px 80px; }
+    @media (max-width: 768px) { .page-inner { padding: 20px 16px 88px; } }
+
+    /* Hero Rabino */
+    .rav-hero { background: var(--color-primary); border-radius: var(--radius-lg); padding: 32px; text-align: center; margin-bottom: 32px; color: white; }
+    .rav-avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--color-gold); margin: 0 auto 16px; object-fit: cover; display: block; }
+    .rav-name { font-family: var(--font-brand); font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+    .rav-cargo { color: var(--color-gold); font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
+    .rav-desc { font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.6; max-width: 480px; margin: 0 auto 16px; }
+    .rav-disponible { display: inline-flex; align-items: center; gap: 8px; background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4); border-radius: var(--radius-full); padding: 6px 16px; font-size: 0.8rem; color: #6EE7B7; font-weight: 600; }
+    .pulse-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
+
+    /* Tipos de cita */
+    .section-title { font-family: var(--font-brand); font-size: 1.2rem; font-weight: 700; color: var(--color-text); margin-bottom: 16px; }
+    .tipos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
+    @media (max-width: 640px) { .tipos-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 400px) { .tipos-grid { grid-template-columns: 1fr; } }
+    .tipo-card { border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: 16px 14px; cursor: pointer; transition: all var(--transition-fast); background: white; text-align: left; width: 100%; }
+    .tipo-card:hover { border-color: var(--color-gold); background: var(--color-gold-light); }
+    .tipo-card.selected { border-color: var(--color-gold); background: var(--color-gold-light); }
+    .tipo-emoji { font-size: 1.5rem; margin-bottom: 8px; }
+    .tipo-titulo { font-size: 0.85rem; font-weight: 700; color: var(--color-text); margin-bottom: 3px; line-height: 1.3; }
+    .tipo-duracion { font-size: 0.72rem; color: var(--color-gold-dark); font-weight: 600; background: white; display: inline-block; padding: 2px 8px; border-radius: var(--radius-full); margin-bottom: 5px; }
+    .tipo-desc { font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4; }
+    .tipo-input { margin-top: 8px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.8rem; width: 100%; outline: none; display: none; }
+    .tipo-card.selected .tipo-input { display: block; }
+
+    /* Calendario */
+    .calendario-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .cal-nav-btn { width: 36px; height: 36px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-text); transition: all var(--transition-fast); }
+    .cal-nav-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .cal-nav-btn svg { width: 16px; height: 16px; }
+    .cal-semana-label { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
+    .dias-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+    @media (max-width: 500px) { .dias-grid { grid-template-columns: repeat(2, 1fr); } }
+    .dia-col { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 14px 12px; }
+    .dia-header { text-align: center; margin-bottom: 12px; }
+    .dia-nombre { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); }
+    .dia-fecha { font-size: 1.1rem; font-weight: 700; color: var(--color-primary); font-family: var(--font-brand); }
+    .slots { display: flex; flex-direction: column; gap: 6px; }
+    .slot { padding: 6px 8px; border-radius: var(--radius-xs); font-size: 0.78rem; font-weight: 600; text-align: center; cursor: pointer; transition: all var(--transition-fast); border: 1.5px solid transparent; }
+    .slot.libre { background: #D1FAE5; color: #065F46; border-color: #A7F3D0; }
+    .slot.libre:hover { background: #A7F3D0; }
+    .slot.ocupado { background: var(--color-bg); color: var(--color-text-light); cursor: not-allowed; }
+    .slot.selected { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+
+    /* Formulario */
+    .form-section { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 24px; margin-bottom: 32px; box-shadow: var(--shadow-sm); }
+    .form-hint { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px 16px; text-align: center; color: var(--color-text-muted); font-size: 0.85rem; }
+    .resumen-card { background: var(--color-bg); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .resumen-item { display: flex; flex-direction: column; }
+    .resumen-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); margin-bottom: 2px; }
+    .resumen-val { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-label { font-size: 0.85rem; font-weight: 600; color: var(--color-text); }
+    .form-input, .form-textarea { padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.875rem; color: var(--color-text); outline: none; transition: border-color var(--transition-fast); width: 100%; }
+    .form-input:focus, .form-textarea:focus { border-color: var(--color-primary); }
+    .form-textarea { resize: vertical; min-height: 90px; }
+    .modalidad-opts { display: flex; gap: 16px; }
+    .radio-opt { display: flex; align-items: center; gap: 6px; font-size: 0.875rem; cursor: pointer; }
+    .modalidad-info { font-size: 0.8rem; color: var(--color-text-muted); margin-top: 4px; font-style: italic; }
+    .checkbox-confirm { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: var(--color-text); cursor: pointer; }
+    .checkbox-confirm input { margin-top: 2px; cursor: pointer; }
+    .btn-confirmar { width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); background: var(--color-gold); color: var(--color-primary-dark); font-family: var(--font-ui); font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity var(--transition-fast); margin-top: 16px; }
+    .btn-confirmar:hover:not(:disabled) { opacity: 0.9; }
+    .btn-confirmar:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Confirmación */
+    .confirmacion { text-align: center; padding: 32px 24px; }
+    .check-circle { width: 72px; height: 72px; border-radius: 50%; background: var(--color-gold-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; animation: popIn 0.4s ease; }
+    @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+    .check-circle svg { width: 36px; height: 36px; color: var(--color-gold-dark); }
+    .conf-title { font-family: var(--font-brand); font-size: 1.8rem; font-weight: 700; color: var(--color-primary); margin-bottom: 8px; }
+    .conf-resumen { background: var(--color-bg); border-radius: var(--radius-sm); padding: 16px; margin: 20px 0; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+    .conf-row { display: flex; justify-content: space-between; font-size: 0.85rem; }
+    .conf-row span:first-child { color: var(--color-text-muted); }
+    .conf-row span:last-child { font-weight: 600; color: var(--color-text); }
+    .conf-nota { font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 20px; }
+    .conf-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .btn-outline { padding: 10px 20px; border: 1.5px solid var(--color-primary); border-radius: var(--radius-sm); background: transparent; color: var(--color-primary); font-family: var(--font-ui); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); }
+    .btn-outline:hover { background: var(--color-primary); color: white; }
+    .btn-primary { padding: 10px 20px; border: none; border-radius: var(--radius-sm); background: var(--color-primary); color: white; font-family: var(--font-ui); font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+
+    /* Mis citas */
+    .citas-list { display: flex; flex-direction: column; gap: 10px; }
+    .cita-item { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px 20px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow-sm); }
+    .cita-emoji { font-size: 1.5rem; width: 40px; text-align: center; flex-shrink: 0; }
+    .cita-info { flex: 1; }
+    .cita-titulo { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
+    .cita-meta { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 3px; }
+    .cita-estado { font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-full); white-space: nowrap; }
+    .cita-estado.confirmada { background: #DBEAFE; color: #1D4ED8; }
+    .cita-estado.realizada { background: #D1FAE5; color: #065F46; }
+    .cita-estado.cancelada { background: #FEE2E2; color: #991B1B; }
+    .btn-cancelar { font-size: 0.75rem; color: var(--color-danger); background: none; border: 1px solid var(--color-danger); border-radius: var(--radius-sm); padding: 4px 10px; cursor: pointer; transition: all var(--transition-fast); white-space: nowrap; }
+    .btn-cancelar:hover { background: var(--color-danger); color: white; }
+    .section-gap { margin-top: 40px; }
+    .form-sub { font-size: .78rem; color: var(--color-text-muted); margin-top: 2px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+    .chip-opt { position: relative; cursor: pointer; }
+    .chip-opt input { position: absolute; opacity: 0; pointer-events: none; }
+    .chip-opt span { display: inline-block; padding: 7px 14px; border: 1.5px solid var(--color-border); border-radius: var(--radius-full); font-size: .82rem; font-weight: 600; color: var(--color-text); background: white; transition: all var(--transition-fast); }
+    .chip-opt input:checked + span { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+    .chip-opt input:focus-visible + span { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+    @media (max-width: 560px) { .form-row-2 { grid-template-columns: 1fr; } }
+    .form-error { color: var(--color-danger); font-size: .8rem; display: none; }
+    .form-input[readonly] { background: var(--color-bg); color: var(--color-text-muted); }
+    .form-nota { font-size: .78rem; color: var(--color-text-muted); text-align: center; margin-top: 10px; line-height: 1.5; }
+    .cita-estado.pendiente { background: #FEF3C7; color: #92400E; }
+    .envio-aviso { background: #FEF3C7; color: #78350F; border-radius: var(--radius-sm); padding: 12px 14px; font-size: .82rem; line-height: 1.5; margin: 0 0 16px; text-align: left; }
+    .envio-aviso a { color: inherit; font-weight: 700; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="page-inner">
+
+      <!-- Hero Rabino -->
+      <div class="rav-hero">
+        <img class="rav-avatar" src="img/avatar.svg" alt="{{rabbi.name}}">
+        <div class="rav-name">{{rabbi.fullName}}</div>
+        <div class="rav-cargo">Rabino de {{name}}</div>
+        <div class="rav-desc">{{rabbi.bio}}</div>
+        <div class="rav-disponible">
+          <span class="pulse-dot"></span>
+          Envía tu solicitud y la oficina del Rav te escribirá para acordar la cita
+        </div>
+      </div>
+
+      <!-- Tipos de cita -->
+      <div class="section-title">¿Qué tipo de consulta necesitas?</div>
+      <div class="tipos-grid" id="tiposGrid"></div>
+
+      <!-- Formulario de solicitud / Confirmación -->
+      <div class="section-title">Cuéntanos qué necesitas</div>
+      <div class="form-section" id="formSection">
+        <div id="formContent"></div>
+        <div id="confirmacionContent" style="display:none"></div>
+      </div>
+
+      <!-- Mis citas -->
+      <div class="section-gap">
+        <div class="section-title">Mis solicitudes</div>
+        <div class="citas-list" id="citasList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/vendor/supabase.js"></script>  <script src="js/auth.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+  <script>
+    const TIPOS_CITA = [
+      { id:'halacha', titulo:'Consulta halachica', duracion:'', desc:'Para preguntas que requieren respuesta personalizada', emoji:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>' },
+      { id:'espiritual', titulo:'Orientación espiritual', duracion:'', desc:'Conversación sobre tu camino judío', emoji:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>' },
+      { id:'barmitzvah', titulo:'Preparación Bar/Bat Mitzvá — familia', duracion:'', desc:'Planificación y orientación para la familia', emoji:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 3.741-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5"/></svg>' },
+      { id:'matrimonial', titulo:'Consulta pre-matrimonial', duracion:'', desc:'Orientación halachica y espiritual para parejas', emoji:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>' },
+      { id:'kosher', titulo:'Certificación Kosher empresarial', duracion:'', desc:'El Rav certifica empresas alimentarias. Acceso a 25M de consumidores en el mundo.', emoji:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/></svg>' }
+    ];
+
+    // No hay calendario: el miembro envía una solicitud (tipo, motivo, su
+    // disponibilidad) y la oficina del Rav (Carol) acuerda día y hora por
+    // email. El email lo manda la Edge Function notify-cita.
+    const OFICINA_EMAIL = '{{contact.email}}';
+    const DIRECCION = '{{contact.address}}. {{centerName}}';
+    const DIAS_DISP = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+    const FRANJAS_DISP = ['Mañana', 'Mediodía', 'Tarde', 'Noche'];
+
+    let selectedTipo = null;
+    let perfilTel = '';
+    let enviando = false;
+
+    const esc = (v) => typeof escHtml === 'function' ? escHtml(v == null ? '' : String(v))
+      : String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    function fechaEnvio(ts) { const d = new Date(ts); return isNaN(d) ? '' : `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`; }
+
+    function renderTipos() {
+      document.getElementById('tiposGrid').innerHTML = TIPOS_CITA.map(t => `
+        <button type="button" class="tipo-card ${selectedTipo === t.id ? 'selected' : ''}" onclick="selectTipo('${t.id}')" id="tipo-${t.id}" aria-pressed="${selectedTipo === t.id}">
+          <div class="tipo-emoji">${t.emoji}</div>
+          <div class="tipo-titulo">${t.titulo}</div>
+          ${t.desc ? `<div class="tipo-desc">${t.desc}</div>` : ''}
+        </button>
+      `).join('');
+    }
+
+    function selectTipo(id) {
+      if (!selectedTipo && typeof trackEvent === 'function') trackEvent('cita_inicio', { tipo: String(id) });
+      selectedTipo = id;
+      renderTipos();
+      const tipo = TIPOS_CITA.find(t => t.id === id);
+      const el = document.getElementById('f_tipo_sel');
+      if (el) el.innerHTML = `${tipo.emoji} ${tipo.titulo}`;
+      document.getElementById('f_tipo_err').style.display = 'none';
+    }
+
+    function renderForm() {
+      const user = getCurrentUser();
+      const chips = (name, items) => items.map(v =>
+        `<label class="chip-opt"><input type="checkbox" name="${name}" value="${v}"><span>${v}</span></label>`).join('');
+      document.getElementById('formContent').innerHTML = `
+        <div class="resumen-card">
+          <div class="resumen-item"><span class="resumen-label">Tipo de consulta</span><span class="resumen-val" id="f_tipo_sel">Elige uno arriba</span></div>
+        </div>
+        <span class="form-error" id="f_tipo_err" style="margin:-8px 0 12px">Elige el tipo de consulta.</span>
+
+        <div class="form-group">
+          <label class="form-label" for="f_motivo">Motivo de la reunión</label>
+          <textarea class="form-textarea" id="f_motivo" maxlength="1500" placeholder="Cuéntale brevemente al Rav de qué quieres hablar. Solo lo lee la oficina del Rav."></textarea>
+          <span class="form-error" id="f_motivo_err">Escribe el motivo de la reunión (al menos unas palabras).</span>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Tu disponibilidad</span>
+          <span class="form-sub">Días que te van bien</span>
+          <div class="chips">${chips('f_dias', DIAS_DISP)}</div>
+          <span class="form-sub">Franja horaria</span>
+          <div class="chips">${chips('f_franjas', FRANJAS_DISP)}</div>
+          <input type="text" class="form-input" id="f_disp_txt" maxlength="300" placeholder="Otros detalles (opcional): p. ej. «a partir del 3 de noviembre», «después de las 18 h»">
+          <span class="form-error" id="f_disp_err">Indica al menos un día o escribe cuándo te viene bien.</span>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Modalidad</span>
+          <div class="modalidad-opts">
+            <label class="radio-opt"><input type="radio" name="f_mod" value="Presencial" checked onchange="updateModalidadInfo()"> Presencial</label>
+            <label class="radio-opt"><input type="radio" name="f_mod" value="Videollamada" onchange="updateModalidadInfo()"> Videollamada</label>
+          </div>
+          <div class="modalidad-info" id="modalidadInfo"></div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="f_nombre">Nombre</label>
+            <input type="text" class="form-input" id="f_nombre" value="${esc(user ? user.name : '')}" readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f_email">Email <span style="color:var(--color-text-muted);font-weight:400">(te contestarán aquí)</span></label>
+            <input type="email" class="form-input" id="f_email" value="${esc(user ? user.email : '')}" readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f_tel">Teléfono de contacto</label>
+          <input type="tel" class="form-input" id="f_tel" placeholder="+34 600 000 000" autocomplete="tel" maxlength="40" value="${esc(perfilTel)}">
+          <span class="form-error" id="f_tel_err">Indica un teléfono por si la oficina necesita llamarte.</span>
+        </div>
+
+        <label class="checkbox-confirm">
+          <input type="checkbox" id="f_privacy" onchange="toggleConfirmar()">
+          Confirmo que mantendré la privacidad de lo tratado en esta cita
+        </label>
+        <span class="form-error" id="f_envio_err"></span>
+        <button type="button" class="btn-confirmar" id="btnConfirmar" disabled onclick="enviarSolicitud()">Enviar solicitud</button>
+        <p class="form-nota">La solicitud llega por email a la oficina del Rav (${OFICINA_EMAIL}), que te escribirá para acordar el día y la hora.</p>
+      `;
+      updateModalidadInfo();
+      if (selectedTipo) selectTipo(selectedTipo);
+    }
+
+    // Al corregir un campo, ocultar su mensaje de error
+    function limpiarErrorCampo(e) {
+      const err = e.target.closest('.form-group')?.querySelector('.form-error');
+      if (err) err.style.display = 'none';
+    }
+    document.getElementById('formContent').addEventListener('input', limpiarErrorCampo);
+    document.getElementById('formContent').addEventListener('change', limpiarErrorCampo);
+
+    function updateModalidadInfo() {
+      const mod = document.querySelector('input[name="f_mod"]:checked')?.value;
+      const info = document.getElementById('modalidadInfo');
+      if (info) info.innerHTML = mod === 'Presencial' ? '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:16px;height:16px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg> ' + DIRECCION : '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:16px;height:16px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg> Te enviarán el enlace por email';
+    }
+
+    function toggleConfirmar() {
+      const btn = document.getElementById('btnConfirmar');
+      if (btn) btn.disabled = !document.getElementById('f_privacy')?.checked || enviando;
+    }
+
+    function mostrarErrorEnvio(msg) {
+      const el = document.getElementById('f_envio_err');
+      if (el) { el.textContent = msg; el.style.display = 'block'; }
+    }
+
+    /** Llama a la Edge Function notify-cita (email a la oficina / cancelación). */
+    async function llamarNotifyCita(accion, citaId) {
+      const session = typeof getValidSession === 'function' ? await getValidSession() : null;
+      const token = session?.access_token;
+      if (!token) return { ok: false, error: 'Sin sesión' };
+      try {
+        const res = await fetch(SUPABASE_URL + '/functions/v1/notify-cita', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+          body: JSON.stringify({ accion, cita_id: citaId })
+        });
+        const data = await res.json().catch(() => ({}));
+        return res.ok && data.ok ? data : { ok: false, error: data.error || ('HTTP ' + res.status) };
+      } catch (e) {
+        return { ok: false, error: e.message || 'Error de red' };
+      }
+    }
+
+    function leerDisponibilidad() {
+      const marcados = (name) => [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(i => i.value);
+      const dias = marcados('f_dias'), franjas = marcados('f_franjas');
+      const txt = document.getElementById('f_disp_txt')?.value?.trim() || '';
+      const partes = [];
+      if (dias.length) partes.push('Días: ' + dias.join(', '));
+      if (franjas.length) partes.push('Franja: ' + franjas.join(', '));
+      if (txt) partes.push(txt);
+      return { texto: partes.join('\n'), valido: dias.length > 0 || txt.length >= 3 };
+    }
+
+    async function enviarSolicitud() {
+      if (enviando) return;
+      const show = (id, on) => { document.getElementById(id).style.display = on ? 'block' : 'none'; };
+      document.getElementById('f_envio_err').style.display = 'none';
+
+      const tipo = TIPOS_CITA.find(t => t.id === selectedTipo);
+      const motivo = document.getElementById('f_motivo').value.trim();
+      const disp = leerDisponibilidad();
+      const tel = document.getElementById('f_tel').value.trim();
+      const mod = document.querySelector('input[name="f_mod"]:checked')?.value || 'Presencial';
+
+      show('f_tipo_err', !tipo);
+      show('f_motivo_err', motivo.length < 10);
+      show('f_disp_err', !disp.valido);
+      show('f_tel_err', tel.replace(/\D/g, '').length < 6);
+      const primerError = [...document.querySelectorAll('#formContent .form-error')].find(e => e.style.display === 'block');
+      if (primerError) {
+        if (!tipo) document.getElementById('tiposGrid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        else primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+      const session = typeof getValidSession === 'function' ? await getValidSession() : null;
+      if (!sb || !session) { mostrarErrorEnvio('No se pudo confirmar tu sesión. Vuelve a entrar en la app e inténtalo de nuevo.'); return; }
+
+      const user = getCurrentUser();
+      enviando = true;
+      const btn = document.getElementById('btnConfirmar');
+      btn.disabled = true; btn.textContent = 'Enviando…';
+
+      const { data: cita, error: citaErr } = await sb.from('citas').insert({
+        usuario_id: session.user.id,
+        usuario_nombre: user?.name || '',
+        usuario_email: user?.email || session.user.email || '',
+        telefono: tel,
+        tipo_cita: tipo.titulo,
+        tipo_emoji: tipo.id,
+        modalidad: mod,
+        notas: motivo,
+        disponibilidad: disp.texto,
+        estado: 'pendiente'
+      }).select('id').single();
+
+      if (citaErr) {
+        enviando = false;
+        btn.textContent = 'Enviar solicitud'; toggleConfirmar();
+        if (typeof trackEvent === 'function') trackEvent('cita_error', { msg: String(citaErr.message).slice(0, 120) });
+        mostrarErrorEnvio('No se pudo enviar la solicitud: ' + citaErr.message);
+        return;
+      }
+
+      const aviso = await llamarNotifyCita('nueva', cita.id);
+      if (typeof trackEvent === 'function') {
+        trackEvent('cita_ok', { tipo: tipo.id, modalidad: mod });
+        if (!aviso.ok) trackEvent('cita_error', { msg: ('aviso email: ' + aviso.error).slice(0, 120) });
+      }
+      enviando = false;
+      mostrarConfirmacion(tipo, mod, disp.texto, cita.id, aviso);
+      loadMisCitas();
+    }
+
+    function mostrarConfirmacion(tipo, mod, disp, citaId, aviso) {
+      const user = getCurrentUser();
+      document.getElementById('formContent').style.display = 'none';
+      const el = document.getElementById('confirmacionContent');
+      el.style.display = 'block';
+      el.innerHTML = `
+        <div class="confirmacion">
+          <div class="check-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+          </div>
+          <div class="conf-title">¡Solicitud enviada!</div>
+          <div class="conf-resumen">
+            <div class="conf-row"><span>Tipo de consulta</span><span>${tipo.titulo}</span></div>
+            <div class="conf-row"><span>Modalidad</span><span>${esc(mod)}</span></div>
+            <div class="conf-row"><span>Tu disponibilidad</span><span style="white-space:pre-line;text-align:right">${esc(disp)}</span></div>
+          </div>
+          ${aviso.ok ? `
+          <div class="conf-nota">
+            La oficina del Rav ha recibido tu solicitud y te escribirá a <strong>${esc(user ? user.email : 'tu correo')}</strong> para acordar el día y la hora.
+            ${aviso.acuse ? '<br>Te hemos enviado un email con el resumen.' : ''}
+          </div>` : `
+          <div class="envio-aviso" id="avisoFallo">
+            Tu solicitud está guardada, pero <strong>no pudimos enviarla por email</strong> a la oficina.
+            <button type="button" class="btn-outline" style="margin:8px 0;display:block" onclick="reintentarAviso('${esc(citaId)}', this)">Reintentar envío</button>
+            Si sigue fallando, escribe directamente a <a href="mailto:${OFICINA_EMAIL}">${OFICINA_EMAIL}</a>.
+          </div>`}
+          <div class="conf-btns">
+            <button type="button" class="btn-primary" onclick="resetCitas()">Enviar otra solicitud</button>
+          </div>
+        </div>
+      `;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function reintentarAviso(citaId, btn) {
+      btn.disabled = true; btn.textContent = 'Enviando…';
+      const r = await llamarNotifyCita('nueva', citaId);
+      if (r.ok) {
+        document.getElementById('avisoFallo').innerHTML = 'Listo: la oficina del Rav ha recibido tu solicitud y te escribirá para acordar el día y la hora.';
+      } else {
+        btn.disabled = false; btn.textContent = 'Reintentar envío';
+        showToast('No se pudo enviar. Escribe a ' + OFICINA_EMAIL, 'error');
+      }
+    }
+
+    function resetCitas() {
+      selectedTipo = null;
+      document.getElementById('confirmacionContent').style.display = 'none';
+      document.getElementById('formContent').style.display = 'block';
+      renderTipos();
+      renderForm();
+      document.getElementById('tiposGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    const ESTADO_LABEL = { pendiente: 'Enviada · te escribirán', confirmada: 'Confirmada', cancelada: 'Cancelada', realizada: 'Realizada' };
+
+    function renderMisCitas(lista) {
+      const tipoIcon = (id) => (TIPOS_CITA.find(t => t.id === id) || {}).emoji || '';
+      document.getElementById('citasList').innerHTML = lista.length ? lista.map(c => {
+        const cancelable = ['pendiente', 'confirmada'].includes(c.estado);
+        return `
+        <div class="cita-item">
+          <div class="cita-emoji">${tipoIcon(c.tipo_emoji)}</div>
+          <div class="cita-info">
+            <div class="cita-titulo">${esc(c.tipo_cita)}</div>
+            <div class="cita-meta">${[c.created_at ? 'Enviada el ' + fechaEnvio(c.created_at) : '', c.modalidad || ''].filter(Boolean).map(esc).join(' · ')}</div>
+          </div>
+          <span class="cita-estado ${esc(c.estado)}">${esc(ESTADO_LABEL[c.estado] || c.estado)}</span>
+          ${cancelable ? `<button type="button" class="btn-cancelar" onclick="cancelarCita('${esc(c.id)}', this)">Cancelar</button>` : ''}
+        </div>`;
+      }).join('') : '<p style="color:var(--color-text-muted);font-size:.875rem;padding:12px 0;">Todavía no has pedido ninguna cita.</p>';
+    }
+
+    // Sin diálogos nativos (bloquean el WebView): el primer toque pide confirmación
+    async function cancelarCita(id, btn) {
+      if (!btn.dataset.confirmar) {
+        btn.dataset.confirmar = '1';
+        btn.textContent = '¿Seguro? Toca otra vez';
+        setTimeout(() => { if (btn.isConnected) { delete btn.dataset.confirmar; btn.textContent = 'Cancelar'; } }, 4000);
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Cancelando…';
+      const r = await llamarNotifyCita('cancelar', id);
+      if (r.ok) {
+        showToast('Solicitud cancelada. Hemos avisado a la oficina del Rav.', 'info');
+        if (typeof trackEvent === 'function') trackEvent('cita_cancelada');
+      } else {
+        showToast('No se pudo cancelar: ' + r.error, 'error');
+      }
+      loadMisCitas();
+    }
+
+    async function loadMisCitas() {
+      const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+      const session = typeof getValidSession === 'function' ? await getValidSession() : null;
+      if (!sb || !session) { renderMisCitas([]); return; }
+      const { data, error } = await sb.from('citas').select('*')
+        .eq('usuario_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      if (error) console.warn('[citas] mis citas:', error.message);
+      renderMisCitas(data || []);
+    }
+
+    async function cargarTelefonoPerfil() {
+      const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+      const session = typeof getValidSession === 'function' ? await getValidSession() : null;
+      if (!sb || !session) return;
+      const { data } = await sb.from('profiles').select('telefono').eq('id', session.user.id).maybeSingle();
+      perfilTel = data?.telefono || '';
+      const input = document.getElementById('f_tel');
+      if (input && !input.value) input.value = perfilTel;
+    }
+
+    initNav('citas-rabino');
+    renderTipos();
+    renderForm();
+    renderMisCitas([]);
+    (async () => {
+      const authed = await requireAuth();
+      if (!authed) return;
+      loadMisCitas();
+      cargarTelefonoPerfil();
+    })();
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
+  </script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

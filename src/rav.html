@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Preguntas al Rav</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+    .rav-inner { max-width: 1100px; margin: 0 auto; padding: 32px 32px 60px; }
+    @media (max-width: 768px) { .rav-inner { padding: 20px 14px 88px; } }
+
+    /* ─── Hero ─── */
+    .rav-hero {
+      background: var(--color-primary);
+      border-radius: var(--radius-lg);
+      padding: 32px 36px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .rav-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 80% 50%, rgba(201,168,76,.12) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .rav-hero-top { display: flex; align-items: center; gap: 18px; margin-bottom: 16px; position: relative; z-index: 1; }
+    .rav-hero-icon {
+      width: 52px; height: 52px;
+      background: rgba(201,168,76,.15); border: 1.5px solid var(--color-gold);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .rav-hero-icon svg { width: 28px; height: 28px; color: var(--color-gold); }
+    .rav-hero-texts h1 { font-family: var(--font-brand); font-size: 1.75rem; font-weight: 700; color: #fff; line-height: 1.15; }
+    .rav-hero-texts p  { font-size: .9rem; color: rgba(255,255,255,.65); margin-top: 4px; line-height: 1.5; }
+    .rav-hero-badges   { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
+    .rav-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      padding: 5px 14px; border-radius: var(--radius-full);
+      font-size: .8125rem; font-weight: 500; color: rgba(255,255,255,.85);
+    }
+    .rav-badge.gold { background: rgba(201,168,76,.2); border-color: var(--color-gold); color: var(--color-gold-light); }
+
+    /* ─── Formulario ─── */
+    .rav-form-card {
+      background: var(--color-white);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--color-gold);
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .rav-form-header { padding: 20px 24px 0; }
+    .rav-form-title  { font-size: 1.0625rem; font-weight: 700; color: var(--color-text); }
+    .rav-form-sub    { font-size: .8125rem; color: var(--color-text-muted); margin-top: 4px; }
+    .rav-form-body   { padding: 20px 24px 24px; }
+
+    /* Categorías chips */
+    .cat-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+    .cat-chip {
+      padding: 5px 14px; border-radius: var(--radius-full);
+      font-size: .8125rem; font-weight: 500;
+      border: 1.5px solid var(--color-border);
+      color: var(--color-text-muted); cursor: pointer;
+      background: var(--color-white); transition: all var(--transition-fast);
+    }
+    .cat-chip:hover  { border-color: var(--color-primary); color: var(--color-primary); }
+    .cat-chip.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+    /* Textarea con contador */
+    .textarea-wrap { position: relative; }
+    .textarea-count {
+      position: absolute; bottom: 10px; right: 12px;
+      font-size: .7rem; color: var(--color-text-light); pointer-events: none;
+    }
+    .textarea-count.near-limit { color: var(--color-warning); }
+    .textarea-count.at-limit   { color: var(--color-danger); }
+    #rav-textarea {
+      min-height: 140px; resize: vertical;
+      padding-bottom: 28px;
+    }
+
+    /* Toggle anonimato */
+    .anon-toggle-wrap {
+      background: var(--color-bg); border-radius: var(--radius-sm);
+      padding: 14px 16px; margin-bottom: 18px;
+    }
+    .anon-toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; cursor: pointer; }
+    .anon-toggle-label { font-size: .875rem; font-weight: 500; color: var(--color-text); }
+    .anon-toggle-hint  { font-size: .775rem; color: var(--color-text-muted); line-height: 1.5; }
+
+    /* Pantalla confirmación */
+    .rav-confirm {
+      display: none; padding: 40px 24px; text-align: center;
+      animation: fadeInUp .4s ease;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Check animado */
+    .animated-check {
+      width: 72px; height: 72px; margin: 0 auto 20px;
+      background: var(--color-success-light);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      animation: checkBounce .6s cubic-bezier(.34,1.56,.64,1) .1s both;
+    }
+    @keyframes checkBounce {
+      from { opacity: 0; transform: scale(.5); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .animated-check svg { width: 38px; height: 38px; color: var(--color-success); }
+    .confirm-title  { font-family: var(--font-brand); font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 8px; }
+    .confirm-desc   { font-size: .9rem; color: var(--color-text-muted); line-height: 1.65; margin-bottom: 20px; max-width: 360px; margin-inline: auto; }
+    .confirm-ref    {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--color-gold-light); border: 1px solid var(--color-gold);
+      color: var(--color-gold-dark); padding: 6px 16px;
+      border-radius: var(--radius-full); font-size: .8125rem; font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    /* ─── Sección respuestas públicas ─── */
+    .section-hero-label {
+      font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--color-gold-dark); display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+    }
+    .section-hero-label::before { content: ''; width: 14px; height: 2px; background: var(--color-gold); border-radius: 1px; }
+    .section-main-title { font-family: var(--font-brand); font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 4px; }
+    .section-sub        { font-size: .875rem; color: var(--color-text-muted); margin-bottom: 20px; line-height: 1.5; }
+
+    /* Toolbar respuestas */
+    .qa-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .qa-toolbar .search-box { flex: 1; min-width: 200px; }
+    .qa-filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; scrollbar-width: none; }
+    .qa-filter-chips::-webkit-scrollbar { display: none; }
+    .qchip {
+      padding: 5px 14px; border-radius: var(--radius-full); font-size: .8rem; font-weight: 500;
+      border: 1.5px solid var(--color-border); background: var(--color-white);
+      color: var(--color-text-muted); cursor: pointer; white-space: nowrap;
+      transition: all var(--transition-fast);
+    }
+    .qchip.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+    /* ─── Q&A Cards ─── */
+    .qa-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .qa-card { background: var(--color-white); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); overflow: hidden; transition: box-shadow var(--transition-normal); }
+    .qa-card:hover { box-shadow: var(--shadow-md); }
+
+    .qa-question-part { background: var(--color-bg); padding: 16px 20px; }
+    .qa-question-top  { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .q-icon {
+      width: 24px; height: 24px; background: var(--color-primary);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .q-icon svg { width: 14px; height: 14px; color: #fff; }
+    .qa-question-text { font-size: .9375rem; color: var(--color-text); line-height: 1.55; }
+    .qa-question-meta { font-size: .75rem; color: var(--color-text-light); margin-top: 8px; }
+
+    .qa-answer-part   { padding: 16px 20px; border-top: 1px solid var(--color-border-light); }
+    .rav-answerer     { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .rav-avatar       { width: 38px; height: 38px; background: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .8125rem; font-weight: 700; color: var(--color-gold); flex-shrink: 0; }
+    .rav-info-name    { font-size: .9rem; font-weight: 700; color: var(--color-text); }
+    .rav-info-role    { font-size: .75rem; color: var(--color-gold-dark); font-weight: 500; }
+
+    .qa-answer-text   { font-size: .9rem; color: var(--color-text); line-height: 1.7; }
+    .qa-answer-clamp  { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .qa-expand-btn    { background: none; border: none; color: var(--color-primary); font-size: .8125rem; font-weight: 600; cursor: pointer; margin-top: 6px; padding: 0; display: flex; align-items: center; gap: 4px; }
+    .qa-expand-btn:hover { color: var(--color-gold-dark); }
+
+    .qa-card-footer   { padding: 10px 20px 12px; border-top: 1px solid var(--color-border-light); display: flex; align-items: center; gap: 10px; }
+    .qa-action-btn {
+      display: flex; align-items: center; gap: 5px;
+      font-size: .8125rem; font-weight: 500; color: var(--color-text-muted);
+      cursor: pointer; border: 1.5px solid var(--color-border); background: none;
+      padding: 5px 12px; border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+    .qa-action-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .qa-action-btn.liked { background: var(--color-success-light); border-color: var(--color-success); color: #065F46; }
+
+    /* Badges categoría Q&A */
+    .qbadge { display: inline-flex; padding: 2px 9px; border-radius: var(--radius-full); font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+    .qbadge-halaka      { background: #EDE9FE; color: #7C3AED; }
+    .qbadge-shabat      { background: #DBEAFE; color: #1E40AF; }
+    .qbadge-kashrut     { background: var(--color-gold-light); color: var(--color-gold-dark); }
+    .qbadge-familia     { background: #FCE7F3; color: #9D174D; }
+    .qbadge-tefila      { background: #D1FAE5; color: #065F46; }
+    .qbadge-festividades{ background: #FEF3C7; color: #92400E; }
+    .qbadge-personal    { background: #CCFBF1; color: #134E4A; }
+    .qbadge-otro        { background: var(--color-bg); color: var(--color-text-muted); }
+
+    /* ─── Mis preguntas ─── */
+    .mis-preguntas-card {
+      background: var(--color-white); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+      overflow: hidden; margin-top: 32px;
+    }
+    .mis-preg-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; user-select: none;
+      transition: background var(--transition-fast);
+    }
+    .mis-preg-header:hover { background: var(--color-bg); }
+    .mis-preg-title { font-size: .9375rem; font-weight: 600; color: var(--color-text); display: flex; align-items: center; gap: 8px; }
+    .chevron-icon { width: 18px; height: 18px; color: var(--color-text-muted); transition: transform var(--transition-fast); }
+    .chevron-icon.open { transform: rotate(180deg); }
+    .mis-preg-body { padding: 0 20px 16px; display: none; }
+    .mis-preg-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-border-light); flex-wrap: wrap; }
+    .mis-preg-row:last-child { border-bottom: none; }
+    .mis-preg-ref { font-size: .75rem; font-weight: 700; color: var(--color-text-muted); font-family: monospace; }
+    .mis-preg-info { flex: 1; min-width: 0; }
+    .mis-preg-cat  { font-size: .75rem; margin-bottom: 2px; }
+    .mis-preg-fecha{ font-size: .725rem; color: var(--color-text-light); }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+<div id="sidebar-placeholder"></div>
+<div class="main-content">
+  <div class="rav-inner">
+
+    <!-- HERO -->
+    <div class="rav-hero">
+      <div class="rav-hero-top">
+        <div class="rav-hero-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/>
+          </svg>
+        </div>
+        <div class="rav-hero-texts">
+          <h1>Pregunta al Rav</h1>
+          <p>Consultas halachicas y personales para los miembros de la comunidad</p>
+        </div>
+      </div>
+      <div class="rav-hero-badges">
+        <span class="rav-badge"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:16px;height:16px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg> 100% Anónimo</span>
+        <span class="rav-badge gold">✓ Respuesta en 48–72h</span>
+      </div>
+    </div>
+
+    <!-- FORMULARIO -->
+    <div class="rav-form-card" id="rav-form-card">
+      <div class="rav-form-header">
+        <p class="rav-form-title">Enviar pregunta anónima</p>
+        <p class="rav-form-sub">Tu identidad nunca será revelada al Rav ni a ningún miembro de la comunidad</p>
+      </div>
+      <div class="rav-form-body" id="rav-form-body">
+
+        <!-- Categorías -->
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label required">Categoría</label>
+          <div class="cat-chips" id="cat-chips">
+            <button class="cat-chip" data-cat="Halaká"      onclick="selectCat(this)">Halaká</button>
+            <button class="cat-chip" data-cat="Shabat"      onclick="selectCat(this)">Shabat</button>
+            <button class="cat-chip" data-cat="Kashrut"     onclick="selectCat(this)">Kashrut</button>
+            <button class="cat-chip" data-cat="Familia"     onclick="selectCat(this)">Familia</button>
+            <button class="cat-chip" data-cat="Tefila"      onclick="selectCat(this)">Tefila</button>
+            <button class="cat-chip" data-cat="Festividades"onclick="selectCat(this)">Festividades</button>
+            <button class="cat-chip" data-cat="Personal"    onclick="selectCat(this)">Personal</button>
+            <button class="cat-chip" data-cat="Otro"        onclick="selectCat(this)">Otro</button>
+          </div>
+          <span class="form-error" id="err-cat" style="display:none;">Selecciona una categoría.</span>
+        </div>
+
+        <!-- Textarea -->
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label required">Tu consulta</label>
+          <div class="textarea-wrap">
+            <textarea id="rav-textarea" class="form-textarea"
+              placeholder="Escribe tu consulta con todo el detalle que necesites. Cuanto más contexto des, mejor podrá responderte el Rav..."
+              maxlength="1000" oninput="updateCount(this)"></textarea>
+            <span class="textarea-count" id="char-count">0 / 1000</span>
+          </div>
+          <span class="form-error" id="err-textarea" style="display:none;">La pregunta debe tener al menos 20 caracteres.</span>
+        </div>
+
+        <!-- Toggle público -->
+        <div class="anon-toggle-wrap">
+          <label class="anon-toggle-row toggle-wrap" for="toggle-publico">
+            <input type="checkbox" class="toggle-input" id="toggle-publico">
+            <span class="toggle-switch"></span>
+            <span class="anon-toggle-label">Permitir que la respuesta sea pública</span>
+          </label>
+          <p class="anon-toggle-hint">Si el Rav considera que tu pregunta es útil para la comunidad, podrá publicar su respuesta de forma anónima para todos los miembros.</p>
+        </div>
+
+        <!-- Botón enviar -->
+        <button class="btn btn-primary btn-lg w-full" onclick="enviarPregunta()">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:18px;height:18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/>
+          </svg>
+          Enviar pregunta al Rav
+        </button>
+
+      </div>
+
+      <!-- Confirmación -->
+      <div class="rav-confirm" id="rav-confirm">
+        <div class="animated-check">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+          </svg>
+        </div>
+        <p class="confirm-title">¡Pregunta enviada!</p>
+        <p class="confirm-desc">El Rav recibirá tu consulta de forma anónima. Te notificaremos cuando haya una respuesta.</p>
+        <span class="confirm-ref">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5-3.9 19.5m-2.1-19.5-3.9 19.5"/>
+          </svg>
+          Referencia: <span id="confirm-ref-num">#0000</span>
+        </span>
+        <button class="btn btn-secondary" onclick="resetForm()">Hacer otra pregunta</button>
+      </div>
+    </div>
+
+    <!-- RESPUESTAS PÚBLICAS -->
+    <div>
+      <p class="section-hero-label">Conocimiento comunitario</p>
+      <h2 class="section-main-title">Preguntas respondidas por el Rav</h2>
+      <p class="section-sub">Consultas de la comunidad que el Rav ha decidido compartir con todos los miembros</p>
+
+      <div class="qa-toolbar">
+        <div class="search-box" style="flex:1;min-width:200px;">
+          <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+          <input type="text" id="qa-search" placeholder="Buscar por tema o palabra clave…" oninput="filterQA()">
+        </div>
+        <select style="padding:9px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-sm);font-size:.8125rem;background:var(--color-white);outline:none;" id="qa-order" onchange="filterQA()">
+          <option value="reciente">Más recientes</option>
+          <option value="util">Más útiles</option>
+        </select>
+      </div>
+
+      <div class="qa-filter-chips" id="qa-chips">
+        <button class="qchip active" data-cat="" onclick="setQCat(this,'')">Todas</button>
+        <button class="qchip" data-cat="Halaká"       onclick="setQCat(this,'Halaká')">Halaká</button>
+        <button class="qchip" data-cat="Shabat"       onclick="setQCat(this,'Shabat')">Shabat</button>
+        <button class="qchip" data-cat="Kashrut"      onclick="setQCat(this,'Kashrut')">Kashrut</button>
+        <button class="qchip" data-cat="Familia"      onclick="setQCat(this,'Familia')">Familia</button>
+        <button class="qchip" data-cat="Tefila"       onclick="setQCat(this,'Tefila')">Tefila</button>
+        <button class="qchip" data-cat="Festividades" onclick="setQCat(this,'Festividades')">Festividades</button>
+      </div>
+
+      <div class="qa-list" id="qa-list"></div>
+    </div>
+
+    <!-- MIS PREGUNTAS -->
+    <div class="mis-preguntas-card" id="mis-preg-card">
+      <div class="mis-preg-header" onclick="toggleMisPreguntas()">
+        <span class="mis-preg-title">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:18px;height:18px;color:var(--color-gold);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+          </svg>
+          Mis preguntas enviadas
+          <span class="badge" style="background:var(--color-bg);color:var(--color-text-muted);font-size:.7rem;padding:2px 8px;">3</span>
+        </span>
+        <svg class="chevron-icon" id="mis-preg-chevron" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+        </svg>
+      </div>
+      <div class="mis-preg-body" id="mis-preg-body">
+        <div class="mis-preg-row">
+          <span class="mis-preg-ref">#3847</span>
+          <div class="mis-preg-info">
+            <div class="mis-preg-cat"><span class="qbadge qbadge-kashrut">Kashrut</span></div>
+            <div class="mis-preg-fecha">Enviada el 28 Mar 2024</div>
+          </div>
+          <span class="badge badge-active" style="font-size:.7rem;">Respondida — pública</span>
+          <button class="btn btn-sm btn-secondary" onclick="showToast('Respuesta visible en la sección pública','info')">Ver respuesta</button>
+        </div>
+        <div class="mis-preg-row">
+          <span class="mis-preg-ref">#3712</span>
+          <div class="mis-preg-info">
+            <div class="mis-preg-cat"><span class="qbadge qbadge-shabat">Shabat</span></div>
+            <div class="mis-preg-fecha">Enviada el 15 Mar 2024</div>
+          </div>
+          <span class="badge" style="background:#DBEAFE;color:#1E40AF;font-size:.7rem;"><span style="background:#3B82F6;" class="badge-dot-inner"></span>Respondida — privada</span>
+          <button class="btn btn-sm btn-secondary">Ver respuesta</button>
+        </div>
+        <div class="mis-preg-row">
+          <span class="mis-preg-ref">#3891</span>
+          <div class="mis-preg-info">
+            <div class="mis-preg-cat"><span class="qbadge qbadge-tefila">Tefila</span></div>
+            <div class="mis-preg-fecha">Enviada el 30 Mar 2024</div>
+          </div>
+          <span class="badge badge-pending" style="font-size:.7rem;">Pendiente de respuesta</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-container"></div>
+<script src="/vendor/supabase.js"></script><script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+<script>
+  requireAuth();
+  initNav('rav');
+
+  /* ─── Bandeja del Rav (solo admin) ─── */
+  (function() {
+    const u = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!u || u.role !== 'admin') return;
+
+    const inner = document.querySelector('.rav-inner');
+    if (!inner) return;
+
+    const section = document.createElement('div');
+    section.id = 'rav-inbox';
+    section.style.cssText = 'margin-top:32px;';
+    section.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <p style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--color-gold-dark,#9a7a2a);">Panel del Rav</p>
+          <h2 style="font-size:1.25rem;font-weight:700;color:var(--color-text);">Preguntas recibidas</h2>
+        </div>
+        <button onclick="loadPreguntas()" style="font-size:.8rem;padding:6px 14px;border-radius:999px;border:1.5px solid var(--color-border);background:#fff;cursor:pointer;color:var(--color-text-muted);">↺ Actualizar</button>
+      </div>
+      <div id="rav-inbox-list"><p style="text-align:center;color:var(--color-text-muted);padding:24px 0;">Cargando preguntas…</p></div>`;
+    inner.appendChild(section);
+
+    loadPreguntas();
+  })();
+
+  async function loadPreguntas() {
+    const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+    if (!sb) return;
+    const list = document.getElementById('rav-inbox-list');
+    if (!list) return;
+    try {
+      const { data, error } = await sb.from('preguntas_rav').select('*').order('created_at', { ascending: false });
+      if (error || !data?.length) {
+        list.innerHTML = '<p style="text-align:center;color:var(--color-text-muted);padding:24px 0;">No hay preguntas aún</p>';
+        return;
+      }
+      list.innerHTML = data.map(p => {
+        const fecha = new Date(p.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
+        const estadoColor = p.estado === 'respondida' ? '#059669' : '#D97706';
+        const estadoLabel = p.estado === 'respondida' ? 'Respondida' : 'Pendiente';
+        return `<div id="preg-${p.id}" style="background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,.08);padding:18px 20px;margin-bottom:14px;border-left:4px solid ${estadoColor};">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--color-bg);color:var(--color-text-muted);">${escHtml(p.categoria || 'Sin categoría')}</span>
+              <span style="font-size:.7rem;color:var(--color-text-muted);">${escHtml(p.usuario_nombre || 'Anónimo')} · ${fecha}</span>
+            </div>
+            <span style="font-size:.7rem;font-weight:600;color:${estadoColor};">${estadoLabel}</span>
+          </div>
+          <p style="font-size:.9rem;color:var(--color-text);line-height:1.55;margin-bottom:12px;">${escHtml(p.pregunta)}</p>
+          ${p.respuesta ? `<div style="background:#F0FDF4;border-radius:8px;padding:12px 14px;font-size:.875rem;color:#065F46;line-height:1.5;"><strong>Respuesta:</strong> ${escHtml(p.respuesta)}</div>` : `
+          <details style="margin-top:4px;">
+            <summary style="font-size:.8rem;cursor:pointer;color:var(--color-primary);font-weight:600;list-style:none;">✏️ Responder</summary>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+              <textarea id="resp-${p.id}" rows="3" placeholder="Escribe tu respuesta…" style="border:1.5px solid var(--color-border);border-radius:8px;padding:9px 12px;font-size:.875rem;font-family:inherit;outline:none;resize:vertical;width:100%;box-sizing:border-box;"></textarea>
+              <button onclick="responderPregunta('${p.id}')" style="align-self:flex-end;padding:7px 18px;background:var(--color-primary);color:#fff;border:none;border-radius:8px;font-size:.875rem;font-weight:600;cursor:pointer;">Publicar respuesta</button>
+            </div>
+          </details>`}
+        </div>`;
+      }).join('');
+    } catch(e) { list.innerHTML = '<p style="color:#ef4444;text-align:center;padding:20px;">Error al cargar preguntas</p>'; }
+  }
+
+  async function responderPregunta(id) {
+    const resp = document.getElementById(`resp-${id}`)?.value.trim();
+    if (!resp) { alert('Escribe una respuesta'); return; }
+    const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+    if (!sb) return;
+    const { error } = await sb.from('preguntas_rav').update({ respuesta: resp, estado: 'respondida' }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    if (typeof showToast === 'function') showToast('Respuesta publicada', 'success');
+    loadPreguntas();
+  }
+
+
+  /* ─── Categoría seleccionada ─── */
+  let selectedCat = '';
+  function selectCat(el) {
+    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    selectedCat = el.dataset.cat;
+    document.getElementById('err-cat').style.display = 'none';
+  }
+
+  /* ─── Contador textarea ─── */
+  function updateCount(el) {
+    const len = el.value.length;
+    const span = document.getElementById('char-count');
+    span.textContent = `${len} / 1000`;
+    span.className = 'textarea-count' + (len > 900 ? (len >= 1000 ? ' at-limit' : ' near-limit') : '');
+    if (len >= 20) document.getElementById('err-textarea').style.display = 'none';
+  }
+
+  /* ─── Enviar pregunta ─── */
+  async function enviarPregunta() {
+    const text = document.getElementById('rav-textarea').value.trim();
+    let valid = true;
+    if (!selectedCat) { document.getElementById('err-cat').style.display = ''; valid = false; }
+    if (text.length < 20) { document.getElementById('err-textarea').style.display = ''; valid = false; }
+    if (!valid) return;
+
+    const user = getCurrentUser();
+    const publica = document.getElementById('toggle-publico').checked;
+    const ref = '#' + String(Math.floor(1000 + Math.random() * 9000));
+
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        const { error: pregErr } = await sb.from('preguntas_rav').insert({
+          usuario_id: user?.userId || null,
+          usuario_nombre: user?.name || 'Miembro',
+          categoria: selectedCat,
+          pregunta: text,
+          anonima: !publica,
+          publica: publica,
+          estado: 'pendiente',
+          referencia: ref
+        });
+        if (typeof trackEvent === 'function') {
+          if (pregErr) trackEvent('pregunta_error', { msg: String(pregErr.message).slice(0, 120) });
+          else trackEvent('pregunta_ok', { categoria: String(selectedCat), publica });
+        }
+      } catch (e) { /* fallback silencioso */ }
+    }
+
+
+    document.getElementById('confirm-ref-num').textContent = ref;
+    document.getElementById('rav-form-body').style.display = 'none';
+    document.getElementById('rav-confirm').style.display = 'block';
+  }
+
+  function resetForm() {
+    document.getElementById('rav-form-body').style.display = '';
+    document.getElementById('rav-confirm').style.display = 'none';
+    document.getElementById('rav-textarea').value = '';
+    document.getElementById('char-count').textContent = '0 / 1000';
+    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+    selectedCat = '';
+  }
+
+  /* ─── Mis preguntas toggle ─── */
+  function toggleMisPreguntas() {
+    const body    = document.getElementById('mis-preg-body');
+    const chevron = document.getElementById('mis-preg-chevron');
+    const open    = body.style.display === 'block';
+    body.style.display    = open ? 'none' : 'block';
+    chevron.classList.toggle('open', !open);
+  }
+
+  /* ─── Datos Q&A ─── */
+  const QA_DATA = [
+    {
+      id: 'qa1', cat: 'Kashrut', fecha: '29 Mar 2024',
+      pregunta: '¿Se puede usar el mismo lavavajillas para vajilla láctea y cárnica si se pone un ciclo vacío entre un uso y otro?',
+      respuesta: 'Esta es una cuestión debatida entre las autoridades halachicas contemporáneas. La opinión mayoritaria de los poskim sefardíes, siguiendo al HaRav Ovadia Yosef ztz"l, es que bediavad (a posteriori) se puede utilizar el mismo lavavajillas intercalando un ciclo de limpieza completo con agua caliente y sin vajilla. Sin embargo, lechatchila (idealmente) lo correcto es tener dos lavavajillas separados. Los poskim ashkenazíes son en general más estrictos y requieren dos máquinas distintas. En la práctica, quien no pueda tener dos máquinas puede apoyarse en la opinión permisiva, asegurándose de que el ciclo de limpieza sea a alta temperatura (más de 60°C) y sin restos de comida.',
+      util: 23, fecha_resp: '30 Mar 2024'
+    },
+    {
+      id: 'qa2', cat: 'Shabat', fecha: '20 Mar 2024',
+      pregunta: '¿Se puede usar el móvil para llamadas de emergencia en Shabat si no hay otra forma de pedir ayuda?',
+      respuesta: 'El principio de pikuaj nefesh (preservación de la vida) es uno de los valores fundamentales de la Torá y anula prácticamente todas las prohibiciones, incluidas las de Shabat. En caso de peligro real para la vida —propio o ajeno— no solo se permite sino que se obliga a llamar al servicio de emergencias. El Shulján Aruj establece que "jaj l\'olam gueval" — no hay límite cuando la vida está en riesgo. Es importante recordar que esto aplica a peligro real, no a incomodidades. En caso de duda sobre si la situación es grave, se actúa como si lo fuera. Lo hace el propio individuo, no busca a un no judío para que lo haga por él.',
+      util: 41, fecha_resp: '21 Mar 2024'
+    },
+    {
+      id: 'qa3', cat: 'Tefila', fecha: '15 Mar 2024',
+      pregunta: '¿Cuántas veces se puede interrumpir la Amidá en caso de urgencia? ¿Está permitido hablar entre los pies durante la repetición del Jazán?',
+      respuesta: 'La Amidá es la oración central y debe rezarse con la máxima concentración, sin interrupciones. Solo está permitido interrumpirla en dos situaciones excepcionales: peligro de vida inmediato (pikuaj nefesh) o respeto a un rey. Durante la repetición del Jazán (Jazarat HaSatz) está absolutamente prohibido hablar, ni siquiera palabras de Torá. Los Rishonim son muy estrictos en esto. Quien habla durante la repetición comete una transgresión grave y, según el Mishná Beruráh, la comunidad que tolera esto debería considerar suprimir la repetición. En la práctica, cualquier interrupción para asuntos no urgentes anula el mérito de la tefila.',
+      util: 18, fecha_resp: '16 Mar 2024'
+    },
+    {
+      id: 'qa4', cat: 'Familia', fecha: '10 Mar 2024',
+      pregunta: '¿Qué tradición seguimos para la noche del Séder de Pesaj si en la familia hay mezcla de costumbres sefaradíes y ashkenazíes?',
+      respuesta: 'Mazel tov por tener una familia tan diversa en tradiciones. La regla general es que cada uno sigue el nusaj de su padre (minhag avot). En el caso del Séder familiar mixto, lo más práctico y bello es adoptar el nusaj de quien dirige el Séder, con respeto por las variantes. Para el kitniyot, los miembros sefardíes pueden comerlo aunque haya ashkenazíes presentes; no hay prohibición de tenerlo en la mesa. Lo importante es que todos los presentes entiendan el Hagadá y se sientan parte de la celebración. Sugiero usar una Hagadá bilingüe hebreo-español y que cada uno lea en su tradición los pasajes que conoce de memoria. La unidad familiar es también un valor de la noche de Pesaj.',
+      util: 35, fecha_resp: '12 Mar 2024'
+    },
+    {
+      id: 'qa5', cat: 'Festividades', fecha: '5 Mar 2024',
+      pregunta: '¿Se puede encender la Janukiá con velas de cualquier color o existe alguna preferencia halachica?',
+      respuesta: 'No existe ninguna prohibición ni preferencia halachica respecto al color de las velas de Janucá. Lo esencial es que las velas sean de cera, aceite o cualquier material que arda de forma uniforme durante al menos 30 minutos después de la aparición de las estrellas (tzet hakochavim). La costumbre extendida de usar velas blancas es puramente estética, sin base halachica. Usar velas de colores, especialmente azules y blancos que recuerdan a los colores de Israel o de la Janucá, es perfectamente válido y puede añadir alegría a la mitzva. Lo más importante es colocar la Janukiá en el lugar adecuado para publicitar el milagro (pirsumei nisa).',
+      util: 12, fecha_resp: '6 Mar 2024'
+    },
+    {
+      id: 'qa6', cat: 'Halaká', fecha: '28 Feb 2024',
+      pregunta: '¿Cuál es la diferencia práctica entre un ger tzedek (converso completo) y alguien que solo observa las 7 leyes de Noé (Ben Noaj)?',
+      respuesta: 'La distinción es fundamental en la halajá. Un Ben Noaj (Noájida) es cualquier gentil que observa las 7 mitzvot universales dadas a Noé: no idolatría, no blasfemia, no asesinato, no inmoralidad sexual, no robo, establecer tribunales de justicia, y no comer un miembro de un animal vivo. El Ben Noaj tiene un lugar garantizado en el Olam HaBa (Mundo Venidero) si cumple estas leyes por ser mandato divino. Un ger tzedek, en cambio, se ha convertido formalmente al judaísmo mediante beit din, milá (varones) y tevilá en el mikvé. Pasa a ser judío a todos los efectos: obligado en todas las 613 mitzvot, puede casarse con judío/a, cuenta para minián (según las poskim). La conversión es irreversible. La diferencia no es de valor espiritual, sino de estatus legal dentro del sistema halachico.',
+      util: 29, fecha_resp: '1 Mar 2024'
+    }
+  ];
+
+  const catBadgeClass = {
+    'Halaká':'qbadge-halaka','Shabat':'qbadge-shabat','Kashrut':'qbadge-kashrut',
+    'Familia':'qbadge-familia','Tefila':'qbadge-tefila','Festividades':'qbadge-festividades',
+    'Personal':'qbadge-personal','Otro':'qbadge-otro'
+  };
+
+  const likedSet = new Set();
+  const localUtils = {};
+  QA_DATA.forEach(q => { localUtils[q.id] = q.util; });
+
+  let activeQCat = '';
+
+  function setQCat(el, cat) {
+    document.querySelectorAll('.qchip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    activeQCat = cat;
+    filterQA();
+  }
+
+  function filterQA() {
+    const q     = (document.getElementById('qa-search').value || '').toLowerCase();
+    const order = document.getElementById('qa-order').value;
+
+    let items = QA_DATA.filter(qa => {
+      const matchCat = !activeQCat || qa.cat === activeQCat;
+      const matchQ   = !q || qa.pregunta.toLowerCase().includes(q) || qa.respuesta.toLowerCase().includes(q);
+      return matchCat && matchQ;
+    });
+
+    if (order === 'util') items = [...items].sort((a,b) => localUtils[b.id] - localUtils[a.id]);
+
+    renderQA(items);
+  }
+
+  function renderQA(items) {
+    const list = document.getElementById('qa-list');
+    if (!items.length) {
+      list.innerHTML = `<div class="empty-state" style="padding:40px 0;">
+        <p class="empty-state-title">Sin resultados</p>
+        <p class="empty-state-desc">Prueba con otro término de búsqueda o categoría.</p>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = items.map(qa => {
+      const badgeClass = catBadgeClass[qa.cat] || 'qbadge-otro';
+      const utilCount  = localUtils[qa.id];
+      const isLiked    = likedSet.has(qa.id);
+      const isLong     = qa.respuesta.length > 320;
+
+      return `
+        <div class="qa-card">
+          <div class="qa-question-part">
+            <div class="qa-question-top">
+              <span class="qbadge ${badgeClass}">${escHtml(qa.cat)}</span>
+              <div class="q-icon">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+                </svg>
+              </div>
+            </div>
+            <p class="qa-question-text">${escHtml(qa.pregunta)}</p>
+            <p class="qa-question-meta">Pregunta anónima · ${escHtml(qa.fecha)}</p>
+          </div>
+          <div class="qa-answer-part">
+            <div class="rav-answerer">
+              <div class="rav-avatar">HR</div>
+              <div>
+                <p class="rav-info-name">{{rabbi.name}}</p>
+                <p class="rav-info-role">Rabino de {{name}}</p>
+              </div>
+            </div>
+            <div id="resp-text-${qa.id}">
+              <p class="qa-answer-text ${isLong ? 'qa-answer-clamp' : ''}" id="resp-p-${qa.id}">${escHtml(qa.respuesta)}</p>
+              ${isLong ? `<button class="qa-expand-btn" id="expand-btn-${qa.id}" onclick="expandResp('${qa.id}')">
+                Leer respuesta completa
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                </svg>
+              </button>` : ''}
+            </div>
+          </div>
+          <div class="qa-card-footer">
+            <button class="qa-action-btn ${isLiked ? 'liked' : ''}" id="like-btn-${qa.id}" onclick="toggleLike('${qa.id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:16px;height:16px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m10.598-9.75H14.25M5.904 18.5c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 0 1-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 9.953 4.167 9.5 5 9.5h1.053c.472 0 .745.556.5.96a8.958 8.958 0 0 0-1.302 4.665c0 1.194.232 2.333.654 3.375Z"/></svg> Útil (<span id="util-count-${qa.id}">${utilCount}</span>)
+            </button>
+            <button class="qa-action-btn" onclick="compartir('${qa.id}')">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:15px;height:15px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"/>
+              </svg>
+              Compartir
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function expandResp(id) {
+    const p   = document.getElementById(`resp-p-${id}`);
+    const btn = document.getElementById(`expand-btn-${id}`);
+    p.classList.remove('qa-answer-clamp');
+    btn.style.display = 'none';
+  }
+
+  function toggleLike(id) {
+    const btn = document.getElementById(`like-btn-${id}`);
+    const cnt = document.getElementById(`util-count-${id}`);
+    if (likedSet.has(id)) {
+      likedSet.delete(id);
+      localUtils[id]--;
+      btn.classList.remove('liked');
+    } else {
+      likedSet.add(id);
+      localUtils[id]++;
+      btn.classList.add('liked');
+    }
+    cnt.textContent = localUtils[id];
+  }
+
+  function compartir(id) {
+    showToast('Enlace copiado al portapapeles', 'success');
+  }
+
+  /* ─── Cargar Q&A desde Supabase ─── */
+  async function loadQAFromSupabase() {
+    const sb = getSupabase();
+    if (!sb) { filterQA(); return; }
+    try {
+      const { data } = await sb
+        .from('preguntas_rav')
+        .select('*')
+        .eq('estado', 'respondida')
+        .eq('publica', true)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (data && data.length) {
+        const mapped = data.map(r => ({
+          id: r.id,
+          cat: r.categoria,
+          fecha: new Date(r.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' }),
+          pregunta: r.pregunta,
+          respuesta: r.respuesta || '',
+          util: 0,
+          fecha_resp: r.updated_at ? new Date(r.updated_at).toLocaleDateString('es-ES') : ''
+        }));
+        QA_DATA.unshift(...mapped);
+      }
+    } catch(e) { /* usa QA_DATA mock como fallback */ }
+    filterQA();
+  }
+
+  /* ─── Cargar mis preguntas desde Supabase ─── */
+  async function loadMisPreguntas() {
+    const sb = getSupabase();
+    const user = getCurrentUser();
+    if (!sb || !user) return;
+    try {
+      const { data } = await sb
+        .from('preguntas_rav')
+        .select('*')
+        .eq('usuario_id', user.userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!data || !data.length) return;
+      const statusLabel = { pendiente: 'Pendiente de respuesta', respondida: 'Respondida', respondida_publica: 'Respondida — pública' };
+      const badgeClass = { pendiente: 'badge-pending', respondida: '', respondida_publica: 'badge-active' };
+      const body = document.getElementById('mis-preg-body');
+      const badge = document.querySelector('#mis-preg-card .badge');
+      if (badge) badge.textContent = data.length;
+      body.innerHTML = data.map(p => {
+        const catClass = (p.categoria || 'otro').toLowerCase().replace(/[áéíóúñ]/g, c => ({'á':'a','é':'e','í':'i','ó':'o','ú':'u','ñ':'n'}[c]));
+        const estado = p.publica && p.estado === 'respondida' ? 'respondida_publica' : (p.estado || 'pendiente');
+        const fecha = new Date(p.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
+        return `<div class="mis-preg-row">
+          <span class="mis-preg-ref">${escHtml(p.referencia || ('#' + p.id?.slice(0,6)))}</span>
+          <div class="mis-preg-info">
+            <div class="mis-preg-cat"><span class="qbadge qbadge-${catClass}">${escHtml(p.categoria)}</span></div>
+            <div class="mis-preg-fecha">Enviada el ${fecha}</div>
+          </div>
+          <span class="badge ${badgeClass[estado] || ''}" style="font-size:.7rem;">${statusLabel[estado] || estado}</span>
+          ${p.respuesta ? `<button class="btn btn-sm btn-secondary" onclick="showToast('${escHtml(p.respuesta.slice(0,80))}…','info',6000)">Ver respuesta</button>` : ''}
+        </div>`;
+      }).join('');
+    } catch(e) { /* mantiene HTML mock */ }
+  }
+
+  loadQAFromSupabase();
+  loadMisPreguntas();
+</script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
+  </script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

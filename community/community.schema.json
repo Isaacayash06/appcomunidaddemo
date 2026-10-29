@@ -1,0 +1,326 @@
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "shortName": {
+      "type": "string"
+    },
+    "appName": {
+      "type": "string"
+    },
+    "tagline": {
+      "type": "string"
+    },
+    "taglineEn": {
+      "type": "string"
+    },
+    "centerName": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "labels": {
+      "type": "object",
+      "properties": {
+        "services": {
+          "type": "string"
+        },
+        "servicesEn": {
+          "type": "string"
+        },
+        "business": {
+          "type": "string"
+        },
+        "businessEn": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "mikve": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rabbi": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "short": {
+          "type": "string"
+        },
+        "surname": {
+          "type": "string"
+        },
+        "bio": {
+          "type": "string"
+        },
+        "bioEn": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "team": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "area": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "contact": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "privacyEmail": {
+          "type": "string"
+        },
+        "donationsEmail": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "whatsapp": {
+          "type": "string"
+        },
+        "street": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "social": {
+      "type": "object",
+      "properties": {
+        "instagram": {
+          "type": "string"
+        },
+        "facebook": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "members": {
+          "type": "string"
+        },
+        "founded": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "membership": {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string"
+        },
+        "individual": {
+          "type": "string"
+        },
+        "student": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "legal": {
+      "type": "object",
+      "properties": {
+        "entityName": {
+          "type": "string"
+        },
+        "entityType": {
+          "type": "string"
+        },
+        "taxId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "cityKey": {
+          "type": "string"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        },
+        "timezone": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "theme": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "string"
+        },
+        "accent": {
+          "type": "string"
+        },
+        "background": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "app": {
+      "type": "object",
+      "properties": {
+        "scheme": {
+          "type": "string"
+        },
+        "androidPackage": {
+          "type": "string"
+        },
+        "iosBundleId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stores": {
+      "type": "object",
+      "properties": {
+        "appStore": {
+          "type": "string"
+        },
+        "playStore": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "integrations": {
+      "type": "object",
+      "properties": {
+        "supabaseUrl": {
+          "type": "string"
+        },
+        "supabaseAnonKey": {
+          "type": "string"
+        },
+        "supabaseProxy": {
+          "type": "boolean"
+        },
+        "stripePublishableKey": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "modules": {
+      "type": "object",
+      "properties": {
+        "calendario": {
+          "type": "boolean"
+        },
+        "eventos": {
+          "type": "boolean"
+        },
+        "noticias": {
+          "type": "boolean"
+        },
+        "shiurim": {
+          "type": "boolean"
+        },
+        "rav": {
+          "type": "boolean"
+        },
+        "citas": {
+          "type": "boolean"
+        },
+        "siddur": {
+          "type": "boolean"
+        },
+        "donativos": {
+          "type": "boolean"
+        },
+        "mikve": {
+          "type": "boolean"
+        },
+        "business": {
+          "type": "boolean"
+        },
+        "servicios": {
+          "type": "boolean"
+        },
+        "galeria": {
+          "type": "boolean"
+        },
+        "voluntariado": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "$schema": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Configuración de comunidad",
+  "required": [
+    "name",
+    "city",
+    "domain",
+    "contact"
+  ]
+}

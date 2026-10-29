@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <script>
+    // Redirección instantánea si ya hay sesión activa, ANTES de que se
+    // cargue/pinte nada del login — se ejecuta de forma síncrona y bloquea
+    // el resto del parseo del <head>, así el navegador ni siquiera llega a
+    // renderizar el formulario de login. Duplica a propósito la lectura de
+    // localStorage que hace getCurrentUser() en auth.js: no puede esperar a
+    // que carguen ese script ni el CDN de Supabase, o ya se vería el flash.
+    (function () {
+      try {
+        const raw = localStorage.getItem('kehila_user');
+        if (!raw) return;
+        const user = JSON.parse(raw);
+        if (user && user.status === 'active') {
+          // ¿Venía de un enlace (p. ej. un evento compartido)? → allí
+          let dest = user.role === 'admin' ? 'admin.html' : 'home.html';
+          try {
+            const v = JSON.parse(localStorage.getItem('kehila_volver') || 'null');
+            if (v && Date.now() - v.t < 3600e3 && /^[a-z0-9-]+\.html([?#][^\s<>"']*)?$/i.test(v.p) && !/^index\.html/i.test(v.p)) dest = v.p;
+            localStorage.removeItem('kehila_volver');
+          } catch (e) {}
+          window.location.replace(dest);
+        }
+      } catch (e) { /* localStorage corrupto o bloqueado: se queda en el login */ }
+    })();
+  </script>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Acceso</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    /* ─── Página de acceso ─── */
+    body {
+      height: 100vh;
+      display: flex;
+      align-items: stretch;
+      background: var(--color-bg);
+      overflow: hidden;
+    }
+
+    /* ─── Panel hero (izquierda) ─── */
+    .auth-hero {
+      flex: 0 0 52%;
+      background: var(--color-primary);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: 48px 52px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ─── Mosaico de fotos de la comunidad ─── */
+    .hero-mosaic {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 3px;
+    }
+
+    .mosaic-cell {
+      background-size: cover;
+      background-position: center;
+      transition: transform 8s ease;
+    }
+
+    .auth-hero:hover .mosaic-cell {
+      transform: scale(1.05);
+    }
+
+    /* ─── Degradado oscuro sobre las fotos ─── */
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(17, 28, 52, 0.40) 0%,
+        rgba(17, 28, 52, 0.50) 35%,
+        rgba(17, 28, 52, 0.88) 68%,
+        rgba(17, 28, 52, 0.97) 100%
+      );
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 400px;
+    }
+
+    /* ─── Divisor dorado ─── */
+    .hero-divider {
+      width: 36px;
+      height: 2px;
+      background: var(--color-gold);
+      opacity: 0.7;
+      margin: 20px 0;
+      border-radius: 1px;
+    }
+
+    /* ─── Stats de la comunidad ─── */
+    .hero-stats {
+      display: flex;
+      gap: 28px;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .stat-num {
+      font-family: var(--font-brand);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-gold);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.45);
+    }
+
+    /* Logo en hero */
+    .hero-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
+    .hero-logo-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(201,168,76,0.15);
+      border: 1.5px solid var(--color-gold);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-logo-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--color-gold);
+    }
+
+    .hero-logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-logo-name {
+      font-family: var(--font-brand);
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-white);
+      line-height: 1;
+    }
+
+    .hero-logo-sub {
+      font-size: 0.6875rem;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 3px;
+    }
+
+    .hero-tagline {
+      font-family: var(--font-brand);
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: var(--color-white);
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .hero-tagline span {
+      color: var(--color-gold);
+    }
+
+    .hero-desc {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.7;
+      margin-bottom: 44px;
+    }
+
+    /* (hero-features replaced by hero-stats — see above) */
+
+    /* ─── Panel formulario (derecha) ─── */
+    .auth-form-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--color-white);
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .auth-form-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 52px;
+      min-height: min-content;
+    }
+
+    .auth-form-inner {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* Alternancia de estados con animación */
+    .auth-view {
+      width: 100%;
+      animation: viewIn 0.32s ease forwards;
+    }
+
+    @keyframes viewIn {
+      from { opacity: 0; transform: translateX(24px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes viewInReverse {
+      from { opacity: 0; transform: translateX(-24px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .auth-view.reverse {
+      animation: viewInReverse 0.32s ease forwards;
+    }
+
+    /* Cabecera del formulario */
+    .auth-form-header {
+      margin-bottom: 28px;
+    }
+
+    .auth-form-pretitle {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-gold-dark);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .auth-form-pretitle::before {
+      content: '';
+      width: 14px;
+      height: 2px;
+      background: var(--color-gold);
+      border-radius: 1px;
+      display: block;
+    }
+
+    .auth-form-title {
+      font-family: var(--font-brand);
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+
+    .auth-form-subtitle {
+      font-size: 0.9375rem;
+      color: var(--color-text-muted);
+    }
+
+    /* Campos del formulario */
+    .input-with-icon {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-with-icon .input-icon {
+      position: absolute;
+      left: 13px;
+      width: 18px;
+      height: 18px;
+      color: var(--color-text-light);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .input-with-icon .form-input {
+      padding-left: 42px;
+    }
+
+    .input-with-icon .input-toggle {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-text-light);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      border-radius: var(--radius-xs);
+      transition: color var(--transition-fast);
+    }
+
+    .input-with-icon .input-toggle:hover {
+      color: var(--color-text);
+    }
+
+    .input-with-icon .input-toggle svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    /* Prefijo teléfono */
+    .input-prefix {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .input-prefix-label {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      background: var(--color-bg);
+      border: 1.5px solid var(--color-border);
+      border-right: none;
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .input-prefix .form-input {
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      flex: 1;
+    }
+
+    /* Indicador de fortaleza de contraseña */
+    .password-strength {
+      margin-top: 6px;
+    }
+
+    .strength-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .strength-segment {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--color-border);
+      transition: background 0.3s ease;
+    }
+
+    .strength-segment.filled.weak   { background: var(--color-danger); }
+    .strength-segment.filled.medium { background: var(--color-warning); }
+    .strength-segment.filled.strong { background: var(--color-success); }
+
+    .strength-label {
+      font-size: 0.725rem;
+      font-weight: 500;
+      color: var(--color-text-light);
+    }
+
+    .strength-label.weak   { color: var(--color-danger); }
+    .strength-label.medium { color: var(--color-warning); }
+    .strength-label.strong { color: var(--color-success); }
+
+    /* Mensajes de estado */
+    .auth-message {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      animation: fadeSlideDown 0.25s ease;
+    }
+
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-message.error {
+      background: var(--color-danger-light);
+      color: #991B1B;
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+
+    .auth-message.info {
+      background: #EEF2FA;
+      color: #1B2E5E;
+      border: 1px solid rgba(27,46,94,0.15);
+    }
+
+    .auth-message.warning {
+      background: var(--color-warning-light);
+      color: #92400E;
+      border: 1px solid rgba(245,158,11,0.2);
+    }
+
+    .auth-message svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Banner info registro */
+    .auth-info-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--color-info-light);
+      color: #1E40AF;
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .auth-info-banner svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Checkbox custom */
+    .checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      cursor: pointer;
+      accent-color: var(--color-primary);
+    }
+
+    .checkbox-label a {
+      color: var(--color-primary);
+      font-weight: 500;
+      text-decoration: underline;
+      text-decoration-color: transparent;
+      transition: text-decoration-color var(--transition-fast);
+    }
+
+    .checkbox-label a:hover {
+      text-decoration-color: var(--color-primary);
+    }
+
+    /* Link alternar vista */
+    .auth-switch {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+    }
+
+    .auth-switch button {
+      background: none;
+      border: none;
+      color: var(--color-primary);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: inherit;
+      padding: 0;
+      transition: color var(--transition-fast);
+      text-decoration: underline;
+      text-decoration-color: transparent;
+    }
+
+    .auth-switch button:hover {
+      color: var(--color-gold-dark);
+      text-decoration-color: var(--color-gold-dark);
+    }
+
+    /* ─── Pantalla de éxito ─── */
+    .success-view {
+      text-align: center;
+      padding: 20px 0;
+      animation: viewIn 0.4s ease;
+    }
+
+    .success-check {
+      width: 80px;
+      height: 80px;
+      background: var(--color-success-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      animation: checkBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+    }
+
+    @keyframes checkBounce {
+      from { opacity: 0; transform: scale(0.5); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .success-check svg {
+      width: 40px;
+      height: 40px;
+      color: var(--color-success);
+    }
+
+    .success-title {
+      font-family: var(--font-brand);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 10px;
+    }
+
+    .success-desc {
+      color: var(--color-text-muted);
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    /* ─── Footer ─── */
+    .auth-footer {
+      padding: 14px 52px;
+      border-top: 1px solid var(--color-border-light);
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--color-text-light);
+      background: var(--color-white);
+      flex-shrink: 0;
+    }
+
+    /* ─── Logo mobile (oculto — hero visible en móvil ahora) ─── */
+    .mobile-logo { display: none !important; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1100px) {
+      .auth-hero { flex: 0 0 48%; padding: 40px 44px; }
+    }
+
+    @media (max-width: 900px) {
+      .auth-hero { flex: 0 0 44%; padding: 36px 32px; }
+      .hero-tagline { font-size: 1.75rem; }
+      .auth-form-wrapper { padding: 32px 28px; }
+    }
+
+    @media (max-width: 768px) {
+      body { overflow: auto; flex-direction: column; }
+      .auth-hero { flex: 0 0 340px; justify-content: flex-end; padding: 20px 20px 18px; }
+      .hero-mosaic { opacity: 0.85; }
+      .hero-logo { margin-bottom: 8px; }
+      .hero-logo-icon { width: 42px; height: 42px; }
+      .hero-logo-name { font-size: 1.45rem; }
+      .hero-logo-sub { font-size: 0.72rem; }
+      .hero-divider { display: none; }
+      .hero-tagline { font-size: 1.55rem; margin-bottom: 4px; }
+      .hero-desc { display: none; }
+      .hero-stats { gap: 16px; margin-top: 8px; }
+      .stat-num { font-size: 1.1rem; }
+      .stat-label { font-size: 0.6rem; }
+      .auth-form-panel { min-height: calc(100vh - 340px); }
+      .auth-form-wrapper { padding: 20px 20px 24px; }
+      .auth-form-inner { max-width: 100%; }
+      .auth-footer { padding: 12px 20px; }
+      .mobile-logo { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .auth-hero { flex: 0 0 300px; }
+      .hero-stats { display: none; }
+      .hero-tagline { font-size: 1.35rem; }
+      .auth-form-panel { min-height: calc(100vh - 300px); }
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <script>
+    // Smart App Banner de Safari (iOS): «Abrir» en la app en esta misma página
+    (function(){ try { if (window.Capacitor) return; var m=document.createElement('meta'); m.name='apple-itunes-app';
+      m.content='app-id=6781786203, app-argument='+location.href; document.head.appendChild(m); } catch(e){} })();
+  </script>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+
+  <!-- ─── PANEL HERO (fotos reales de la comunidad) ─── -->
+  <div class="auth-hero" style="position:relative;">
+
+    <button class="lang-toggle-btn" onclick="toggleLang()" style="position:fixed;top:14px;right:14px;z-index:999;display:flex;align-items:center;gap:7px;font-size:0.9rem;font-weight:800;letter-spacing:0.02em;color:#1B2E5E;background:#F5C542;border:none;border-radius:24px;padding:9px 16px 9px 12px;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(0,0,0,0.35);">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9Z"/></svg>
+      <span class="lang-toggle-label">EN</span>
+    </button>
+
+    <!-- Mosaico 3×3 con fotos de la kehilá -->
+    <div class="hero-mosaic">
+      <div class="mosaic-cell" style="background-image:url('img/placeholder.svg')"></div>
+      <div class="mosaic-cell" style="background-image:url('img/placeholder.svg'); background-position: center top;"></div>
+      <div class="mosaic-cell" style="background-image:url('img/placeholder.svg')"></div>
+      <div class="mosaic-cell" style="background-image:url('img/placeholder.svg')"></div>
+      <div class="mosaic-cell" style="background-image:url('img/placeholder.svg'); background-position: center top;"></div>
+      <div class="mosaic-cell" style="background-image:url('img/placeholder.svg')"></div>
+      <div class="mosaic-cell" style="background-image:url('img/placeholder.svg')"></div>
+      <div class="mosaic-cell" style="background-image:url('img/placeholder.svg')"></div>
+      <div class="mosaic-cell" style="background-image:url('img/placeholder.svg')"></div>
+    </div>
+    <!-- Degradado oscuro hacia abajo -->
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+
+      <div class="hero-logo" data-action="ir-login" style="cursor:pointer">
+        <img src="img/logo.svg" alt="{{name}}" style="width:52px;height:52px;object-fit:contain;display:block;flex-shrink:0;">
+        <div class="hero-logo-text">
+          <span class="hero-logo-name">{{name}}</span>
+          <span class="hero-logo-sub">{{taglineUpper}}</span>
+        </div>
+      </div>
+
+      <div class="hero-divider"></div>
+
+      <h1 class="hero-tagline">
+        Tu hogar judío en <span>{{city}}</span>
+      </h1>
+      <p class="hero-desc">
+        Conecta con tu comunidad judía. Rezos, eventos, kosher, shiurim y mucho más — todo en un solo lugar.
+      </p>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="stat-num">Desde {{stats.founded}}</span>
+          <span class="stat-label">Fundación</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-num">{{stats.members}}</span>
+          <span class="stat-label">Miembros</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-num">{{city}}</span>
+          <span class="stat-label">Ciudad</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── PANEL FORMULARIO ─── -->
+  <div class="auth-form-panel">
+
+    <!-- Logo mobile -->
+    <div class="mobile-logo" data-action="ir-login" style="cursor:pointer">
+      <img src="img/logo.svg" alt="{{name}}" style="width:32px;height:32px;object-fit:contain;display:block;flex-shrink:0;">
+      <span class="mobile-logo-name">{{shortName}}</span>
+    </div>
+
+    <div class="auth-form-wrapper">
+      <div class="auth-form-inner" id="form-container">
+
+        <!-- ═══ VISTA: LOGIN ═══ -->
+        <div id="view-login" class="auth-view">
+
+          <div class="auth-form-header">
+            <p class="auth-form-pretitle" data-i18n="login_pretitle">Acceso</p>
+            <h2 class="auth-form-title" data-i18n="login_title">Bienvenido de nuevo</h2>
+            <p class="auth-form-subtitle" data-i18n="login_subtitle">Accede a tu comunidad</p>
+          </div>
+
+          <!-- Mensaje de estado (error / warning) -->
+          <div id="login-message" class="auth-message" style="display:none;"></div>
+
+          <form id="login-form" novalidate>
+            <div class="flex-col gap-md">
+
+              <!-- Email -->
+              <div class="form-group">
+                <label class="form-label required" for="login-email" data-i18n="login_email">Correo electrónico</label>
+                <div class="input-with-icon">
+                  <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
+                  </svg>
+                  <input
+                    type="email"
+                    id="login-email"
+                    class="form-input"
+                    placeholder="tu@email.com"
+                    autocomplete="email"
+                    value=""
+                  >
+                </div>
+                <span class="form-error" id="login-email-error" style="display:none;"></span>
+              </div>
+
+              <!-- Password -->
+              <div class="form-group">
+                <label class="form-label required" for="login-password" data-i18n="login_password">Contraseña</label>
+                <div class="input-with-icon">
+                  <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+                  </svg>
+                  <input
+                    type="password"
+                    id="login-password"
+                    class="form-input"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                  >
+                  <button type="button" class="input-toggle" id="toggle-login-pw" aria-label="Mostrar contraseña">
+                    <svg id="eye-show-login" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                    </svg>
+                    <svg id="eye-hide-login" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="display:none;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/>
+                    </svg>
+                  </button>
+                </div>
+                <span class="form-error" id="login-pw-error" style="display:none;"></span>
+              </div>
+
+              <!-- Forgot password -->
+              <div style="text-align:right;margin-top:-4px;">
+                <button type="button" onclick="openForgotModal()" style="background:none;border:none;cursor:pointer;font-size:0.8125rem;color:var(--color-primary);font-weight:500;padding:0;font-family:inherit;transition:color 0.15s ease;" onmouseover="this.style.color='#A8892E'" onmouseout="this.style.color='var(--color-primary)'">¿Olvidaste tu contraseña? / Forgot password?</button>
+              </div>
+
+              <!-- Botón entrar -->
+              <button type="submit" class="btn btn-primary btn-lg w-full mt-sm" id="btn-login">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:18px;height:18px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"/>
+                </svg>
+                <span data-i18n="login_btn">Entrar</span>
+              </button>
+
+            </div>
+          </form>
+
+          <div class="auth-switch mt-lg">
+            <span data-i18n="login_register">¿Aún no eres miembro?</span>
+            <button type="button" onclick="showRegister()"><span data-i18n="login_register2">Solicitar acceso</span> →</button>
+          </div>
+
+
+        </div>
+        <!-- FIN VISTA LOGIN -->
+
+        <!-- ═══ VISTA: REGISTRO — 4 PASOS ═══ -->
+        <div id="view-register" class="auth-view" style="display:none;">
+
+          <a data-action="ir-login" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#718096;cursor:pointer;margin-bottom:1.5rem;text-decoration:none;transition:color 0.15s ease" onmouseover="this.style.color='#1B2E5E'" onmouseout="this.style.color='#718096'">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+            <span data-i18n="login_iniciar_sesion">Iniciar sesión</span>
+          </a>
+
+          <!-- Progress bar -->
+          <div id="reg-progress-bar" class="reg-steps-bar">
+            <!-- Franja de progreso (pasa de izq a der al completar pasos) -->
+            <div class="steps-track">
+              <div class="steps-track-fill" id="steps-track-fill"></div>
+            </div>
+            <div class="step active" id="step-node-1">
+              <div class="step-circle" id="step-circle-1">1</div>
+              <div class="step-label" id="step-label-1" data-i18n="reg_step1">Cuenta</div>
+            </div>
+            <div class="step" id="step-node-2">
+              <div class="step-circle" id="step-circle-2">2</div>
+              <div class="step-label" id="step-label-2" data-i18n="reg_step2">Identidad</div>
+            </div>
+            <div class="step" id="step-node-3">
+              <div class="step-circle" id="step-circle-3">3</div>
+              <div class="step-label" id="step-label-3" data-i18n="reg_step3">Residencia</div>
+            </div>
+            <div class="step" id="step-node-4">
+              <div class="step-circle" id="step-circle-4">4</div>
+              <div class="step-label" id="step-label-4" data-i18n="reg_step4">Revisión</div>
+            </div>
+          </div>
+
+          <!-- ── PASO 1: DATOS DE CUENTA ── -->
+          <div id="reg-step-1">
+            <div class="auth-form-header" style="margin-bottom:20px;">
+              <p class="auth-form-pretitle" data-i18n="reg_s1_pretitle">Paso 1 de 4</p>
+              <h2 class="auth-form-title" data-i18n="reg_s1_title">Crea tu cuenta</h2>
+              <p class="auth-form-subtitle" data-i18n="reg_s1_subtitle">Información básica de acceso</p>
+            </div>
+            <div class="flex-col gap-md">
+              <div class="grid-2 gap-sm">
+                <div class="form-group">
+                  <label class="form-label required" data-i18n="reg_nombre">Nombre</label>
+                  <input type="text" id="r1-nombre" class="form-input" data-i18n-attr="placeholder" data-i18n="reg_nombre_ph" placeholder="Como en tu DNI/Pasaporte" autocomplete="given-name">
+                  <span class="form-error" id="r1-nombre-err" style="display:none;"></span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label required" data-i18n="reg_apellidos">Apellidos</label>
+                  <input type="text" id="r1-apellidos" class="form-input" data-i18n-attr="placeholder" data-i18n="reg_apellidos_ph" placeholder="Apellidos completos" autocomplete="family-name">
+                  <span class="form-error" id="r1-apellidos-err" style="display:none;"></span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label required" data-i18n="reg_email">Correo electrónico</label>
+                <div class="input-with-icon">
+                  <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+                  <input type="email" id="r1-email" class="form-input" placeholder="tu@email.com" autocomplete="email">
+                </div>
+                <span class="form-hint" data-i18n="reg_email_hint">Recibirás comunicaciones importantes aquí</span>
+                <span class="form-error" id="r1-email-err" style="display:none;"></span>
+              </div>
+              <div class="form-group">
+                <label class="form-label"><span data-i18n="reg_telefono">Teléfono</span> <span style="font-weight:400;color:var(--color-text-muted,#718096);font-size:.85em;" data-i18n="reg_opcional">(opcional)</span></label>
+                <div class="input-prefix">
+                  <select id="r1-prefijo" class="form-input" style="max-width:100px;border-radius:var(--radius-sm) 0 0 var(--radius-sm);border-right:none;flex-shrink:0;">
+                    <option value="+34">+34 ES</option>
+                    <option value="+972">+972 IL</option>
+                    <option value="+1">+1 US</option>
+                    <option value="+44">+44 UK</option>
+                    <option value="+33">+33 FR</option>
+                    <option value="+54">+54 AR</option>
+                    <option value="+598">+598 UY</option>
+                    <option value="+52">+52 MX</option>
+                    <option value="" data-i18n="reg_otro">Otro</option>
+                  </select>
+                  <input type="tel" id="r1-telefono" class="form-input" placeholder="612 345 678" style="border-radius:0 var(--radius-sm) var(--radius-sm) 0;" autocomplete="tel">
+                </div>
+                <span class="form-hint" data-i18n="reg_telefono_hint">Para verificación y contacto urgente de la comunidad</span>
+                <span class="form-error" id="r1-telefono-err" style="display:none;"></span>
+              </div>
+              <div class="form-group">
+                <label class="form-label required" data-i18n="reg_password">Contraseña</label>
+                <div class="input-with-icon">
+                  <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                  <input type="password" id="r1-password" class="form-input" data-i18n-attr="placeholder" data-i18n="reg_password_ph" placeholder="Mín. 8 caracteres" autocomplete="new-password">
+                  <button type="button" onclick="regTogglePass('r1-password','r1-eye-show','r1-eye-hide')" class="input-toggle">
+                    <svg id="r1-eye-show" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                    <svg id="r1-eye-hide" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="display:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+                  </button>
+                </div>
+                <div id="r1-strength-container" style="display:none;">
+                  <div class="password-strength-bar" id="r1-strength-bar">
+                    <div class="strength-segment"></div>
+                    <div class="strength-segment"></div>
+                    <div class="strength-segment"></div>
+                    <div class="strength-segment"></div>
+                  </div>
+                  <span class="strength-text" id="r1-strength-text"></span>
+                </div>
+                <span class="form-error" id="r1-password-err" style="display:none;"></span>
+              </div>
+              <div class="form-group">
+                <label class="form-label required" data-i18n="reg_confirm_pw">Confirmar contraseña</label>
+                <div class="input-with-icon">
+                  <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                  <input type="password" id="r1-confirm" class="form-input" data-i18n-attr="placeholder" data-i18n="reg_confirm_pw_ph" placeholder="Repite la contraseña" autocomplete="new-password">
+                  <svg id="r1-confirm-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" style="position:absolute;right:12px;display:none;"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                </div>
+                <span class="form-error" id="r1-confirm-err" style="display:none;"></span>
+              </div>
+              <button type="button" class="btn btn-primary btn-lg w-full" onclick="regNextStep()">
+                <span data-i18n="reg_btn_continuar">Continuar</span>
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- ── PASO 2: IDENTIDAD ── -->
+          <div id="reg-step-2" style="display:none;">
+            <div class="auth-form-header" style="margin-bottom:16px;">
+              <p class="auth-form-pretitle" data-i18n="reg_s2_pretitle">Paso 2 de 4</p>
+              <h2 class="auth-form-title" data-i18n="reg_s2_title">Verificación de identidad</h2>
+              <p class="auth-form-subtitle" data-i18n="reg_s2_subtitle">Requerida para proteger la seguridad de la comunidad</p>
+            </div>
+            <div class="reg-info-banner" style="margin-bottom:20px;">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="flex-shrink:0;margin-top:1px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+              <span data-i18n="reg_s2_banner">Por la seguridad de todos los miembros, verificamos la identidad de cada persona. Tu información es tratada con total confidencialidad y solo accesible por la dirección de la comunidad.</span>
+            </div>
+            <div class="flex-col gap-md">
+              <div class="form-group">
+                <label class="form-label required" data-i18n="reg_doctipo">Tipo de documento</label>
+                <select id="r2-doc-tipo" class="form-input">
+                  <option value="" data-i18n="reg_doctipo_ph">Selecciona el tipo</option>
+                  <option value="DNI español" data-i18n="doc_dni">DNI español</option>
+                  <option value="NIE" data-i18n="doc_nie">NIE (Número de Identidad Extranjero)</option>
+                  <option value="Pasaporte" data-i18n="doc_pasaporte">Pasaporte (cualquier país)</option>
+                  <option value="Cédula de identidad" data-i18n="doc_cedula">Cédula de identidad</option>
+                  <option value="Otro documento oficial" data-i18n="doc_otro">Otro documento oficial</option>
+                </select>
+                <span class="form-error" id="r2-doc-tipo-err" style="display:none;"></span>
+              </div>
+              <div class="form-group">
+                <label class="form-label required" data-i18n="reg_docnum">Número de documento</label>
+                <input type="text" id="r2-doc-num" class="form-input" data-i18n-attr="placeholder" data-i18n="reg_docnum_ph" placeholder="Número del documento">
+                <span class="form-error" id="r2-doc-num-err" style="display:none;"></span>
+              </div>
+              <div class="form-group">
+                <label class="form-label required" data-i18n="reg_fechanac">Fecha de nacimiento</label>
+                <div style="display:flex;gap:8px;">
+                  <select id="r2-dia" class="form-input" style="flex:1;">
+                    <option value="" data-i18n="reg_dia">Día</option>
+                  </select>
+                  <select id="r2-mes" class="form-input" style="flex:2;">
+                    <option value="" data-i18n="reg_mes">Mes</option>
+                    <option value="1" data-i18n="mes_1">Enero</option><option value="2" data-i18n="mes_2">Febrero</option>
+                    <option value="3" data-i18n="mes_3">Marzo</option><option value="4" data-i18n="mes_4">Abril</option>
+                    <option value="5" data-i18n="mes_5">Mayo</option><option value="6" data-i18n="mes_6">Junio</option>
+                    <option value="7" data-i18n="mes_7">Julio</option><option value="8" data-i18n="mes_8">Agosto</option>
+                    <option value="9" data-i18n="mes_9">Septiembre</option><option value="10" data-i18n="mes_10">Octubre</option>
+                    <option value="11" data-i18n="mes_11">Noviembre</option><option value="12" data-i18n="mes_12">Diciembre</option>
+                  </select>
+                  <select id="r2-anio" class="form-input" style="flex:2;">
+                    <option value="" data-i18n="reg_anio">Año</option>
+                  </select>
+                </div>
+                <span class="form-error" id="r2-fecha-err" style="display:none;"></span>
+              </div>
+              <div class="grid-2 gap-sm">
+                <div class="form-group">
+                  <label class="form-label required" data-i18n="reg_nacionalidad">Nacionalidad</label>
+                  <select id="r2-nacionalidad" class="form-input">
+                    <option value="" data-i18n="reg_selecciona">Selecciona</option>
+                    <option value="España" data-i18n="pais_espana">España</option>
+                    <option value="Israel" data-i18n="pais_israel">Israel</option>
+                    <option value="Argentina" data-i18n="pais_argentina">Argentina</option>
+                    <option value="Uruguay" data-i18n="pais_uruguay">Uruguay</option>
+                    <option value="Francia" data-i18n="pais_francia">Francia</option>
+                    <option value="Estados Unidos" data-i18n="pais_eeuu">Estados Unidos</option>
+                    <option value="México" data-i18n="pais_mexico">México</option>
+                    <option value="Venezuela" data-i18n="pais_venezuela">Venezuela</option>
+                    <option value="Colombia" data-i18n="pais_colombia">Colombia</option>
+                    <option value="Brasil" data-i18n="pais_brasil">Brasil</option>
+                    <option value="Reino Unido" data-i18n="pais_reinounido">Reino Unido</option>
+                    <option value="Marruecos" data-i18n="pais_marruecos">Marruecos</option>
+                    <option value="Otra" data-i18n="pais_otra">Otra</option>
+                  </select>
+                  <span class="form-error" id="r2-nac-err" style="display:none;"></span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label required" data-i18n="reg_paisnac">País de nacimiento</label>
+                  <select id="r2-pais-nac" class="form-input">
+                    <option value="" data-i18n="reg_selecciona">Selecciona</option>
+                    <option value="España" data-i18n="pais_espana">España</option>
+                    <option value="Israel" data-i18n="pais_israel">Israel</option>
+                    <option value="Argentina" data-i18n="pais_argentina">Argentina</option>
+                    <option value="Uruguay" data-i18n="pais_uruguay">Uruguay</option>
+                    <option value="Francia" data-i18n="pais_francia">Francia</option>
+                    <option value="Estados Unidos" data-i18n="pais_eeuu">Estados Unidos</option>
+                    <option value="México" data-i18n="pais_mexico">México</option>
+                    <option value="Venezuela" data-i18n="pais_venezuela">Venezuela</option>
+                    <option value="Colombia" data-i18n="pais_colombia">Colombia</option>
+                    <option value="Brasil" data-i18n="pais_brasil">Brasil</option>
+                    <option value="Reino Unido" data-i18n="pais_reinounido">Reino Unido</option>
+                    <option value="Marruecos" data-i18n="pais_marruecos">Marruecos</option>
+                    <option value="Otro" data-i18n="pais_otra">Otro</option>
+                  </select>
+                  <span class="form-error" id="r2-paisnac-err" style="display:none;"></span>
+                </div>
+              </div>
+
+              <!-- Upload zona — DESACTIVADA temporalmente. Para reactivar: quitar style="display:none;" de este div. -->
+              <div class="form-group" id="r2-upload-block" style="display:none;">
+                <label class="form-label required">Documento de identidad (foto o escaneo)</label>
+                <div id="r2-upload-zone" class="upload-zone">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--color-text-light);margin-bottom:8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                  <div class="upload-title">Sube tu documento de identidad</div>
+                  <div class="upload-subtitle">DNI · NIE · Pasaporte</div>
+                  <div style="font-size:12px;color:var(--color-text-light);margin-top:4px;">Arrastra el archivo aquí o haz clic para seleccionar</div>
+                  <div class="upload-formats" style="margin-top:6px;">JPG, PNG o PDF · Máx. 5MB</div>
+                  <input type="file" id="r2-file-input" accept=".jpg,.jpeg,.png,.pdf" style="display:none;">
+                </div>
+                <span class="form-error" id="r2-upload-err" style="display:none;"></span>
+                <p style="font-size:11px;color:var(--color-text-light);margin-top:8px;line-height:1.5;">Tu documento es procesado de forma cifrada. Solo el administrador de la comunidad tiene acceso. No compartimos tu información con terceros.</p>
+              </div>
+
+              <div class="form-group">
+                <label class="reg-checkbox-label">
+                  <input type="checkbox" id="r2-confirm-ck">
+                  <span data-i18n="reg_ck_verdad">Confirmo que los datos proporcionados son verídicos. Entiendo que proporcionar información falsa resulta en la denegación permanente del acceso.</span>
+                </label>
+                <span class="form-error" id="r2-ck-err" style="display:none;"></span>
+              </div>
+
+              <div style="display:flex;gap:10px;">
+                <button type="button" class="btn btn-ghost btn-lg" style="flex:1;" onclick="regPrevStep()">
+                  <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+                  <span data-i18n="reg_btn_atras">Atrás</span>
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" style="flex:2;" onclick="regNextStep()">
+                  <span data-i18n="reg_btn_continuar">Continuar</span>
+                  <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── PASO 3: RESIDENCIA ── -->
+          <div id="reg-step-3" style="display:none;">
+            <div class="auth-form-header" style="margin-bottom:20px;">
+              <p class="auth-form-pretitle" data-i18n="reg_s3_pretitle">Paso 3 de 4</p>
+              <h2 class="auth-form-title" data-i18n="reg_s3_title">Información de residencia</h2>
+              <p class="auth-form-subtitle" data-i18n="reg_s3_subtitle">Para asignarte a tu comunidad local</p>
+            </div>
+            <div class="flex-col gap-md">
+              <div class="form-group">
+                <label class="form-label required" data-i18n="reg_paisres">País de residencia</label>
+                <select id="r3-pais" class="form-input">
+                  <option value="" data-i18n="reg_paisres_ph">Selecciona tu país</option>
+                  <option value="España" data-i18n="pais_espana">España</option>
+                  <option value="Israel" data-i18n="pais_israel">Israel</option>
+                  <option value="Argentina" data-i18n="pais_argentina">Argentina</option>
+                  <option value="Francia" data-i18n="pais_francia">Francia</option>
+                  <option value="Estados Unidos" data-i18n="pais_eeuu">Estados Unidos</option>
+                  <option value="México" data-i18n="pais_mexico">México</option>
+                  <option value="Uruguay" data-i18n="pais_uruguay">Uruguay</option>
+                  <option value="Otro" data-i18n="pais_otra">Otro</option>
+                </select>
+                <span class="form-error" id="r3-pais-err" style="display:none;"></span>
+              </div>
+              <div class="grid-2 gap-sm">
+                <div class="form-group">
+                  <label class="form-label required" data-i18n="reg_ciudad">Ciudad</label>
+                  <input type="text" id="r3-ciudad" class="form-input" data-i18n-attr="placeholder" data-i18n="reg_ciudad_ph" placeholder="Tu ciudad">
+                  <span class="form-error" id="r3-ciudad-err" style="display:none;"></span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label required" data-i18n="reg_cp">Código postal</label>
+                  <input type="text" id="r3-cp" class="form-input" data-i18n-attr="placeholder" data-i18n="reg_cp_ph" placeholder="Ej. 28001">
+                  <span class="form-hint" data-i18n="reg_cp_hint">Para enviarte info de eventos cercanos</span>
+                  <span class="form-error" id="r3-cp-err" style="display:none;"></span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label required" data-i18n="reg_direccion">Dirección</label>
+                <input type="text" id="r3-direccion" class="form-input" data-i18n-attr="placeholder" data-i18n="reg_direccion_ph" placeholder="Calle y número">
+                <span class="form-hint" data-i18n="reg_direccion_hint">No compartida con otros miembros</span>
+                <span class="form-error" id="r3-dir-err" style="display:none;"></span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="reg_familiar">¿Tienes familiares en la comunidad?</label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:6px;">
+                  <input type="checkbox" id="r3-familiar-toggle" onchange="regToggleFamiliar()">
+                  <span style="font-size:0.875rem;color:var(--color-text-muted);" data-i18n="reg_familiar_ck">Sí, tengo un familiar miembro</span>
+                </label>
+                <div id="r3-familiar-field" style="display:none;margin-top:8px;">
+                  <input type="text" id="r3-familiar-nombre" class="form-input" data-i18n-attr="placeholder" data-i18n="reg_familiar_ph" placeholder="Nombre del familiar">
+                  <span class="form-hint" data-i18n="reg_familiar_hint">Ayuda a agilizar tu verificación</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;">
+                <button type="button" class="btn btn-ghost btn-lg" style="flex:1;" onclick="regPrevStep()">
+                  <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+                  <span data-i18n="reg_btn_atras">Atrás</span>
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" style="flex:2;" onclick="regNextStep(); regRenderSummary();">
+                  <span data-i18n="reg_btn_continuar">Continuar</span>
+                  <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── PASO 4: REVISIÓN Y CONSENTIMIENTOS ── -->
+          <div id="reg-step-4" style="display:none;">
+            <div class="auth-form-header" style="margin-bottom:20px;">
+              <p class="auth-form-pretitle" data-i18n="reg_s4_pretitle">Paso 4 de 4</p>
+              <h2 class="auth-form-title" data-i18n="reg_s4_title">Revisión final</h2>
+              <p class="auth-form-subtitle" data-i18n="reg_s4_subtitle">Confirma tus datos antes de enviar</p>
+            </div>
+            <div class="flex-col gap-md">
+              <!-- Resumen -->
+              <div id="r4-summary" class="reg-summary-card"></div>
+              <button type="button" onclick="regGoToStep(1)" style="font-size:12px;color:var(--color-primary);background:none;border:none;cursor:pointer;text-align:left;padding:0;text-decoration:underline;"><span data-i18n="reg_modificar">Modificar datos</span> →</button>
+
+              <!-- Consentimientos -->
+              <div class="flex-col gap-sm" style="margin-top:8px;">
+                <label class="reg-checkbox-label">
+                  <input type="checkbox" id="r4-ck1">
+                  <span><span data-i18n="reg_ck1_pre">He leído y acepto los</span> <button type="button" onclick="openTermsModal('terminos')" class="reg-link" data-i18n="reg_ck1_link">Términos de Uso y Normas de Convivencia</button> <span data-i18n="reg_ck1_post">de la comunidad {{name}}.</span></span>
+                </label>
+                <label class="reg-checkbox-label">
+                  <input type="checkbox" id="r4-ck2">
+                  <span><span data-i18n="reg_ck2_pre">Acepto la</span> <button type="button" onclick="openTermsModal('privacidad')" class="reg-link" data-i18n="reg_ck2_link">Política de Privacidad</button> <span data-i18n="reg_ck2_post">y el tratamiento de mis datos personales conforme al RGPD.</span></span>
+                </label>
+                <label class="reg-checkbox-label">
+                  <input type="checkbox" id="r4-ck3">
+                  <span data-i18n="reg_ck3">Entiendo que mi solicitud será revisada manualmente por la administración y que el acceso no es automático ni está garantizado.</span>
+                </label>
+                <label class="reg-checkbox-label">
+                  <input type="checkbox" id="r4-ck4">
+                  <span data-i18n="reg_ck4">Confirmo que soy judío/a o tengo un vínculo directo con la comunidad judía, y que mi interés es participar de forma positiva en la vida comunitaria.</span>
+                </label>
+                <span class="form-error" id="r4-ck-err" style="display:none;"></span>
+              </div>
+
+              <!-- Declaración final -->
+              <div class="reg-declaration">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="flex-shrink:0;margin-top:1px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+                <span data-i18n="reg_declaration">Al enviar esta solicitud, declaro bajo mi responsabilidad que toda la información proporcionada es verídica. Soy consciente de que cualquier falsedad resulta en la denegación permanente del acceso.</span>
+              </div>
+
+              <div style="display:flex;gap:10px;">
+                <button type="button" class="btn btn-ghost btn-lg" style="flex:1;" onclick="regPrevStep()">
+                  <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+                  <span data-i18n="reg_btn_atras">Atrás</span>
+                </button>
+                <button type="button" id="r4-submit-btn" class="btn btn-primary btn-lg" style="flex:2;background:var(--color-primary);" onclick="regSubmit()">
+                  <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+                  <span id="r4-submit-label" data-i18n="reg_submit_btn">Enviar solicitud de acceso</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CONFIRMACIÓN ── -->
+          <div id="reg-confirmacion" style="display:none;">
+            <div style="text-align:center;padding:32px 0 20px;">
+              <div class="reg-check-circle">
+                <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+              </div>
+              <h2 style="font-family:var(--font-brand);font-size:1.75rem;font-weight:700;color:var(--color-text);margin:16px 0 8px;" data-i18n="reg_conf_title">Solicitud recibida</h2>
+              <p style="color:var(--color-text-muted);margin-bottom:24px;" data-i18n="reg_conf_desc">Hemos recibido tu solicitud correctamente.</p>
+            </div>
+            <div class="reg-conf-card">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.5);margin-bottom:4px;" data-i18n="reg_conf_numlabel">Tu número de solicitud</div>
+              <div id="conf-num" style="font-family:var(--font-brand);font-size:1.4rem;font-weight:700;color:var(--color-gold);letter-spacing:0.05em;"></div>
+              <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.6);" data-i18n="reg_conf_emaillabel">Email de confirmación enviado a:</div>
+              <div id="conf-email" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.9);"></div>
+              <div class="reg-timeline" style="margin-top:20px;">
+                <div class="reg-timeline-item done">
+                  <div class="reg-timeline-dot"><svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></div>
+                  <span data-i18n="reg_conf_tl1">Solicitud recibida</span>
+                </div>
+                <div class="reg-timeline-item pending">
+                  <div class="reg-timeline-dot"><svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"/></svg></div>
+                  <span data-i18n="reg_conf_tl2">Revisión por el administrador (24-48h)</span>
+                </div>
+                <div class="reg-timeline-item pending" id="reg-timeline-doc" style="display:none;">
+                  <div class="reg-timeline-dot"><svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg></div>
+                  <span data-i18n="reg_conf_tl3">Verificación de documento</span>
+                </div>
+                <div class="reg-timeline-item pending">
+                  <div class="reg-timeline-dot"><svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/></svg></div>
+                  <span data-i18n="reg_conf_tl4">Aprobación y bienvenida</span>
+                </div>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--color-text-muted);text-align:center;margin:16px 0;"><span data-i18n="reg_conf_footer_pre">La administración revisará tu solicitud en un plazo máximo de</span> <strong data-i18n="reg_conf_footer_strong">48 horas laborables</strong>.</p>
+            <button type="button" class="btn btn-primary btn-lg w-full" onclick="showLogin()" data-i18n="reg_conf_btn">Volver al inicio</button>
+          </div>
+
+        </div>
+        <!-- FIN VISTA REGISTRO -->
+
+        <!-- ═══ VISTA: ÉXITO ═══ -->
+        <div id="view-success" class="auth-view" style="display:none;">
+          <div class="success-view">
+            <div class="success-check">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+              </svg>
+            </div>
+            <h2 class="success-title">¡Solicitud enviada!</h2>
+            <p class="success-desc">
+              Revisaremos tu perfil y te contactaremos en breve.<br>
+              <strong>Shalom!</strong>
+            </p>
+            <button type="button" class="btn btn-primary btn-lg" onclick="showLogin()">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:18px;height:18px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+              </svg>
+              Volver al inicio
+            </button>
+          </div>
+        </div>
+        <!-- FIN VISTA ÉXITO -->
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="auth-footer">
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;">
+        <span>&copy; 2026 {{name}}</span>
+        <span style="opacity:.4">&middot;</span>
+        <a href="privacidad.html" style="color:inherit;text-decoration:none;">Privacidad</a>
+        <span style="opacity:.4">&middot;</span>
+        <a href="aviso-legal.html" style="color:inherit;text-decoration:none;">Aviso Legal</a>
+        <span style="opacity:.4">&middot;</span>
+        <a href="cookies.html" style="color:inherit;text-decoration:none;">Cookies</a>
+      </div>
+    </footer>
+
+  <!-- Modal recuperar contraseña -->
+  <div id="forgot-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:14px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid #e5e7eb;">
+        <div>
+          <div style="font-size:0.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#A8892E;margin-bottom:3px;display:flex;align-items:center;gap:5px;">
+            <span style="display:inline-block;width:12px;height:2px;background:#C9A84C;border-radius:1px;"></span><span data-i18n="forgot_eyebrow">Recuperar acceso</span>
+          </div>
+          <h3 style="font-family:var(--font-brand);font-size:1.15rem;font-weight:700;color:var(--color-text);margin:0;" data-i18n="forgot_title">¿Olvidaste tu contraseña?</h3>
+        </div>
+        <button onclick="closeForgotModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px;line-height:0;flex-shrink:0;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Body: step 1 — email input -->
+      <div id="forgot-step-1" style="padding:20px 24px 24px;">
+        <p style="font-size:0.875rem;color:var(--color-text-muted);margin-bottom:18px;line-height:1.6;" data-i18n="forgot_desc">Introduce tu correo y te enviaremos un enlace para crear una nueva contraseña.</p>
+        <div id="forgot-msg" style="display:none;font-size:0.8rem;padding:10px 12px;border-radius:6px;margin-bottom:14px;line-height:1.5;"></div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label required" style="font-size:.8rem;" for="forgot-email" data-i18n="login_email">Correo electrónico</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
+            </svg>
+            <input type="email" id="forgot-email" class="form-input" placeholder="tu@email.com" autocomplete="email">
+          </div>
+          <span id="forgot-email-err" class="form-error" style="display:none;"></span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" onclick="closeForgotModal()" class="btn btn-ghost btn-sm" style="flex:1;" data-i18n="forgot_cancel">Cancelar</button>
+          <button type="button" id="btn-forgot-send" onclick="sendForgotEmail()" class="btn btn-primary btn-sm" style="flex:2;">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+            <span data-i18n="forgot_send">Enviar enlace</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Body: step 2 — sent confirmation -->
+      <div id="forgot-step-2" style="display:none;padding:28px 24px;text-align:center;">
+        <div style="width:64px;height:64px;background:#D1FAE5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="#10B981" style="width:32px;height:32px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+          </svg>
+        </div>
+        <h4 style="font-family:var(--font-brand);font-size:1.1rem;font-weight:700;color:var(--color-text);margin-bottom:8px;" data-i18n="forgot_step2_title">Revisa tu correo</h4>
+        <p style="font-size:0.875rem;color:var(--color-text-muted);line-height:1.65;margin-bottom:20px;">
+          <span data-i18n="forgot_step2_pre">Si</span> <strong id="forgot-sent-email"></strong> <span data-i18n="forgot_step2_post">está registrado, recibirás un enlace en los próximos minutos.</span><br><span style="font-size:.8rem;opacity:.8;" data-i18n="forgot_step2_spam">Revisa también la carpeta de spam.</span>
+        </p>
+        <button type="button" onclick="closeForgotModal()" class="btn btn-primary btn-sm w-full" data-i18n="forgot_understood">Entendido</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal verificación en dos pasos (2FA) -->
+  <style>
+    .otp-boxes { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .otp-boxes .otp-dash { width: 8px; height: 2px; background: var(--color-border); flex-shrink: 0; }
+    .otp-box {
+      width: 42px; height: 52px; text-align: center; font-size: 1.3rem; font-weight: 700;
+      border: 1.5px solid var(--color-border); border-radius: 8px; outline: none;
+      font-family: inherit; color: var(--color-text);
+    }
+    .otp-box:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(27,46,94,0.1); }
+  </style>
+  <div id="mfa-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:14px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+      <div style="padding:24px;">
+        <h3 style="font-family:var(--font-brand);font-size:1.15rem;font-weight:700;color:var(--color-text);margin:0 0 8px;">Verificación en dos pasos</h3>
+        <p style="font-size:0.875rem;color:var(--color-text-muted);margin-bottom:18px;line-height:1.6;">Introduce el código de 6 dígitos de tu app de autenticación (Google Authenticator, Authy...).</p>
+        <div id="mfa-msg" style="display:none;font-size:0.8rem;padding:10px 12px;border-radius:6px;margin-bottom:14px;line-height:1.5;background:#FEE2E2;color:#991B1B;"></div>
+        <div id="mfa-otp-boxes" class="otp-boxes" style="margin-bottom:16px;"></div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" onclick="closeMfaModal()" class="btn btn-ghost btn-sm" style="flex:1;">Cancelar</button>
+          <button type="button" id="btn-mfa-verify" onclick="submitMfaCode(Array.from(document.querySelectorAll('#mfa-otp-boxes .otp-box')).map(b => b.value).join(''))" class="btn btn-primary btn-sm" style="flex:2;">Verificar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal términos y privacidad -->
+  <div id="terms-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #e5e7eb;flex-shrink:0;">
+        <h3 id="terms-modal-title" style="font-family:var(--font-brand);font-size:1.1rem;font-weight:700;color:var(--color-text);"></h3>
+        <button onclick="closeTermsModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px;line-height:0;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="terms-modal-body" style="padding:24px;overflow-y:auto;font-size:13.5px;line-height:1.75;color:var(--color-text-muted);flex:1;"></div>
+      <div style="padding:16px 24px;border-top:1px solid #e5e7eb;flex-shrink:0;">
+        <button onclick="closeTermsModal()" class="btn btn-primary w-full">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <!-- FIN PANEL FORMULARIO -->
+
+  <script src="/vendor/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/push.js"></script>
+  <script src="js/registro.js"></script>  <script>
+    /* ─── Estado actual ─── */
+    let currentView = 'login'; // 'login' | 'register' | 'success'
+
+    /* ─── Helpers de UI ─── */
+    function show(id)  { document.getElementById(id).style.display = ''; }
+    function hide(id)  { document.getElementById(id).style.display = 'none'; }
+    function setText(id, text) { document.getElementById(id).textContent = text; }
+    function setHTML(id, html) { document.getElementById(id).innerHTML = html; }
+
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = '';
+    }
+
+    function clearError(id) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = ''; el.style.display = 'none'; }
+    }
+
+    function markInput(id, hasError) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('error', hasError);
+    }
+
+    /* ─── ir-login desde logo o back link ─── */
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('[data-action="ir-login"]');
+      if (trigger) showLogin();
+    });
+
+    /* ─── Cambio de vistas ─── */
+    function showLogin(reverse = true) {
+      const login = document.getElementById('view-login');
+      const reg   = document.getElementById('view-register');
+      const succ  = document.getElementById('view-success');
+
+      [reg, succ].forEach(v => { v.style.display = 'none'; });
+      login.style.display = '';
+      login.className = 'auth-view' + (reverse ? ' reverse' : '');
+      currentView = 'login';
+      clearLoginMessage();
+    }
+
+    function showRegister() {
+      const login = document.getElementById('view-login');
+      const reg   = document.getElementById('view-register');
+      const succ  = document.getElementById('view-success');
+
+      [login, succ].forEach(v => { v.style.display = 'none'; });
+      reg.style.display = '';
+      reg.className = 'auth-view';
+      currentView = 'register';
+      regInit();
+    }
+
+    function regTogglePass(inputId, showId, hideId) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      document.getElementById(showId).style.display = isPassword ? 'none' : '';
+      document.getElementById(hideId).style.display = isPassword ? '' : 'none';
+    }
+
+    function showSuccess() {
+      const login = document.getElementById('view-login');
+      const reg   = document.getElementById('view-register');
+      const succ  = document.getElementById('view-success');
+
+      [login, reg].forEach(v => { v.style.display = 'none'; });
+      succ.style.display = '';
+      succ.className = 'auth-view';
+      currentView = 'success';
+    }
+
+    /* ─── Mensajes de login ─── */
+    function showLoginMessage(type, html) {
+      const el = document.getElementById('login-message');
+      el.className = `auth-message ${type}`;
+      el.innerHTML = html;
+      el.style.display = 'flex';
+    }
+
+    function clearLoginMessage() {
+      const el = document.getElementById('login-message');
+      el.style.display = 'none';
+    }
+
+    /* ─── Toggle visibilidad contraseña ─── */
+    function setupPasswordToggle(inputId, toggleId, showId, hideId) {
+      const toggleEl = document.getElementById(toggleId);
+      if (!toggleEl) return;
+      toggleEl.addEventListener('click', function () {
+        const input = document.getElementById(inputId);
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        document.getElementById(showId).style.display = isPassword ? 'none' : '';
+        document.getElementById(hideId).style.display = isPassword ? '' : 'none';
+      });
+    }
+
+    setupPasswordToggle('login-password', 'toggle-login-pw', 'eye-show-login', 'eye-hide-login');
+    setupPasswordToggle('reg-password', 'toggle-reg-pw', 'eye-show-reg', 'eye-hide-reg');
+
+    /* Indicador de fortaleza gestionado por registro.js */
+
+
+    /* ─── FORMULARIO LOGIN ─── */
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      clearLoginMessage();
+
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      // Validación básica
+      let hasError = false;
+
+      if (!email) {
+        showError('login-email-error', 'El correo es obligatorio.');
+        markInput('login-email', true);
+        hasError = true;
+      } else {
+        clearError('login-email-error');
+        markInput('login-email', false);
+      }
+
+      if (!password) {
+        showError('login-pw-error', 'La contraseña es obligatoria.');
+        markInput('login-password', true);
+        hasError = true;
+      } else {
+        clearError('login-pw-error');
+        markInput('login-password', false);
+      }
+
+      if (hasError) return;
+
+      // Deshabilitar botón mientras carga
+      const submitBtn = this.querySelector('button[type="submit"]');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Entrando...'; }
+
+      // Login (async: soporta Supabase y mock)
+      login(email, password).then(result => {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Entrar'; }
+
+        if (!result.ok) {
+          const msg = `
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+            </svg>
+            <span>${result.error}</span>
+          `;
+          showLoginMessage('error', msg);
+          return;
+        }
+
+        if (result.mfaRequired) {
+          openMfaModal(result.factorId);
+          return;
+        }
+
+        if (result.status === 'pending') {
+          const msg = `
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+            </svg>
+            <span>Tu solicitud está siendo revisada. Te avisaremos cuando sea aprobada.</span>
+          `;
+          showLoginMessage('warning', msg);
+          return;
+        }
+
+        redirectAfterLogin();
+      });
+    });
+
+    /**
+     * Tras un login completo (con o sin 2FA), redirige segun el rol.
+     */
+    function redirectAfterLogin() {
+      const user = getCurrentUser();
+      const volver = typeof tomarVolver === 'function' ? tomarVolver() : null;
+      if (volver) { window.location.href = volver; return; }
+      if (user && user.role === 'admin') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'home.html';
+      }
+    }
+
+    /* ─── Modal 2FA (verificación en dos pasos) ─── */
+    let mfaFactorId = null;
+
+    /**
+     * Construye 6 casillas de un digito cada una (agrupadas 3+3 con un
+     * guion), con avance automatico al siguiente campo al escribir y
+     * retroceso con Backspace. Reemplaza un solo <input maxlength="6">
+     * porque asi es como lo hacen la mayoria de apps con 2FA (ej. Campus
+     * Global de la UPF) y es mas facil de usar.
+     * @param {string} containerId
+     * @param {function} onComplete - se llama con el codigo cuando se rellenan las 6 casillas
+     */
+    function buildOtpBoxes(containerId, onComplete) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      for (let i = 0; i < 6; i++) {
+        if (i === 3) {
+          const dash = document.createElement('div');
+          dash.className = 'otp-dash';
+          container.appendChild(dash);
+        }
+        const box = document.createElement('input');
+        box.type = 'text';
+        box.inputMode = 'numeric';
+        box.maxLength = 1;
+        box.className = 'otp-box';
+        box.dataset.idx = i;
+        if (i === 0) box.autocomplete = 'one-time-code';
+        container.appendChild(box);
+      }
+      const boxes = () => Array.from(container.querySelectorAll('.otp-box'));
+
+      const getCode = () => boxes().map(b => b.value).join('');
+
+      container.addEventListener('input', (e) => {
+        const box = e.target;
+        box.value = box.value.replace(/\D/g, '').slice(0, 1);
+        const idx = Number(box.dataset.idx);
+        if (box.value && idx < 5) boxes()[idx + 1].focus();
+        if (getCode().length === 6) onComplete(getCode());
+      });
+
+      container.addEventListener('keydown', (e) => {
+        const idx = Number(e.target.dataset.idx);
+        if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+          boxes()[idx - 1].focus();
+        }
+      });
+
+      // Pegar el código completo de golpe (ej. autocompletado del móvil).
+      container.addEventListener('paste', (e) => {
+        const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        if (!text) return;
+        e.preventDefault();
+        boxes().forEach((b, i) => { b.value = text[i] || ''; });
+        if (text.length === 6) onComplete(text);
+        else boxes()[Math.min(text.length, 5)].focus();
+      });
+    }
+
+    function openMfaModal(factorId) {
+      mfaFactorId = factorId;
+      document.getElementById('mfa-msg').style.display = 'none';
+      buildOtpBoxes('mfa-otp-boxes', (code) => submitMfaCode(code));
+      document.getElementById('mfa-modal').style.display = 'flex';
+      document.querySelector('#mfa-otp-boxes .otp-box').focus();
+    }
+
+    function closeMfaModal() {
+      document.getElementById('mfa-modal').style.display = 'none';
+      mfaFactorId = null;
+    }
+
+    async function submitMfaCode(code) {
+      const msgEl = document.getElementById('mfa-msg');
+      const btn = document.getElementById('btn-mfa-verify');
+      if (!/^\d{6}$/.test(code || '')) {
+        msgEl.textContent = 'Introduce los 6 dígitos del código.';
+        msgEl.style.display = 'block';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+      const result = await verifyLoginMfa(mfaFactorId, code);
+      btn.disabled = false;
+      btn.textContent = 'Verificar';
+
+      if (!result.ok) {
+        msgEl.textContent = result.error || 'Código incorrecto.';
+        msgEl.style.display = 'block';
+        return;
+      }
+      closeMfaModal();
+      redirectAfterLogin();
+    }
+
+    /* ─── Limpiar error al escribir (login) ─── */
+    document.getElementById('login-email').addEventListener('input', function () {
+      clearError('login-email-error');
+      markInput('login-email', false);
+      clearLoginMessage();
+    });
+    document.getElementById('login-password').addEventListener('input', function () {
+      clearError('login-pw-error');
+      markInput('login-password', false);
+      clearLoginMessage();
+    });
+
+    /* ─── Forgot password modal ─── */
+    function openForgotModal() {
+      document.getElementById('forgot-email').value = document.getElementById('login-email').value || '';
+      document.getElementById('forgot-email-err').style.display = 'none';
+      document.getElementById('forgot-msg').style.display = 'none';
+      document.getElementById('forgot-step-1').style.display = '';
+      document.getElementById('forgot-step-2').style.display = 'none';
+      document.getElementById('forgot-modal').style.display = 'flex';
+      setTimeout(() => document.getElementById('forgot-email').focus(), 100);
+    }
+
+    function closeForgotModal() {
+      document.getElementById('forgot-modal').style.display = 'none';
+    }
+
+    document.getElementById('forgot-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeForgotModal();
+    });
+
+    document.getElementById('forgot-email').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') sendForgotEmail();
+    });
+
+    async function sendForgotEmail() {
+      const email = document.getElementById('forgot-email').value.trim();
+      const errEl = document.getElementById('forgot-email-err');
+      const msgEl = document.getElementById('forgot-msg');
+
+      errEl.style.display = 'none';
+      msgEl.style.display = 'none';
+      document.getElementById('forgot-email').classList.remove('error');
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errEl.textContent = 'Introduce un correo electrónico válido.';
+        errEl.style.display = '';
+        document.getElementById('forgot-email').classList.add('error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-forgot-send');
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
+      try {
+        const sb = getSupabase();
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+          redirectTo: '{{url}}/reset-password.html'
+        });
+
+        if (error) throw error;
+      } catch(e) {
+        document.getElementById('forgot-msg').style.cssText = 'display:block;background:#FEE2E2;color:#991B1B;border:1px solid rgba(239,68,68,0.2);font-size:.8rem;padding:10px 12px;border-radius:6px;margin-bottom:14px;';
+        document.getElementById('forgot-msg').textContent = 'Error al enviar. Inténtalo de nuevo.';
+        btn.disabled = false;
+        btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg> Enviar enlace';
+        return;
+      }
+
+      document.getElementById('forgot-sent-email').textContent = email;
+      document.getElementById('forgot-step-1').style.display = 'none';
+      document.getElementById('forgot-step-2').style.display = '';
+
+      btn.disabled = false;
+      btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg> Enviar enlace';
+    }
+
+    /* ─── Si ya hay sesión activa, redirigir ─── */
+    (function checkExistingSession() {
+      try {
+        // getCurrentUser() lee del mismo storage que requireAuth()
+        // (sessionStorage en app nativa, localStorage en web)
+        const user = getCurrentUser();
+        if (user && user.status === 'active') {
+          window.location.href = (typeof tomarVolver === 'function' && tomarVolver()) || (user.role === 'admin' ? 'admin.html' : 'home.html');
+          return;
+        }
+        // Llegó desde un enlace a un evento sin sesión: explicárselo
+        const v = JSON.parse(localStorage.getItem('kehila_volver') || 'null');
+        if (v && /evento=/.test(v.p) && typeof showLoginMessage === 'function') {
+          showLoginMessage('info', '<span>Inicia sesión para ver el evento y apuntarte. Si aún no tienes cuenta, regístrate abajo.</span>');
+        }
+      } catch (e) { /* ignorar */ }
+    })();
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
+  </script>
+<script src="js/abrir-app.js" defer></script>
+</body>
+</html>

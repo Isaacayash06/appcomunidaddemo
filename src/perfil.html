@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Mi Perfil</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: var(--color-bg); }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+
+    .perfil-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 36px 32px 60px;
+    }
+    @media (max-width: 768px) { .perfil-inner { padding: 20px 16px 88px; } }
+
+    /* ─── Header ─── */
+    .perfil-header {
+      display: flex;
+      align-items: flex-end;
+      gap: 24px;
+      margin-bottom: 32px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    @media (max-width: 560px) {
+      .perfil-header { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ─── Avatar upload ─── */
+    .avatar-upload-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .avatar-upload-wrap .avatar-xl {
+      width: 88px;
+      height: 88px;
+      font-size: 1.75rem;
+      border: 2px solid var(--color-border);
+    }
+
+    .avatar-upload-wrap img.avatar-photo {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--color-border);
+      display: block;
+    }
+
+    .avatar-edit-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: background var(--transition-fast);
+    }
+    .avatar-edit-btn:hover { background: var(--color-bg); }
+    .avatar-edit-btn svg { width: 13px; height: 13px; color: var(--color-text-muted); }
+
+    #avatar-file-input { display: none; }
+
+    /* ─── Header info ─── */
+    .perfil-header-info { flex: 1; min-width: 0; }
+
+    .perfil-name {
+      font-family: var(--font-brand);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .perfil-email {
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+      margin-bottom: 10px;
+    }
+
+    .perfil-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .ptag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      border: 1px solid;
+    }
+    .ptag-role  { color: #1B2E5E; background: #eef2ff; border-color: #c7d2fe; }
+    .ptag-status-active  { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+    .ptag-status-pending { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+
+    /* ─── Sections ─── */
+    .perfil-section {
+      margin-bottom: 28px;
+    }
+
+    /* Notificaciones y cumpleaños hebreo */
+    .np-nota { font-size: .8rem; color: var(--color-text-muted); margin: 0 0 10px; line-height: 1.45; }
+    .np-list { display: flex; flex-direction: column; }
+    .np-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-border); cursor: pointer; }
+    .np-item span { flex: 1; min-width: 0; }
+    .np-item b { display: block; font-size: .875rem; font-weight: 600; color: var(--color-text); }
+    .np-item small { font-size: .75rem; color: var(--color-text-muted); }
+    .np-item input { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--color-primary); }
+    .ch-grid { display: flex; flex-direction: column; gap: 12px; }
+    .ch-campo { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; color: var(--color-text); }
+    .ch-manual summary { font-size: .8rem; color: var(--color-primary); cursor: pointer; }
+    .ch-manual-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .ch-manual-row input { width: 80px; }
+    .ch-manual-row select { flex: 1; min-width: 140px; }
+
+    .perfil-section-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    /* ─── Field rows ─── */
+    .perfil-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 560px) { .perfil-grid { grid-template-columns: 1fr; } }
+
+    .perfil-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .perfil-field-label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text);
+    }
+
+    .perfil-field-value {
+      font-size: 0.9rem;
+      color: var(--color-text);
+      font-weight: 400;
+    }
+
+    .perfil-field-value.empty {
+      color: var(--color-text-light);
+      font-style: italic;
+      font-size: 0.8rem;
+    }
+
+    /* ─── Edit mode ─── */
+    .perfil-field input,
+    .perfil-field select {
+      font-size: 0.875rem;
+      color: var(--color-text);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xs);
+      padding: 7px 10px;
+      outline: none;
+      width: 100%;
+      font-family: var(--font-ui);
+      transition: border-color var(--transition-fast);
+    }
+    .perfil-field input:focus,
+    .perfil-field select:focus {
+      border-color: var(--color-primary);
+    }
+
+    /* ─── Actions ─── */
+    .perfil-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* ─── Mis hijos ─── */
+    .hijo-badge {
+      display: inline-flex; align-items: center;
+      padding: 1px 7px; border-radius: 3px;
+      font-size: .65rem; font-weight: 700; letter-spacing: .03em;
+      background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE;
+    }
+    .hijo-actions { display: flex; gap: 2px; flex-shrink: 0; }
+    .hijo-action-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--color-text-light); padding: 5px; border-radius: var(--radius-xs);
+      display: flex; align-items: center; transition: color var(--transition-fast);
+    }
+    .hijo-action-btn:hover { color: var(--color-primary); }
+    .hijo-action-btn.danger:hover { color: var(--color-danger); }
+    .hijo-action-btn svg { width: 15px; height: 15px; }
+
+    /* ─── Mi familia ─── */
+    .familia-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .familia-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+    }
+
+    .familia-card-info { flex: 1; min-width: 0; }
+    .familia-card-name { font-size: .875rem; font-weight: 600; color: var(--color-text); }
+    .familia-card-rel  { font-size: .75rem; color: var(--color-text-muted); margin-top: 2px; }
+
+    .familia-remove-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-text-light);
+      padding: 4px;
+      border-radius: var(--radius-xs);
+      display: flex;
+      align-items: center;
+      transition: color var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .familia-remove-btn:hover { color: var(--color-danger); }
+    .familia-remove-btn svg  { width: 15px; height: 15px; }
+
+    .familia-empty {
+      font-size: .875rem;
+      color: var(--color-text-light);
+      font-style: italic;
+    }
+
+    /* ─── Modal añadir familiar ─── */
+    .modal-familiar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      background: rgba(0,0,0,.45);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-familiar-overlay.open { display: flex; }
+
+    .modal-familiar-box {
+      background: var(--color-white);
+      border-radius: var(--radius-md);
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    .modal-familiar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .modal-familiar-header h3 {
+      font-family: var(--font-brand);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    .modal-familiar-body { padding: 20px; }
+
+    .familia-search-results {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .familia-result-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-xs);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      border: 1px solid transparent;
+    }
+    .familia-result-item:hover { background: var(--color-bg); }
+    .familia-result-item.selected { background: var(--color-primary-light, #eef2ff); border-color: var(--color-primary); }
+
+    .familia-result-name { font-size: .875rem; font-weight: 500; color: var(--color-text); }
+    .familia-result-email { font-size: .75rem; color: var(--color-text-muted); }
+
+    .modal-familiar-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    /* ─── Solicitud card ─── */
+    .solicitud-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .solicitud-num {
+      font-family: monospace;
+      font-size: 0.875rem;
+      color: var(--color-text);
+      font-weight: 600;
+    }
+
+    .solicitud-date {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+  </style>
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div id="sidebar-placeholder"></div>
+
+  <div class="main-content">
+    <div class="perfil-inner">
+
+      <!-- Page header -->
+      <div class="page-header" style="margin-bottom:24px;">
+        <div class="page-header-left">
+          <a href="home.html" class="btn btn-secondary btn-sm" style="margin-bottom:12px;text-decoration:none;">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+            Volver
+          </a>
+          <div class="page-header-label">Mi cuenta</div>
+          <h1 class="page-title">Mi perfil</h1>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-secondary btn-sm" id="btn-editar" onclick="toggleEdit()">Editar datos</button>
+          <button class="btn btn-primary btn-sm" id="btn-guardar" style="display:none;" onclick="guardar()">Guardar cambios</button>
+          <button class="btn btn-ghost btn-sm" id="btn-cancelar" style="display:none;" onclick="cancelarEdit()">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- ══ HEADER PERFIL ══ -->
+      <div class="perfil-header">
+        <div class="avatar-upload-wrap">
+          <div id="avatar-display"></div>
+          <label class="avatar-edit-btn" for="avatar-file-input" title="Cambiar foto">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z"/>
+            </svg>
+          </label>
+          <input type="file" id="avatar-file-input" accept="image/*" onchange="handleAvatarUpload(event)">
+        </div>
+
+        <div class="perfil-header-info">
+          <div class="perfil-name" id="ph-name">—</div>
+          <div class="perfil-email" id="ph-email">—</div>
+          <div class="perfil-badges" id="ph-badges"></div>
+        </div>
+      </div>
+
+      <!-- ══ SECCIÓN: MIS HIJOS ══ -->
+      <div class="perfil-section" id="section-hijos">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--color-border);">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="perfil-section-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">Mis hijos</div>
+            <span class="hijo-badge">Control parental</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAddHijoModal()">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Añadir hijo/a
+          </button>
+        </div>
+        <p style="font-size:.8rem;color:var(--color-text-muted);margin-bottom:12px;line-height:1.5;">Gestiona los perfiles de tus hijos. Podrás inscribirlos en actividades y eventos desde tu cuenta.</p>
+        <div class="familia-list" id="hijos-list">
+          <p class="familia-empty">Sin hijos registrados.</p>
+        </div>
+      </div>
+
+      <!-- ══ SECCIÓN: MI FAMILIA ══ -->
+      <div class="perfil-section" id="section-familia">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--color-border);">
+          <div class="perfil-section-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">Mi familia</div>
+          <button class="btn btn-primary btn-sm" onclick="openAddFamiliarModal()">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Añadir familiar
+          </button>
+        </div>
+        <div class="familia-list" id="familia-list">
+          <p class="familia-empty">Sin familiares vinculados.</p>
+        </div>
+      </div>
+
+      <!-- ══ SECCIÓN: DATOS PERSONALES ══ -->
+      <div class="perfil-section">
+        <div class="perfil-section-title">Datos personales</div>
+        <div class="perfil-grid">
+          <div class="perfil-field">
+            <div class="perfil-field-label">Nombre</div>
+            <div class="perfil-field-value" id="val-nombre">—</div>
+            <input id="inp-nombre" style="display:none;" placeholder="Nombre">
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Apellidos</div>
+            <div class="perfil-field-value" id="val-apellidos">—</div>
+            <input id="inp-apellidos" style="display:none;" placeholder="Apellidos">
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Teléfono</div>
+            <div class="perfil-field-value" id="val-telefono">—</div>
+            <input id="inp-telefono" style="display:none;" placeholder="+34 600 000 000">
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Fecha de nacimiento</div>
+            <div class="perfil-field-value" id="val-fechanac">—</div>
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Nacionalidad</div>
+            <div class="perfil-field-value" id="val-nacionalidad">—</div>
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">País de nacimiento</div>
+            <div class="perfil-field-value" id="val-paisnac">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SECCIÓN: DIRECCIÓN ══ -->
+      <div class="perfil-section">
+        <div class="perfil-section-title">Dirección</div>
+        <div class="perfil-grid">
+          <div class="perfil-field">
+            <div class="perfil-field-label">País</div>
+            <div class="perfil-field-value" id="val-pais">—</div>
+            <input id="inp-pais" style="display:none;" placeholder="País">
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Ciudad</div>
+            <div class="perfil-field-value" id="val-ciudad">—</div>
+            <input id="inp-ciudad" style="display:none;" placeholder="Ciudad">
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Código postal</div>
+            <div class="perfil-field-value" id="val-cp">—</div>
+            <input id="inp-cp" style="display:none;" placeholder="CP">
+          </div>
+          <div class="perfil-field" style="grid-column: 1 / -1;">
+            <div class="perfil-field-label">Dirección</div>
+            <div class="perfil-field-value" id="val-direccion">—</div>
+            <input id="inp-direccion" style="display:none;" placeholder="Calle, número, piso...">
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SECCIÓN: COMUNIDAD ══ -->
+      <div class="perfil-section">
+        <div class="perfil-section-title">Comunidad</div>
+        <div class="perfil-grid">
+          <div class="perfil-field">
+            <div class="perfil-field-label">Comunidad</div>
+            <div class="perfil-field-value" id="val-comunidad">—</div>
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Práctica religiosa</div>
+            <div class="perfil-field-value" id="val-practica">—</div>
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Familiar en kehilá</div>
+            <div class="perfil-field-value" id="val-familiar">—</div>
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Cómo conoció {{name}}</div>
+            <div class="perfil-field-value" id="val-conocio">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SECCIÓN: DOCUMENTO ══ -->
+      <div class="perfil-section" id="section-doc">
+        <div class="perfil-section-title">Documento de identidad</div>
+        <div class="perfil-grid">
+          <div class="perfil-field">
+            <div class="perfil-field-label">Tipo</div>
+            <div class="perfil-field-value" id="val-docTipo">—</div>
+          </div>
+          <div class="perfil-field">
+            <div class="perfil-field-label">Número</div>
+            <div class="perfil-field-value" id="val-docNum">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SECCIÓN: SOLICITUD ══ -->
+      <div class="perfil-section" id="section-solicitud" style="display:none;">
+        <div class="perfil-section-title">Solicitud de acceso</div>
+        <div class="solicitud-card">
+          <div>
+            <div class="solicitud-num" id="sol-num">—</div>
+            <div class="solicitud-date" id="sol-date">—</div>
+          </div>
+          <span class="ptag" id="sol-status-tag">—</span>
+        </div>
+      </div>
+
+      <!-- ══ ACCIONES ══ -->
+      <div class="perfil-actions" id="edit-actions" style="display:none;">
+        <button class="btn btn-primary btn-sm" onclick="guardar()">Guardar cambios</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelarEdit()">Cancelar</button>
+      </div>
+
+      <!-- ══ SECCIÓN: SEGURIDAD (2FA) — solo admin/super_admin/staff ══ -->
+      <div class="perfil-section" id="section-2fa" style="display:none;">
+        <div class="perfil-section-title">Seguridad</div>
+
+        <div id="mfa-status-off">
+          <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:14px;line-height:1.6;">
+            La verificación en dos pasos no está activada. Añade una capa extra de protección: aunque alguien consiga tu contraseña, no podrá entrar sin el código de tu móvil.
+          </p>
+          <button class="btn btn-primary btn-sm" onclick="startMfaEnroll()">Activar verificación en dos pasos</button>
+        </div>
+
+        <div id="mfa-status-on" style="display:none;">
+          <p style="font-size:.875rem;color:#065F46;background:#D1FAE5;padding:10px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="#065F46"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+            Verificación en dos pasos activada
+          </p>
+        </div>
+
+        <div id="mfa-enroll-box" style="display:none;margin-top:16px;padding:16px;background:#F9FAFB;border-radius:10px;border:1px solid var(--color-border);">
+          <p style="font-size:.8rem;color:var(--color-text-muted);margin-bottom:12px;">1. Escanea este código con Google Authenticator, Authy, o tu gestor de contraseñas:</p>
+          <div id="mfa-qr-container" style="text-align:center;margin-bottom:14px;"></div>
+          <p style="font-size:.8rem;color:var(--color-text-muted);margin-bottom:8px;">2. Escribe el código de 6 dígitos que te muestra la app:</p>
+          <div id="mfa-enroll-otp-boxes" class="otp-boxes" style="justify-content:flex-start;margin-bottom:10px;"></div>
+          <div id="mfa-enroll-msg" style="display:none;font-size:.8rem;color:#991B1B;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-ghost btn-sm" onclick="cancelMfaEnroll()">Cancelar</button>
+            <button class="btn btn-primary btn-sm" id="btn-mfa-confirm" onclick="confirmMfaEnroll(Array.from(document.querySelectorAll('#mfa-enroll-otp-boxes .otp-box')).map(b => b.value).join(''))">Confirmar</button>
+          </div>
+        </div>
+
+        <style>
+          .otp-boxes { display: flex; align-items: center; gap: 8px; }
+          .otp-boxes .otp-dash { width: 8px; height: 2px; background: var(--color-border); flex-shrink: 0; }
+          .otp-box {
+            width: 42px; height: 52px; text-align: center; font-size: 1.3rem; font-weight: 700;
+            border: 1.5px solid var(--color-border); border-radius: 8px; outline: none;
+            font-family: inherit; color: var(--color-text);
+          }
+          .otp-box:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(27,46,94,0.1); }
+        </style>
+      </div>
+
+      <!-- ══ SECCIÓN: NOTIFICACIONES ══ -->
+      <div class="perfil-section" id="notificaciones">
+        <div class="perfil-section-title">Notificaciones</div>
+        <p class="np-nota">Elige qué avisos quieres recibir. Los avisos sobre algo que tú has pedido (tus citas, tus reservas, respuestas del Rav, cambios en tus eventos) siempre te llegan. Todo queda guardado en la campana 🔔.</p>
+        <div id="np-list" class="np-list"></div>
+        <p class="np-nota" id="np-permiso" style="display:none;"></p>
+      </div>
+
+      <!-- ══ SECCIÓN: CUMPLEAÑOS HEBREO ══ -->
+      <div class="perfil-section" id="cumple-hebreo">
+        <div class="perfil-section-title">Cumpleaños hebreo</div>
+        <p class="np-nota" id="ch-resumen">Añade tu fecha de nacimiento en tu solicitud para calcularlo.</p>
+        <div class="ch-grid">
+          <label class="ch-campo">
+            <span>¿Naciste antes o después de la puesta de sol?</span>
+            <select id="ch-puesta" class="form-input">
+              <option value="">Elegir…</option>
+              <option value="antes">Antes de la puesta de sol</option>
+              <option value="despues">Después de la puesta de sol</option>
+              <option value="nose">No lo sé</option>
+            </select>
+          </label>
+          <details class="ch-manual">
+            <summary>¿La fecha no es correcta? Corrígela a mano</summary>
+            <div class="ch-manual-row">
+              <input id="ch-dia" type="number" min="1" max="30" class="form-input" placeholder="Día">
+              <select id="ch-mes" class="form-input">
+                <option value="">Mes hebreo…</option>
+                <option value="Tishrei">Tishrei</option><option value="Cheshvan">Jeshván</option>
+                <option value="Kislev">Kislev</option><option value="Tevet">Tevet</option>
+                <option value="Sh'vat">Shevat</option><option value="Adar">Adar</option>
+                <option value="Adar I">Adar I</option><option value="Adar II">Adar II</option>
+                <option value="Nisan">Nisán</option><option value="Iyyar">Iyar</option>
+                <option value="Sivan">Siván</option><option value="Tamuz">Tamuz</option>
+                <option value="Av">Av</option><option value="Elul">Elul</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="ch-guardar">Guardar</button>
+              <button class="btn btn-ghost btn-sm" id="ch-borrar">Usar el cálculo</button>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- ══ ZONA DE PELIGRO ══ -->
+      <div class="perfil-section" id="zona-peligro" style="border:1.5px solid #FCA5A5;margin-top:32px;">
+        <div class="perfil-section-title" style="color:#B91C1C;">Zona de peligro</div>
+        <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:16px;line-height:1.6;">
+          Eliminar tu cuenta borrará permanentemente tu perfil, tus datos personales y tu acceso a la app.
+          Esta acción no se puede deshacer. Los registros anónimos de actividad (analíticas) pueden conservarse
+          conforme a nuestra <a href="privacidad.html" style="color:var(--color-primary);">Política de Privacidad</a>.
+        </p>
+        <button
+          class="btn btn-sm"
+          style="background:#FEF2F2;color:#B91C1C;border:1.5px solid #FCA5A5;"
+          onclick="abrirModalEliminar()">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:15px;height:15px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+          </svg>
+          Solicitar eliminación de cuenta
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal eliminar cuenta -->
+  <div id="modal-delete-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:12px;max-width:460px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+      <div style="background:#B91C1C;padding:20px 24px;">
+        <h3 style="font-family:var(--font-brand);font-size:1.1rem;font-weight:700;color:#fff;margin:0;">
+          ¿Eliminar tu cuenta?
+        </h3>
+      </div>
+      <div style="padding:24px;">
+        <p style="font-size:.9rem;color:var(--color-text);line-height:1.65;margin-bottom:18px;">
+          Esta acción eliminará permanentemente tu cuenta y todos tus datos personales en un plazo máximo de
+          <strong>30 días hábiles</strong>. Se cerrará tu sesión inmediatamente.
+        </p>
+        <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:16px;">
+          Para confirmar, escribe <strong>ELIMINAR</strong> en el campo de abajo:
+        </p>
+        <input
+          type="text"
+          id="delete-confirm-text"
+          class="form-input"
+          placeholder="Escribe ELIMINAR"
+          style="margin-bottom:8px;"
+          oninput="document.getElementById('btn-confirm-delete').disabled = this.value.trim() !== 'ELIMINAR';">
+        <div id="delete-msg" style="display:none;font-size:.8rem;color:#B91C1C;margin-bottom:12px;"></div>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="cerrarModalEliminar()">Cancelar</button>
+          <button
+            id="btn-confirm-delete"
+            class="btn btn-sm"
+            style="flex:2;background:#B91C1C;color:#fff;border:none;"
+            disabled
+            onclick="confirmarEliminarCuenta()">
+            Eliminar mi cuenta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal añadir/editar hijo -->
+  <div id="modal-hijo-overlay" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--color-white);border-radius:var(--radius-md);width:100%;max-width:440px;box-shadow:var(--shadow-lg);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--color-border);">
+        <h3 id="modal-hijo-title" style="font-family:var(--font-brand);font-size:1rem;font-weight:700;color:var(--color-text);">Añadir hijo/a</h3>
+        <button onclick="closeAddHijoModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px;line-height:0;">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+        <div class="form-group">
+          <label class="form-label required">Nombre</label>
+          <input type="text" id="hijo-nombre" class="form-input" placeholder="Nombre del niño/a">
+        </div>
+        <div class="form-group">
+          <label class="form-label required">Apellidos</label>
+          <input type="text" id="hijo-apellidos" class="form-input" placeholder="Apellidos">
+        </div>
+        <div class="form-group">
+          <label class="form-label required">Fecha de nacimiento</label>
+          <input type="date" id="hijo-fecha-nac" class="form-input">
+          <span id="hijo-fecha-err" style="font-size:.75rem;color:var(--color-danger);display:none;margin-top:4px;display:block;"></span>
+        </div>
+        <div id="hijo-err" style="display:none;font-size:.8rem;color:var(--color-danger);padding:8px 12px;background:#FEF2F2;border-radius:var(--radius-xs);line-height:1.5;"></div>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--color-border);display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-ghost btn-sm" onclick="closeAddHijoModal()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" id="btn-guardar-hijo" onclick="guardarHijo()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal añadir familiar -->
+  <div class="modal-familiar-overlay" id="modal-familiar-overlay">
+    <div class="modal-familiar-box">
+      <div class="modal-familiar-header">
+        <h3>Añadir familiar</h3>
+        <button onclick="closeAddFamiliarModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px;line-height:0;">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-familiar-body">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">Buscar miembro por nombre</label>
+          <input type="text" id="familiar-search-input" class="form-input" placeholder="Escribe un nombre..." oninput="onFamiliarSearch(this.value)">
+        </div>
+        <div class="familia-search-results" id="familiar-search-results">
+          <p style="font-size:.8rem;color:var(--color-text-light);">Escribe al menos 2 caracteres para buscar.</p>
+        </div>
+        <div class="form-group" style="margin-top:16px;" id="familiar-relation-group">
+          <label class="form-label">Parentesco</label>
+          <select id="familiar-relation-select" class="form-input">
+            <option value="">Selecciona parentesco</option>
+            <option value="conyuge">Cónyuge</option>
+            <option value="hijo">Hijo/a</option>
+            <option value="padre">Padre / Madre</option>
+            <option value="hermano">Hermano/a</option>
+            <option value="abuelo">Abuelo/a</option>
+            <option value="otro">Otro familiar</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-familiar-footer">
+        <button class="btn btn-ghost btn-sm" onclick="closeAddFamiliarModal()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" id="btn-confirm-familiar" onclick="confirmAddFamiliar()" disabled>Vincular</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav móvil -->
+  <div id="bottom-nav-placeholder"></div>
+
+  <script src="/vendor/supabase.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/familia.js"></script>
+  <script src="js/media.js"></script>
+  <script>
+    // Identidad cacheada: pinta la UI al instante. requireAuth() (async, más
+    // abajo en init()) confirma la sesión real antes de pedir datos privados
+    // de profiles.
+    const user = getCurrentUser();
+    requireAuth();
+    let editMode = false;
+    let perfilData = {};
+
+    // Campos editables
+    const EDIT_FIELDS = ['nombre','apellidos','telefono','pais','ciudad','cp','direccion'];
+
+    async function init() {
+      if (!user) return;
+      const authedUser = await requireAuth();
+      if (!authedUser) return; // sin sesión real: ya se está redirigiendo
+      if (typeof trackPageView === 'function') trackPageView('perfil');
+
+      // Cargar datos de solicitud desde localStorage
+      const pending = JSON.parse(localStorage.getItem('kehila_pending') || '[]');
+      const sol = pending.find(s => s.email === user.email) || {};
+
+      // Cargar foto guardada
+      const savedPhoto = localStorage.getItem('kehila_avatar_' + user.email);
+
+      // Construir perfilData
+      const nameParts = (user.name || '').split(' ');
+      perfilData = {
+        nombre:      sol.nombre     || nameParts[0] || '',
+        apellidos:   sol.apellidos  || nameParts.slice(1).join(' ') || '',
+        email:       user.email     || '',
+        telefono:    (sol.telefonoPrefijo ? sol.telefonoPrefijo + ' ' : '') + (sol.telefono || user.telefono || ''),
+        fechaNac:    sol.fechaNacDia ? sol.fechaNacDia + '/' + sol.fechaNacMes + '/' + sol.fechaNacAnio : '',
+        nacionalidad: sol.nacionalidad || '',
+        paisNac:     sol.paisNac    || '',
+        pais:        sol.pais       || '',
+        ciudad:      sol.ciudad     || '',
+        cp:          sol.cp         || '',
+        direccion:   sol.direccion  || '',
+        comunidad:   sol.comunidad  || user.comunidad || '',
+        practica:    sol.practica   || '',
+        familiar:    sol.familiar === 'si' ? (sol.familiarNombre || 'Sí') : 'No',
+        conocio:     sol.comoConocio || '',
+        docTipo:     sol.docTipo    || '',
+        docNum:      sol.docNumero  ? '••••' + sol.docNumero.slice(-3) : '',
+        role:        user.role      || 'miembro',
+        status:      user.status    || 'active',
+        solicitudNum: sol.solicitudNum || '',
+        submittedAt: sol.submittedAt || '',
+        photo:       savedPhoto     || '',
+      };
+
+      // Sobreescribir con datos guardados en Supabase — fuente real, protegida
+      // por RLS (solo el propio usuario o admin/staff pueden leerla). Antes
+      // esta consulta pedía columnas 'nombre'/'apellidos' que no existen en
+      // profiles (el nombre completo vive en 'name'), así que fallaba en
+      // silencio y todo se mostraba desde el cache local sin cifrar; ahora
+      // se corrige y además se traen aquí los datos de verificación de
+      // identidad, que ya no se guardan en claro en el dispositivo.
+      const sb = getSupabase();
+      if (sb && user.userId) {
+        try {
+          const { data } = await sb
+            .from('profiles')
+            .select('name,telefono,pais,ciudad,cp,direccion,avatar_url,fecha_nac,nacionalidad,pais_nac,doc_tipo,doc_numero')
+            .eq('id', user.userId)
+            .single();
+          if (data) {
+            if (data.name) {
+              const parts = data.name.split(' ');
+              perfilData.nombre    = parts[0] || perfilData.nombre;
+              perfilData.apellidos = parts.slice(1).join(' ') || perfilData.apellidos;
+            }
+            if (data.telefono)     perfilData.telefono     = data.telefono;
+            if (data.pais)         perfilData.pais         = data.pais;
+            if (data.ciudad)       perfilData.ciudad       = data.ciudad;
+            if (data.cp)           perfilData.cp           = data.cp;
+            if (data.direccion)    perfilData.direccion    = data.direccion;
+            if (data.fecha_nac)    perfilData.fechaNac     = new Date(data.fecha_nac).toLocaleDateString('es-ES');
+            if (data.nacionalidad) perfilData.nacionalidad = data.nacionalidad;
+            if (data.pais_nac)     perfilData.paisNac      = data.pais_nac;
+            if (data.doc_tipo)     perfilData.docTipo      = data.doc_tipo;
+            if (data.doc_numero)   perfilData.docNum       = '••••' + data.doc_numero.slice(-3);
+            // La foto guardada en Supabase manda (sincroniza entre dispositivos);
+            // el valor local solo sirve de vista previa instantánea mientras carga.
+            if (data.avatar_url) perfilData.photo = await resolveMediaUrl('community media', data.avatar_url);
+
+            // Ya tenemos los datos reales desde Supabase: borrar del
+            // dispositivo la copia sin cifrar que quedó guardada al registrarse.
+            try {
+              const all = JSON.parse(localStorage.getItem('kehila_pending') || '[]');
+              const cleaned = all.map(s => {
+                if (s.email !== user.email) return s;
+                const { docTipo, docNumero, fechaNac, nacionalidad, paisNac, pais, ciudad, cp, direccion, ...rest } = s;
+                return rest;
+              });
+              localStorage.setItem('kehila_pending', JSON.stringify(cleaned));
+            } catch (_) {}
+          }
+        } catch(e) { /* usa datos localStorage como fallback */ }
+      }
+
+      renderPerfil();
+      renderFamiliaSection();
+      renderMfaSection();
+    }
+
+    /* ─── 2FA (verificación en dos pasos) — solo admin/super_admin/staff ─── */
+    let mfaEnrollId = null;
+
+    async function renderMfaSection() {
+      if (!['admin', 'super_admin', 'staff'].includes(user.role)) return;
+      const section = document.getElementById('section-2fa');
+      section.style.display = '';
+
+      const sb = getSupabase();
+      if (!sb) return;
+      try {
+        const { data } = await sb.auth.mfa.listFactors();
+        const hasVerified = (data?.totp || []).some(f => f.status === 'verified');
+        document.getElementById('mfa-status-off').style.display = hasVerified ? 'none' : '';
+        document.getElementById('mfa-status-on').style.display = hasVerified ? '' : 'none';
+      } catch (e) { /* si falla, se queda en el estado "off" por defecto */ }
+    }
+
+    /**
+     * Construye 6 casillas de un digito cada una (agrupadas 3+3 con un
+     * guion), con avance automatico al escribir y retroceso con Backspace.
+     * Copia de la misma funcion en index.html (paginas estaticas
+     * independientes, sin bundler compartido).
+     */
+    function buildOtpBoxes(containerId, onComplete) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      for (let i = 0; i < 6; i++) {
+        if (i === 3) {
+          const dash = document.createElement('div');
+          dash.className = 'otp-dash';
+          container.appendChild(dash);
+        }
+        const box = document.createElement('input');
+        box.type = 'text';
+        box.inputMode = 'numeric';
+        box.maxLength = 1;
+        box.className = 'otp-box';
+        box.dataset.idx = i;
+        if (i === 0) box.autocomplete = 'one-time-code';
+        container.appendChild(box);
+      }
+      const boxes = () => Array.from(container.querySelectorAll('.otp-box'));
+      const getCode = () => boxes().map(b => b.value).join('');
+
+      container.addEventListener('input', (e) => {
+        const box = e.target;
+        box.value = box.value.replace(/\D/g, '').slice(0, 1);
+        const idx = Number(box.dataset.idx);
+        if (box.value && idx < 5) boxes()[idx + 1].focus();
+        if (getCode().length === 6) onComplete(getCode());
+      });
+      container.addEventListener('keydown', (e) => {
+        const idx = Number(e.target.dataset.idx);
+        if (e.key === 'Backspace' && !e.target.value && idx > 0) boxes()[idx - 1].focus();
+      });
+      container.addEventListener('paste', (e) => {
+        const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        if (!text) return;
+        e.preventDefault();
+        boxes().forEach((b, i) => { b.value = text[i] || ''; });
+        if (text.length === 6) onComplete(text);
+        else boxes()[Math.min(text.length, 5)].focus();
+      });
+    }
+
+    async function startMfaEnroll() {
+      const sb = getSupabase();
+      if (!sb) return;
+      const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp' });
+      if (error) { alert('Error activando la verificación: ' + error.message); return; }
+      mfaEnrollId = data.id;
+      document.getElementById('mfa-qr-container').innerHTML =
+        `<img src="${data.totp.qr_code}" alt="Código QR" style="width:180px;height:180px;">`;
+      document.getElementById('mfa-enroll-msg').style.display = 'none';
+      document.getElementById('mfa-enroll-box').style.display = '';
+      buildOtpBoxes('mfa-enroll-otp-boxes', (code) => confirmMfaEnroll(code));
+      document.querySelector('#mfa-enroll-otp-boxes .otp-box').focus();
+    }
+
+    function cancelMfaEnroll() {
+      document.getElementById('mfa-enroll-box').style.display = 'none';
+      mfaEnrollId = null;
+    }
+
+    async function confirmMfaEnroll(code) {
+      const msgEl = document.getElementById('mfa-enroll-msg');
+      const btn = document.getElementById('btn-mfa-confirm');
+      if (!/^\d{6}$/.test(code)) {
+        msgEl.textContent = 'Introduce los 6 dígitos del código.';
+        msgEl.style.display = 'block';
+        return;
+      }
+      const sb = getSupabase();
+      btn.disabled = true; btn.textContent = 'Confirmando...';
+      try {
+        const { data: challenge, error: chErr } = await sb.auth.mfa.challenge({ factorId: mfaEnrollId });
+        if (chErr) throw chErr;
+        const { error: vErr } = await sb.auth.mfa.verify({ factorId: mfaEnrollId, challengeId: challenge.id, code });
+        if (vErr) throw vErr;
+
+        document.getElementById('mfa-enroll-box').style.display = 'none';
+        showToast('Verificación en dos pasos activada', 'success');
+        renderMfaSection();
+      } catch (e) {
+        msgEl.textContent = 'Código incorrecto. Inténtalo de nuevo.';
+        msgEl.style.display = 'block';
+      }
+      btn.disabled = false; btn.textContent = 'Confirmar';
+    }
+
+    function renderPerfil() {
+      const d = perfilData;
+
+      // Avatar
+      const avatarWrap = document.getElementById('avatar-display');
+      if (d.photo) {
+        avatarWrap.innerHTML = `<img class="avatar-photo" src="${d.photo}" alt="Foto de perfil">`;
+      } else {
+        const color = getAvatarColor(d.nombre || user.name);
+        const initials = (user.initials || (d.nombre[0] || '') + (d.apellidos[0] || '')).toUpperCase().slice(0,2) || '?';
+        avatarWrap.innerHTML = `<div class="avatar avatar-xl" data-color="${color}">${initials}</div>`;
+      }
+
+      // Header
+      document.getElementById('ph-name').textContent = (d.nombre + ' ' + d.apellidos).trim() || user.name;
+      document.getElementById('ph-email').textContent = d.email;
+
+      // Badges
+      const roleLabel = { admin: 'Admin', mod: 'Moderador', miembro: 'Miembro' }[d.role] || d.role;
+      const statusClass = d.status === 'active' ? 'ptag-status-active' : 'ptag-status-pending';
+      const statusLabel = { active: 'Activo', pending: 'Pendiente aprobación', banned: 'Suspendido' }[d.status] || d.status;
+      document.getElementById('ph-badges').innerHTML =
+        `<span class="ptag ptag-role">${roleLabel}</span>
+         <span class="ptag ${statusClass}">${statusLabel}</span>`;
+
+      // Campos
+      setVal('nombre',      d.nombre);
+      setVal('apellidos',   d.apellidos);
+      setVal('telefono',    d.telefono);
+      setVal('fechanac',    d.fechaNac);
+      setVal('nacionalidad',d.nacionalidad);
+      setVal('paisnac',     d.paisNac);
+      setVal('pais',        d.pais);
+      setVal('ciudad',      d.ciudad);
+      setVal('cp',          d.cp);
+      setVal('direccion',   d.direccion);
+      setVal('comunidad',   d.comunidad);
+      setVal('practica',    d.practica);
+      setVal('familiar',    d.familiar);
+      setVal('conocio',     d.conocio);
+      setVal('docTipo',     d.docTipo);
+      setVal('docNum',      d.docNum);
+
+      // Solicitud
+      if (d.solicitudNum) {
+        document.getElementById('section-solicitud').style.display = '';
+        document.getElementById('sol-num').textContent = d.solicitudNum;
+        document.getElementById('sol-date').textContent = d.submittedAt
+          ? 'Enviada el ' + new Date(d.submittedAt).toLocaleDateString('es-ES', {day:'numeric',month:'long',year:'numeric'})
+          : '';
+        document.getElementById('sol-status-tag').textContent = statusLabel;
+        document.getElementById('sol-status-tag').className = 'ptag ' + statusClass;
+      }
+    }
+
+    function setVal(id, value) {
+      const el = document.getElementById('val-' + id);
+      if (!el) return;
+      if (value) {
+        el.textContent = value;
+        el.classList.remove('empty');
+      } else {
+        el.textContent = 'No indicado';
+        el.classList.add('empty');
+      }
+    }
+
+    function toggleEdit() {
+      editMode = true;
+      document.getElementById('btn-editar').style.display = 'none';
+      document.getElementById('btn-guardar').style.display = '';
+      document.getElementById('btn-cancelar').style.display = '';
+      document.getElementById('edit-actions').style.display = 'none';
+
+      EDIT_FIELDS.forEach(f => {
+        const val = document.getElementById('val-' + f);
+        const inp = document.getElementById('inp-' + f);
+        if (val && inp) {
+          val.style.display = 'none';
+          inp.style.display = '';
+          inp.value = perfilData[f] || '';
+        }
+      });
+    }
+
+    function cancelarEdit() {
+      editMode = false;
+      document.getElementById('btn-editar').style.display = '';
+      document.getElementById('btn-guardar').style.display = 'none';
+      document.getElementById('btn-cancelar').style.display = 'none';
+
+      EDIT_FIELDS.forEach(f => {
+        const val = document.getElementById('val-' + f);
+        const inp = document.getElementById('inp-' + f);
+        if (val && inp) {
+          val.style.display = '';
+          inp.style.display = 'none';
+        }
+      });
+    }
+
+    async function guardar() {
+      EDIT_FIELDS.forEach(f => {
+        const inp = document.getElementById('inp-' + f);
+        if (inp) perfilData[f] = inp.value.trim();
+      });
+
+      // Actualizar sesión (SESSION_STORAGE: sessionStorage en app nativa, localStorage en web)
+      const session = getCurrentUser() || {};
+      session.name = (perfilData.nombre + ' ' + perfilData.apellidos).trim();
+      session.telefono = perfilData.telefono;
+      SESSION_STORAGE.setItem('kehila_user', JSON.stringify(session));
+
+      // Guardar en Supabase
+      const sb = getSupabase();
+      const sess = typeof getValidSession === 'function' ? await getValidSession() : null;
+      if (!sb || !sess || sess.user.id !== user.userId) {
+        if (typeof showToast === 'function') showToast('No se pudo confirmar tu sesión. Vuelve a intentarlo.', 'error');
+        return;
+      }
+
+      const { error } = await sb.from('profiles').upsert({
+        id:        user.userId,
+        nombre:    perfilData.nombre,
+        apellidos: perfilData.apellidos,
+        telefono:  perfilData.telefono,
+        pais:      perfilData.pais,
+        ciudad:    perfilData.ciudad,
+        cp:        perfilData.cp,
+        direccion: perfilData.direccion,
+        name:      session.name,
+        email:     user.email
+      }, { onConflict: 'id' });
+
+      if (error) {
+        if (typeof showToast === 'function') showToast('Error al guardar perfil: ' + error.message, 'error');
+        return;
+      }
+
+      cancelarEdit();
+      renderPerfil();
+      renderFamiliaSection();
+
+      if (typeof showToast === 'function') {
+        showToast('Perfil actualizado', 'success');
+      } else {
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;top:20px;right:20px;z-index:999;background:#1B2E5E;color:#fff;padding:12px 18px;border-radius:6px;font-size:.875rem;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.15);';
+        t.textContent = 'Perfil actualizado';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2500);
+      }
+    }
+
+    async function handleAvatarUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 3 * 1024 * 1024) {
+        alert('La imagen no puede superar 3MB.');
+        return;
+      }
+
+      // Vista previa instantánea (URL local, no bloquea el hilo ni se guarda)
+      const localPreview = URL.createObjectURL(file);
+      perfilData.photo = localPreview;
+      renderPerfil();
+
+      const url = typeof uploadMedia === 'function' ? await uploadMedia(file, 'avatars') : null;
+      URL.revokeObjectURL(localPreview);
+      if (!url) {
+        if (typeof showToast === 'function') showToast('No se pudo subir la foto.', 'error');
+        return;
+      }
+
+      localStorage.setItem('kehila_avatar_' + user.email, url); // caché local liviana (solo la URL, no la imagen)
+      perfilData.photo = await resolveMediaUrl('community media', url);
+      renderPerfil();
+
+      const sb = getSupabase();
+      const sess = typeof getValidSession === 'function' ? await getValidSession() : null;
+      if (sb && sess && sess.user.id === user.userId) {
+        const { error } = await sb.from('profiles').upsert({ id: user.userId, avatar_url: url }, { onConflict: 'id' });
+        if (error && typeof showToast === 'function') showToast('La foto se ve solo en este dispositivo: no se pudo sincronizar.', 'error');
+      }
+    }
+
+    init();
+    loadHijos();
+
+    /* ══ HIJOS ══ */
+    let _hijosData = [];
+    let _hijoEditId = null;
+
+    function calcAge(fechaNac) {
+      if (!fechaNac) return null;
+      return Math.floor((Date.now() - new Date(fechaNac)) / (365.25*24*60*60*1000));
+    }
+
+    async function loadHijos() {
+      const sb = getSupabase();
+      if (!sb || !user?.userId) return;
+      const sess = typeof getValidSession === 'function' ? await getValidSession() : null;
+      if (!sess || sess.user.id !== user.userId) return;
+      try {
+        const { data } = await sb.from('children')
+          .select('id, nombre, apellidos, fecha_nac')
+          .eq('parent_id', user.userId)
+          .order('nombre');
+        _hijosData = data || [];
+        renderHijos();
+      } catch(e) { console.error('Error cargando hijos:', e); }
+    }
+
+    function renderHijos() {
+      const list = document.getElementById('hijos-list');
+      if (!_hijosData.length) {
+        list.innerHTML = '<p class="familia-empty">Sin hijos registrados. Añade a tus hijos para inscribirlos en actividades.</p>';
+        return;
+      }
+      list.innerHTML = _hijosData.map(h => {
+        const fullName = escHtml(h.nombre + ' ' + h.apellidos);
+        const age = calcAge(h.fecha_nac);
+        const initials = ((h.nombre?.[0] || '') + (h.apellidos?.[0] || '')).toUpperCase() || '?';
+        const color = getAvatarColor(h.nombre);
+        const ageStr = age !== null ? `${age} años` : 'Menor';
+        return `
+          <div class="familia-card">
+            <div class="avatar" data-color="${color}" style="width:36px;height:36px;font-size:.8rem;flex-shrink:0;">${initials}</div>
+            <div class="familia-card-info">
+              <div class="familia-card-name">${fullName}</div>
+              <div class="familia-card-rel">${ageStr} &middot; <span class="hijo-badge">Control parental</span></div>
+            </div>
+            <div class="hijo-actions">
+              <button class="hijo-action-btn" onclick="openEditHijoModal('${h.id}')" title="Editar">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z"/></svg>
+              </button>
+              <button class="hijo-action-btn danger" onclick="eliminarHijo('${h.id}', '${escHtml(h.nombre + ' ' + h.apellidos).replace(/'/g,"\\'")}')">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function openAddHijoModal() {
+      _hijoEditId = null;
+      document.getElementById('modal-hijo-title').textContent = 'Añadir hijo/a';
+      document.getElementById('hijo-nombre').value = '';
+      document.getElementById('hijo-apellidos').value = '';
+      document.getElementById('hijo-fecha-nac').value = '';
+      document.getElementById('hijo-err').style.display = 'none';
+      document.getElementById('hijo-fecha-err').style.display = 'none';
+      const today = new Date().toISOString().split('T')[0];
+      const minDate = new Date(Date.now() - 18*365.25*24*60*60*1000).toISOString().split('T')[0];
+      document.getElementById('hijo-fecha-nac').max = today;
+      document.getElementById('hijo-fecha-nac').min = minDate;
+      document.getElementById('btn-guardar-hijo').disabled = false;
+      document.getElementById('btn-guardar-hijo').textContent = 'Guardar';
+      document.getElementById('modal-hijo-overlay').style.display = 'flex';
+      setTimeout(() => document.getElementById('hijo-nombre').focus(), 100);
+    }
+
+    function openEditHijoModal(id) {
+      const hijo = _hijosData.find(h => h.id === id);
+      if (!hijo) return;
+      _hijoEditId = id;
+      document.getElementById('modal-hijo-title').textContent = 'Editar hijo/a';
+      document.getElementById('hijo-nombre').value = hijo.nombre || '';
+      document.getElementById('hijo-apellidos').value = hijo.apellidos || '';
+      document.getElementById('hijo-fecha-nac').value = hijo.fecha_nac || '';
+      document.getElementById('hijo-err').style.display = 'none';
+      document.getElementById('hijo-fecha-err').style.display = 'none';
+      const today = new Date().toISOString().split('T')[0];
+      const minDate = new Date(Date.now() - 18*365.25*24*60*60*1000).toISOString().split('T')[0];
+      document.getElementById('hijo-fecha-nac').max = today;
+      document.getElementById('hijo-fecha-nac').min = minDate;
+      document.getElementById('btn-guardar-hijo').disabled = false;
+      document.getElementById('btn-guardar-hijo').textContent = 'Guardar';
+      document.getElementById('modal-hijo-overlay').style.display = 'flex';
+    }
+
+    function closeAddHijoModal() {
+      document.getElementById('modal-hijo-overlay').style.display = 'none';
+      _hijoEditId = null;
+    }
+
+    async function guardarHijo() {
+      const nombre    = document.getElementById('hijo-nombre').value.trim();
+      const apellidos = document.getElementById('hijo-apellidos').value.trim();
+      const fechaNac  = document.getElementById('hijo-fecha-nac').value;
+      const errEl     = document.getElementById('hijo-err');
+      const fechaErr  = document.getElementById('hijo-fecha-err');
+      errEl.style.display = 'none';
+      fechaErr.style.display = 'none';
+
+      if (!nombre || !apellidos) {
+        errEl.textContent = 'El nombre y apellidos son obligatorios.';
+        errEl.style.display = '';
+        return;
+      }
+      if (!fechaNac) {
+        errEl.textContent = 'La fecha de nacimiento es obligatoria.';
+        errEl.style.display = '';
+        return;
+      }
+      const age = calcAge(fechaNac);
+      if (age < 0) {
+        fechaErr.textContent = 'La fecha de nacimiento no puede ser futura.';
+        fechaErr.style.display = '';
+        return;
+      }
+      if (age > 17) {
+        fechaErr.textContent = 'Esta función es para menores de 18 años.';
+        fechaErr.style.display = '';
+        return;
+      }
+
+      const btn = document.getElementById('btn-guardar-hijo');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      const sb = getSupabase();
+      const isEdit = !!_hijoEditId;
+      const sess = typeof getValidSession === 'function' ? await getValidSession() : null;
+      if (!sb || !sess || sess.user.id !== user.userId) {
+        errEl.textContent = 'No se pudo confirmar tu sesión. Vuelve a intentarlo.';
+        errEl.style.display = '';
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+        return;
+      }
+
+      try {
+        let error;
+        if (isEdit) {
+          ({ error } = await sb.from('children').update({
+            nombre:    nombre,
+            apellidos: apellidos,
+            fecha_nac: fechaNac
+          }).eq('id', _hijoEditId).eq('parent_id', user.userId));
+        } else {
+          ({ error } = await sb.from('children').insert({
+            parent_id: user.userId,
+            nombre:    nombre,
+            apellidos: apellidos,
+            fecha_nac: fechaNac
+          }));
+        }
+
+        if (error) throw error;
+
+        const displayName = nombre + ' ' + apellidos;
+        closeAddHijoModal();
+        await loadHijos();
+        if (typeof showToast === 'function')
+          showToast(isEdit ? 'Perfil actualizado' : `${displayName} añadido/a`, 'success');
+      } catch(e) {
+        errEl.textContent = 'Error al guardar. Inténtalo de nuevo.';
+        errEl.style.display = '';
+        console.error('guardarHijo error:', e);
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+      }
+    }
+
+    async function eliminarHijo(id, nombre) {
+      if (!confirm(`¿Eliminar el perfil de ${nombre}? Esta acción no se puede deshacer.`)) return;
+      const sb = getSupabase();
+      const sess = typeof getValidSession === 'function' ? await getValidSession() : null;
+      if (!sb || !sess || sess.user.id !== user.userId) {
+        if (typeof showToast === 'function') showToast('No se pudo confirmar tu sesión. Vuelve a intentarlo.', 'error');
+        return;
+      }
+      try {
+        const { error } = await sb.from('children').delete()
+          .eq('id', id).eq('parent_id', user.userId);
+        if (error) throw error;
+        await loadHijos();
+        if (typeof showToast === 'function') showToast('Perfil eliminado', 'success');
+      } catch(e) {
+        if (typeof showToast === 'function') showToast('Error al eliminar', 'error');
+        console.error('eliminarHijo error:', e);
+      }
+    }
+
+    /* ══ FAMILIA ══ */
+    let _familiarSelected = null;
+
+    const REL_LABELS = {
+      conyuge: 'Cónyuge', hijo: 'Hijo/a', padre: 'Padre / Madre',
+      hermano: 'Hermano/a', abuelo: 'Abuelo/a', otro: 'Otro familiar'
+    };
+
+    function renderFamiliaSection() {
+      if (!user) return;
+      const links = getFamilyLinks(user.userId || user.email);
+      const list = document.getElementById('familia-list');
+      if (!links.length) {
+        list.innerHTML = '<p class="familia-empty">Sin familiares vinculados.</p>';
+        return;
+      }
+      list.innerHTML = links.map(f => {
+        const color = getAvatarColor(f.name);
+        return `
+          <div class="familia-card">
+            <div class="avatar" data-color="${color}" style="width:36px;height:36px;font-size:.8rem;flex-shrink:0;">${f.initials}</div>
+            <div class="familia-card-info">
+              <div class="familia-card-name">${f.name}</div>
+              <div class="familia-card-rel">${REL_LABELS[f.relation] || f.relation}</div>
+            </div>
+            <button class="familia-remove-btn" onclick="removeMyFamiliar('${f.id}')" title="Desvincular">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+          </div>`;
+      }).join('');
+    }
+
+    function openAddFamiliarModal() {
+      _familiarSelected = null;
+      document.getElementById('familiar-search-input').value = '';
+      document.getElementById('familiar-search-results').innerHTML =
+        '<p style="font-size:.8rem;color:var(--color-text-light);">Escribe al menos 2 caracteres para buscar.</p>';
+      document.getElementById('familiar-relation-select').value = '';
+      document.getElementById('btn-confirm-familiar').disabled = true;
+      document.getElementById('modal-familiar-overlay').classList.add('open');
+    }
+
+    function closeAddFamiliarModal() {
+      document.getElementById('modal-familiar-overlay').classList.remove('open');
+    }
+
+    let _familiarResults = [];
+
+    async function onFamiliarSearch(query) {
+      const userId = user.userId || user.email;
+      const existing = getFamilyLinks(userId).map(l => l.id);
+      existing.push(userId);
+      const container = document.getElementById('familiar-search-results');
+      if ((query || '').trim().length < 2) {
+        container.innerHTML = '<p style="font-size:.8rem;color:var(--color-text-light);">Escribe al menos 2 caracteres para buscar.</p>';
+        _familiarSelected = null;
+        updateConfirmBtn();
+        return;
+      }
+      const results = await searchMembers(query, existing);
+      _familiarResults = results;
+      if (!results.length) {
+        container.innerHTML = '<p style="font-size:.8rem;color:var(--color-text-light);">Sin resultados.</p>';
+        _familiarSelected = null;
+        updateConfirmBtn();
+        return;
+      }
+      container.innerHTML = results.map(m => `
+        <div class="familia-result-item" id="res-${escHtml(m.id)}" onclick="selectFamiliarResult('${escHtml(m.id)}')">
+          <div class="avatar" data-color="${getAvatarColor(m.name)}" style="width:32px;height:32px;font-size:.75rem;flex-shrink:0;">${escHtml(m.initials || '')}</div>
+          <div>
+            <div class="familia-result-name">${escHtml(m.name)}</div>
+            <div class="familia-result-email">${escHtml(m.email)}</div>
+          </div>
+        </div>`).join('');
+      _familiarSelected = null;
+      updateConfirmBtn();
+    }
+
+    function selectFamiliarResult(id) {
+      document.querySelectorAll('.familia-result-item').forEach(el => el.classList.remove('selected'));
+      const el = document.getElementById('res-' + id);
+      if (el) el.classList.add('selected');
+      _familiarSelected = _familiarResults.find(m => m.id === id) || null;
+      updateConfirmBtn();
+    }
+
+    function updateConfirmBtn() {
+      const rel = document.getElementById('familiar-relation-select').value;
+      document.getElementById('btn-confirm-familiar').disabled = !(_familiarSelected && rel);
+    }
+
+    document.getElementById('familiar-relation-select')?.addEventListener('change', updateConfirmBtn);
+
+    function confirmAddFamiliar() {
+      const rel = document.getElementById('familiar-relation-select').value;
+      if (!_familiarSelected || !rel) return;
+      const userId = user.userId || user.email;
+      const ok = addFamilyLink(userId, _familiarSelected, rel);
+      closeAddFamiliarModal();
+      renderFamiliaSection();
+      if (typeof showToast === 'function') {
+        showToast(ok ? `${_familiarSelected.name} vinculado como familiar` : 'Ya está vinculado', ok ? 'success' : 'warning');
+      }
+    }
+
+    function removeMyFamiliar(memberId) {
+      const userId = user.userId || user.email;
+      removeFamilyLink(userId, memberId);
+      renderFamiliaSection();
+      if (typeof showToast === 'function') showToast('Familiar desvinculado', 'success');
+    }
+
+    /* ══ ELIMINACIÓN DE CUENTA ══ */
+    function abrirModalEliminar() {
+      document.getElementById('delete-confirm-text').value = '';
+      document.getElementById('btn-confirm-delete').disabled = true;
+      document.getElementById('delete-msg').style.display = 'none';
+      const overlay = document.getElementById('modal-delete-overlay');
+      overlay.style.display = 'flex';
+    }
+
+    function cerrarModalEliminar() {
+      document.getElementById('modal-delete-overlay').style.display = 'none';
+    }
+
+    async function confirmarEliminarCuenta() {
+      const confirmText = document.getElementById('delete-confirm-text').value.trim();
+      if (confirmText !== 'ELIMINAR') return;
+
+      const btn = document.getElementById('btn-confirm-delete');
+      btn.disabled = true;
+      btn.textContent = 'Procesando...';
+
+      try {
+        const sb = getSupabase();
+        const session = await sb.auth.getSession();
+        const token = session?.data?.session?.access_token;
+        if (!token) throw new Error('Sesión no válida');
+
+        const res = await fetch(SUPABASE_URL + '/functions/v1/delete-account', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error al eliminar la cuenta');
+      } catch (err) {
+        const msgEl = document.getElementById('delete-msg');
+        msgEl.textContent = err.message || 'Error al eliminar la cuenta. Inténtalo de nuevo.';
+        msgEl.style.display = '';
+        btn.disabled = false;
+        btn.textContent = 'Eliminar mi cuenta';
+        return;
+      }
+
+      // Limpiar sesión local (ambos storages por si quedan restos)
+      SESSION_STORAGE.removeItem('kehila_user');
+      localStorage.removeItem('kehila_user');
+      localStorage.removeItem('kehila_pending');
+      if (user && user.email) {
+        localStorage.removeItem('kehila_avatar_' + user.email);
+        localStorage.removeItem('kehila_cart');
+      }
+
+      window.location.href = 'index.html?deleted=1';
+    }
+
+  </script>
+<div id="pt-ready" hidden></div>
+<script src="js/perfil-notif.js"></script>
+</body>
+</html>

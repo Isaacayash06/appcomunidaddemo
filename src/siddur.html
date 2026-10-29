@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!-- GENERADO por tools/build_siddur.py a partir de tools/siddur.template.html — no editar siddur.html a mano. -->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Sidur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Frank+Ruhl+Libre:wght@400;500;700&family=Noto+Serif+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/siddur.css">
+  <script>
+  // Preferencias de lectura antes de pintar (sin parpadeo de tema/tamaño)
+  (function () {
+    try {
+      var s = JSON.parse(localStorage.getItem('kehila_sidur_prefs') || '{}'), r = document.documentElement;
+      var dark = s.theme === 'dark' || (s.theme === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+      if (dark) r.classList.add('sd-dark');
+      if (s.size) r.style.setProperty('--fs', s.size + 'px');
+      if (s.rubrics === false) r.classList.add('sd-no-rubrics');
+    } catch (e) {}
+  })();
+  </script>
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div class="app-layout">
+    <div id="sidebar-placeholder"></div>
+
+    <main class="main-content sd" id="sd">
+
+      <!-- Barra de lectura (solo visible con una tefilá abierta) -->
+      <div class="sd-safe" aria-hidden="true"></div>
+      <header class="sd-topbar" id="sdTopbar">
+        <div class="grp">
+          <button class="ico" id="sdBack" aria-label="Volver al índice del sidur">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <button class="ico" id="sdOpenToc" aria-label="Índice" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M4 7h16M4 12h11M4 17h16"/></svg>
+          </button>
+        </div>
+        <div class="sd-where notranslate" id="sdWhere" aria-live="polite" data-no-translate></div>
+        <div class="grp end">
+          <button class="ico" id="sdOpenSet" aria-label="Ajustes de lectura" aria-expanded="false">
+            <span class="aa notranslate" data-no-translate><b>A</b>a</span>
+          </button>
+        </div>
+        <div class="sd-progress" aria-hidden="true"><i id="sdBar"></i></div>
+      </header>
+
+      <!-- Portada + índice -->
+      <div id="sdLanding">
+        <section class="cover" id="top">
+          <div class="cover-in">
+            <div class="frame" aria-hidden="true"></div>
+            <p class="kicker">Nusaj Sefaradí</p>
+            <h1 class="he notranslate" lang="he" data-no-translate>סדור</h1>
+            <p class="es-title">Sidur</p>
+            <div class="orn big" aria-hidden="true"><i></i></div>
+            <p class="edition">Edot HaMizraj</p>
+            <p class="donor"><b>ChaiActive</b></p>
+            <a class="resume" id="sdResume" href="#" hidden>Continuar donde quedaste<span id="sdResumeWhere" class="notranslate" data-no-translate></span></a>
+            <a class="start" href="#indice" id="sdStart" aria-label="Ir al índice"><span>Índice</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M6 10l6 6 6-6"/></svg></a>
+          </div>
+        </section>
+
+        <section class="contents" id="indice">
+          <header class="sec-head plain"><h2 class="toc-title">Índice</h2><div class="orn"><i></i></div></header>
+<h2 class="toc-group">Entre semana</h2><ol class="toc">
+<li class="has-sub"><details><summary><span class="es">Shajarit</span><span class="dots"></span><span class="he" lang="he">שחרית</span></summary><ul class="quick"><li><a href="#shajarit"><span class="es">Desde el principio</span><span class="dots"></span><span class="he" lang="he"></span></a></li><li><a href="#shajarit-6"><span class="es">Tefilín</span><span class="dots"></span><span class="he" lang="he">תפילין</span></a></li><li><a href="#shajarit-10"><span class="es">Hodu</span><span class="dots"></span><span class="he" lang="he">הודו</span></a></li><li><a href="#baruj-sheamar"><span class="es">Baruj Sheamar</span><span class="dots"></span><span class="he" lang="he">ברוך שאמר</span></a></li><li><a href="#shajarit-12"><span class="es">Shemá</span><span class="dots"></span><span class="he" lang="he">שמע</span></a></li><li><a href="#shajarit-13"><span class="es">Amidá</span><span class="dots"></span><span class="he" lang="he">עמידה</span></a></li></ul></details></li>
+<li class="has-sub"><details><summary><span class="es">Minjá</span><span class="dots"></span><span class="he" lang="he">מנחה</span></summary><ul class="quick"><li><a href="#minja"><span class="es">Desde el principio</span><span class="dots"></span><span class="he" lang="he"></span></a></li><li><a href="#ashrei"><span class="es">Ashré Yoshvé</span><span class="dots"></span><span class="he" lang="he">אשרי יושבי</span></a></li></ul></details></li>
+<li><a href="#arvit"><span class="es">Arvit</span><span class="dots"></span><span class="he" lang="he">ערבית</span></a></li>
+</ol>
+<h2 class="toc-group">Bendiciones</h2><ol class="toc">
+<li><a href="#birkat-hamazon"><span class="es">Birkat Hamazón</span><span class="dots"></span><span class="he" lang="he">ברכת המזון</span></a></li>
+<li><a href="#shema-mita"><span class="es">Shemá al HaMitá</span><span class="dots"></span><span class="he" lang="he">קריאת שמע שעל המטה</span></a></li>
+</ol>
+<h2 class="toc-group">Shabat</h2><ol class="toc">
+<li><a href="#kabalat-shabat"><span class="es">Kabalat Shabat</span><span class="dots"></span><span class="he" lang="he">קבלת שבת</span></a></li>
+<li><a href="#seuda-shabat"><span class="es">Kidush y Seudá</span><span class="dots"></span><span class="he" lang="he">קידוש וסעודה</span></a></li>
+<li><a href="#shajarit-shabat"><span class="es">Shajarit de Shabat</span><span class="dots"></span><span class="he" lang="he">שחרית של שבת</span></a></li>
+<li><a href="#musaf-shabat"><span class="es">Musaf de Shabat</span><span class="dots"></span><span class="he" lang="he">מוסף של שבת</span></a></li>
+<li><a href="#kidush-hayom"><span class="es">Kidush del día</span><span class="dots"></span><span class="he" lang="he">קידוש היום</span></a></li>
+<li><a href="#minja-shabat"><span class="es">Minjá de Shabat</span><span class="dots"></span><span class="he" lang="he">מנחה של שבת</span></a></li>
+<li><a href="#seuda-shlishit"><span class="es">Seudá Shlishit</span><span class="dots"></span><span class="he" lang="he">סעודה שלישית</span></a></li>
+<li><a href="#havdala"><span class="es">Havdalá</span><span class="dots"></span><span class="he" lang="he">הבדלה</span></a></li>
+</ol>
+<h2 class="toc-group">Rosh Jodesh y fiestas</h2><ol class="toc">
+<li><a href="#rosh-jodesh"><span class="es">Rosh Jodesh</span><span class="dots"></span><span class="he" lang="he">ראש חודש</span></a></li>
+<li><a href="#januca"><span class="es">Janucá</span><span class="dots"></span><span class="he" lang="he">חנוכה</span></a></li>
+</ol>
+<h2 class="toc-group">Otras tefilot</h2><ol class="toc">
+<li><a href="#sefirat-haomer"><span class="es">Sefirat HaÓmer</span><span class="dots"></span><span class="he" lang="he">ספירת העומר</span></a></li>
+<li><a href="#kidush-levana"><span class="es">Kidush Leváná</span><span class="dots"></span><span class="he" lang="he">קידוש לבנה</span></a></li>
+</ol>
+        </section>
+
+        <footer class="colophon">
+          <div class="orn big"><i></i></div>
+          <p class="he amen notranslate" lang="he" data-no-translate>אמן</p>
+          <p class="small">Texto basado en el <em>Siddur Edot HaMizrach</em>, publicado en Sefaria bajo dominio público (CC0). Se han retirado los signos de cantilación y las citas bibliográficas para una lectura más limpia. Ante cualquier duda de nusaj o halajá, consulta tu sidur impreso o a tu rab.</p>
+        </footer>
+      </div>
+
+      <!-- Lectura: aquí se carga una sola tefilá (siddur/<parte>.html) -->
+      <div id="sdReader" class="sd-book notranslate" data-no-translate hidden></div>
+
+      <!-- Índice lateral -->
+      <aside class="sd-drawer" id="sdDrawer" aria-hidden="true" aria-label="Índice">
+        <div class="sd-drawer-in">
+          <div class="sd-drawer-head">
+            <span>Índice</span>
+            <button class="ico" id="sdCloseToc" aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <nav id="sdTocDrawer">
+<h2 class="toc-group">Entre semana</h2>
+<details class="toc-part" data-part="shajarit"><summary><span class="es">Shajarit</span><span class="he" lang="he">שחרית</span></summary><ul><li><a href="#shajarit"><span class="es">Desde el principio</span><span class="he" lang="he"></span></a></li><li><a href="#shajarit-6"><span class="es">Tefilín</span><span class="he" lang="he">תפילין</span></a></li><li><a href="#shajarit-10"><span class="es">Hodu</span><span class="he" lang="he">הודו</span></a></li><li><a href="#baruj-sheamar"><span class="es">Baruj Sheamar</span><span class="he" lang="he">ברוך שאמר</span></a></li><li><a href="#shajarit-12"><span class="es">Shemá</span><span class="he" lang="he">שמע</span></a></li><li><a href="#shajarit-13"><span class="es">Amidá</span><span class="he" lang="he">עמידה</span></a></li></ul></details>
+<details class="toc-part" data-part="minja"><summary><span class="es">Minjá</span><span class="he" lang="he">מנחה</span></summary><ul><li><a href="#minja"><span class="es">Desde el principio</span><span class="he" lang="he"></span></a></li><li><a href="#ashrei"><span class="es">Ashré Yoshvé</span><span class="he" lang="he">אשרי יושבי</span></a></li></ul></details>
+<details class="toc-part" data-part="arvit"><summary><span class="es">Arvit</span><span class="he" lang="he">ערבית</span></summary><ul><li><a href="#arvit-1"><span class="es">Barjú</span><span class="he" lang="he">ברכו</span></a></li><li><a href="#arvit-2"><span class="es">Shemá y sus bendiciones</span><span class="he" lang="he">קריאת שמע וברכותיה</span></a></li><li><a href="#arvit-3"><span class="es">Amidá</span><span class="he" lang="he">עמידה</span></a></li><li><a href="#arvit-4"><span class="es">Alenu</span><span class="he" lang="he">עלינו לשבח</span></a></li></ul></details>
+<h2 class="toc-group">Bendiciones</h2>
+<details class="toc-part" data-part="birkat-hamazon"><summary><span class="es">Birkat Hamazón</span><span class="he" lang="he">ברכת המזון</span></summary><ul><li><a href="#birkat-hamazon-1"><span class="es">Birkat Hamazón</span><span class="he" lang="he">ברכת המזון</span></a></li><li><a href="#birkat-hamazon-2"><span class="es">Berajá Ajaroná</span><span class="he" lang="he">ברכה מעין שלוש</span></a></li><li><a href="#birkat-hamazon-3"><span class="es">Berajot HaNehenín</span><span class="he" lang="he">ברכות הנהנין</span></a></li></ul></details>
+<details class="toc-part" data-part="shema-mita"><summary><span class="es">Shemá al HaMitá</span><span class="he" lang="he">קריאת שמע שעל המטה</span></summary><ul><li><a href="#shema-mita-1"><span class="es">Shemá al HaMitá</span><span class="he" lang="he">קריאת שמע שעל המיטה</span></a></li></ul></details>
+<h2 class="toc-group">Shabat</h2>
+<details class="toc-part" data-part="kabalat-shabat"><summary><span class="es">Kabalat Shabat</span><span class="he" lang="he">קבלת שבת</span></summary><ul><li><a href="#kabalat-shabat-1"><span class="es">Hadlakat Nerot</span><span class="he" lang="he">הדלקת נרות</span></a></li><li><a href="#kabalat-shabat-2"><span class="es">Shir HaShirim</span><span class="he" lang="he">שיר השירים</span></a></li><li><a href="#kabalat-shabat-3"><span class="es">Kabalat Shabat</span><span class="he" lang="he">קבלת שבת</span></a></li><li><a href="#kabalat-shabat-4"><span class="es">Barjú</span><span class="he" lang="he">ברכו</span></a></li><li><a href="#kabalat-shabat-5"><span class="es">Shemá y sus bendiciones</span><span class="he" lang="he">קריאת שמע וברכותיה</span></a></li><li><a href="#kabalat-shabat-6"><span class="es">Amidá</span><span class="he" lang="he">עמידה</span></a></li><li><a href="#kabalat-shabat-7"><span class="es">Alenu</span><span class="he" lang="he">עלינו לשבח</span></a></li></ul></details>
+<details class="toc-part" data-part="seuda-shabat"><summary><span class="es">Kidush y Seudá</span><span class="he" lang="he">קידוש וסעודה</span></summary><ul><li><a href="#seuda-shabat-1"><span class="es">Shalom Aleijem</span><span class="he" lang="he">שלום עליכם</span></a></li><li><a href="#seuda-shabat-2"><span class="es">Eshet Jayil</span><span class="he" lang="he">אשת חיל</span></a></li><li><a href="#seuda-shabat-3"><span class="es">Atkinu Seudatá</span><span class="he" lang="he">אתקינו סעודתא</span></a></li><li><a href="#seuda-shabat-4"><span class="es">Kidush</span><span class="he" lang="he">קידוש</span></a></li><li><a href="#seuda-shabat-5"><span class="es">Birkat HaBanim</span><span class="he" lang="he">ברכת הבנים</span></a></li><li><a href="#seuda-shabat-6"><span class="es">Seudá</span><span class="he" lang="he">סעודה</span></a></li><li><a href="#seuda-shabat-7"><span class="es">Zohar</span><span class="he" lang="he">זוהר</span></a></li><li><a href="#seuda-shabat-8"><span class="es">Zemirot</span><span class="he" lang="he">זמירות</span></a></li></ul></details>
+<details class="toc-part" data-part="shajarit-shabat"><summary><span class="es">Shajarit de Shabat</span><span class="he" lang="he">שחרית של שבת</span></summary><ul><li><a href="#shajarit-shabat-1"><span class="es">Salmos de Shabat</span><span class="he" lang="he">מזמורי שבת</span></a></li><li><a href="#shajarit-shabat-2"><span class="es">Pesukei DeZimrá</span><span class="he" lang="he">פסוקי דזמרה</span></a></li><li><a href="#shajarit-shabat-3"><span class="es">Shemá y sus bendiciones</span><span class="he" lang="he">קריאת שמע וברכותיה</span></a></li><li><a href="#shajarit-shabat-4"><span class="es">Amidá</span><span class="he" lang="he">עמידה</span></a></li><li><a href="#shajarit-shabat-5"><span class="es">Lectura de la Torá</span><span class="he" lang="he">קריאת התורה</span></a></li><li><a href="#shajarit-shabat-6"><span class="es">HaGomel</span><span class="he" lang="he">ברכת הגומל</span></a></li><li><a href="#shajarit-shabat-7"><span class="es">Zéved HaBat</span><span class="he" lang="he">זבד הבת</span></a></li><li><a href="#shajarit-shabat-8"><span class="es">Haftará</span><span class="he" lang="he">הפטרה</span></a></li><li><a href="#shajarit-shabat-9"><span class="es">Birkat HaJódesh</span><span class="he" lang="he">ברכת החדש</span></a></li><li><a href="#shajarit-shabat-10"><span class="es">Ashré</span><span class="he" lang="he">אשרי</span></a></li></ul></details>
+<details class="toc-part" data-part="musaf-shabat"><summary><span class="es">Musaf de Shabat</span><span class="he" lang="he">מוסף של שבת</span></summary><ul><li><a href="#musaf-shabat-1"><span class="es">Amidá de Musaf</span><span class="he" lang="he">עמידת מוסף</span></a></li><li><a href="#musaf-shabat-2"><span class="es">Ketoret</span><span class="he" lang="he">פטום הקטורת</span></a></li><li><a href="#musaf-shabat-3"><span class="es">Alenu</span><span class="he" lang="he">עלינו לשבח</span></a></li></ul></details>
+<details class="toc-part" data-part="kidush-hayom"><summary><span class="es">Kidush del día</span><span class="he" lang="he">קידוש היום</span></summary><ul><li><a href="#kidush-hayom-1"><span class="es">Kidush</span><span class="he" lang="he">קידוש היום</span></a></li></ul></details>
+<details class="toc-part" data-part="minja-shabat"><summary><span class="es">Minjá de Shabat</span><span class="he" lang="he">מנחה של שבת</span></summary><ul><li><a href="#minja-shabat-1"><span class="es">Korbanot</span><span class="he" lang="he">קרבנות</span></a></li><li><a href="#minja-shabat-2"><span class="es">Uva LeTzión</span><span class="he" lang="he">ובא לציון</span></a></li><li><a href="#minja-shabat-3"><span class="es">Amidá</span><span class="he" lang="he">עמידה</span></a></li><li><a href="#minja-shabat-4"><span class="es">Alenu</span><span class="he" lang="he">עלינו לשבח</span></a></li></ul></details>
+<details class="toc-part" data-part="seuda-shlishit"><summary><span class="es">Seudá Shlishit</span><span class="he" lang="he">סעודה שלישית</span></summary><ul><li><a href="#seuda-shlishit-1"><span class="es">Seudá Shlishit</span><span class="he" lang="he">סעודה שלישית</span></a></li></ul></details>
+<details class="toc-part" data-part="havdala"><summary><span class="es">Havdalá</span><span class="he" lang="he">הבדלה</span></summary><ul><li><a href="#havdala-1"><span class="es">Antes de Havdalá</span><span class="he" lang="he">מוצאי שבת</span></a></li><li><a href="#havdala-2"><span class="es">Havdalá</span><span class="he" lang="he">סדר הבדלה</span></a></li><li><a href="#havdala-3"><span class="es">Zemirot de Motzaé Shabat</span><span class="he" lang="he">שירים למוצאי שבת</span></a></li><li><a href="#havdala-4"><span class="es">Veyitén Lejá</span><span class="he" lang="he">ויתן לך</span></a></li><li><a href="#havdala-5"><span class="es">Seudá de Melavé Malká</span><span class="he" lang="he">סעודה רביעית</span></a></li></ul></details>
+<h2 class="toc-group">Rosh Jodesh y fiestas</h2>
+<details class="toc-part" data-part="rosh-jodesh"><summary><span class="es">Rosh Jodesh</span><span class="he" lang="he">ראש חודש</span></summary><ul><li><a href="#rosh-jodesh-1"><span class="es">Hallel</span><span class="he" lang="he">הלל</span></a></li><li><a href="#rosh-jodesh-2"><span class="es">Uva LeTzión</span><span class="he" lang="he">ובא לציון</span></a></li><li><a href="#rosh-jodesh-3"><span class="es">Shir shel Yom</span><span class="he" lang="he">שיר של יום</span></a></li><li><a href="#rosh-jodesh-4"><span class="es">Musaf</span><span class="he" lang="he">מוסף</span></a></li><li><a href="#rosh-jodesh-5"><span class="es">Barjí Nafshí</span><span class="he" lang="he">ברכי נפשי</span></a></li><li><a href="#rosh-jodesh-6"><span class="es">Kavé</span><span class="he" lang="he">קוה</span></a></li><li><a href="#rosh-jodesh-7"><span class="es">Ketoret</span><span class="he" lang="he">פטום הקטורת</span></a></li><li><a href="#rosh-jodesh-8"><span class="es">Alenu</span><span class="he" lang="he">עלינו לשבח</span></a></li></ul></details>
+<details class="toc-part" data-part="januca"><summary><span class="es">Janucá</span><span class="he" lang="he">חנוכה</span></summary><ul><li><a href="#januca-1"><span class="es">Hadlakat HaJanukiá</span><span class="he" lang="he">הדלקת נרות חנוכה</span></a></li><li><a href="#januca-2"><span class="es">Shajarit de Janucá</span><span class="he" lang="he">שחרית לחנוכה</span></a></li></ul></details>
+<h2 class="toc-group">Otras tefilot</h2>
+<details class="toc-part" data-part="sefirat-haomer"><summary><span class="es">Sefirat HaÓmer</span><span class="he" lang="he">ספירת העומר</span></summary><ul><li><a href="#sefirat-haomer-1"><span class="es">Sefirat HaÓmer</span><span class="he" lang="he">ספירת העומר</span></a></li></ul></details>
+<details class="toc-part" data-part="kidush-levana"><summary><span class="es">Kidush Leváná</span><span class="he" lang="he">קידוש לבנה</span></summary><ul><li><a href="#kidush-levana-1"><span class="es">Birkat HaLevaná</span><span class="he" lang="he">ברכת הלבנה</span></a></li></ul></details>
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Ajustes de lectura -->
+      <div class="sd-sheet" id="sdSheet" aria-hidden="true">
+        <div class="row">
+          <span class="lbl">Tamaño</span>
+          <div class="stepper">
+            <button id="sdSmaller" aria-label="Reducir"><span style="font-size:.8em">A</span></button>
+            <button id="sdBigger" aria-label="Aumentar"><span style="font-size:1.25em">A</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="lbl">Fondo</span>
+          <div class="seg" id="sdThemeSeg">
+            <button data-t="light">Claro</button>
+            <button data-t="auto">Auto</button>
+            <button data-t="dark">Noche</button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="lbl">Indicaciones</span>
+          <div class="seg" id="sdRubSeg">
+            <button data-r="1">Ver</button>
+            <button data-r="0">Ocultar</button>
+          </div>
+        </div>
+      </div>
+      <div class="sd-scrim" id="sdScrim"></div>
+    </main>
+  </div>
+
+  <script src="/vendor/supabase.min.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+  <script>window.SIDUR = {"parts":[{"id":"shajarit","es":"Shajarit","he":"שחרית","v":"1c94151e53"},{"id":"minja","es":"Minjá","he":"מנחה","v":"9f797d8861"},{"id":"arvit","es":"Arvit","he":"ערבית","v":"6767efefef"},{"id":"birkat-hamazon","es":"Birkat Hamazón","he":"ברכת המזון","v":"eca8cf97cd"},{"id":"shema-mita","es":"Shemá al HaMitá","he":"קריאת שמע שעל המטה","v":"5ddd28d42f"},{"id":"kabalat-shabat","es":"Kabalat Shabat","he":"קבלת שבת","v":"121f41e017"},{"id":"seuda-shabat","es":"Kidush y Seudá","he":"קידוש וסעודה","v":"328f6e4943"},{"id":"shajarit-shabat","es":"Shajarit de Shabat","he":"שחרית של שבת","v":"f22b86cfae"},{"id":"musaf-shabat","es":"Musaf de Shabat","he":"מוסף של שבת","v":"5619126ed7"},{"id":"kidush-hayom","es":"Kidush del día","he":"קידוש היום","v":"bf5e78409d"},{"id":"minja-shabat","es":"Minjá de Shabat","he":"מנחה של שבת","v":"a285614532"},{"id":"seuda-shlishit","es":"Seudá Shlishit","he":"סעודה שלישית","v":"1df38438ea"},{"id":"havdala","es":"Havdalá","he":"הבדלה","v":"5b9900def3"},{"id":"rosh-jodesh","es":"Rosh Jodesh","he":"ראש חודש","v":"0a14e9843b"},{"id":"januca","es":"Janucá","he":"חנוכה","v":"ef0580e6cc"},{"id":"sefirat-haomer","es":"Sefirat HaÓmer","he":"ספירת העומר","v":"a9e64b445e"},{"id":"kidush-levana","es":"Kidush Leváná","he":"קידוש לבנה","v":"1f526a210d"}],"where":{"shajarit-1":"shajarit","shajarit-2":"shajarit","shajarit-3":"shajarit","shajarit-4":"shajarit","shajarit-5":"shajarit","shajarit-6":"shajarit","shajarit-7":"shajarit","shajarit-8":"shajarit","shajarit-9":"shajarit","shajarit-10":"shajarit","shajarit-11":"shajarit","shajarit-12":"shajarit","shajarit-13":"shajarit","shajarit-14":"shajarit","shajarit-15":"shajarit","shajarit-16":"shajarit","shajarit-17":"shajarit","shajarit-18":"shajarit","shajarit-19":"shajarit","shajarit-20":"shajarit","shajarit-21":"shajarit","shajarit-22":"shajarit","shajarit-23":"shajarit","baruj-sheamar":"shajarit","ashrei":"minja","shajarit":"shajarit","minja-1":"minja","minja-2":"minja","minja-3":"minja","minja-4":"minja","minja":"minja","arvit-1":"arvit","arvit-2":"arvit","arvit-3":"arvit","arvit-4":"arvit","arvit":"arvit","birkat-hamazon-1":"birkat-hamazon","birkat-hamazon-2":"birkat-hamazon","birkat-hamazon-3":"birkat-hamazon","birkat-hamazon":"birkat-hamazon","shema-mita-1":"shema-mita","shema-mita":"shema-mita","kabalat-shabat-1":"kabalat-shabat","kabalat-shabat-2":"kabalat-shabat","kabalat-shabat-3":"kabalat-shabat","kabalat-shabat-4":"kabalat-shabat","kabalat-shabat-5":"kabalat-shabat","kabalat-shabat-6":"kabalat-shabat","kabalat-shabat-7":"kabalat-shabat","kabalat-shabat":"kabalat-shabat","seuda-shabat-1":"seuda-shabat","seuda-shabat-2":"seuda-shabat","seuda-shabat-3":"seuda-shabat","seuda-shabat-4":"seuda-shabat","seuda-shabat-5":"seuda-shabat","seuda-shabat-6":"seuda-shabat","seuda-shabat-7":"seuda-shabat","seuda-shabat-8":"seuda-shabat","seuda-shabat":"seuda-shabat","shajarit-shabat-1":"shajarit-shabat","shajarit-shabat-2":"shajarit-shabat","shajarit-shabat-3":"shajarit-shabat","shajarit-shabat-4":"shajarit-shabat","shajarit-shabat-5":"shajarit-shabat","shajarit-shabat-6":"shajarit-shabat","shajarit-shabat-7":"shajarit-shabat","shajarit-shabat-8":"shajarit-shabat","shajarit-shabat-9":"shajarit-shabat","shajarit-shabat-10":"shajarit-shabat","shajarit-shabat":"shajarit-shabat","musaf-shabat-1":"musaf-shabat","musaf-shabat-2":"musaf-shabat","musaf-shabat-3":"musaf-shabat","musaf-shabat":"musaf-shabat","kidush-hayom-1":"kidush-hayom","kidush-hayom":"kidush-hayom","minja-shabat-1":"minja-shabat","minja-shabat-2":"minja-shabat","minja-shabat-3":"minja-shabat","minja-shabat-4":"minja-shabat","minja-shabat":"minja-shabat","seuda-shlishit-1":"seuda-shlishit","seuda-shlishit":"seuda-shlishit","havdala-1":"havdala","havdala-2":"havdala","havdala-3":"havdala","havdala-4":"havdala","havdala-5":"havdala","havdala":"havdala","rosh-jodesh-1":"rosh-jodesh","rosh-jodesh-2":"rosh-jodesh","rosh-jodesh-3":"rosh-jodesh","rosh-jodesh-4":"rosh-jodesh","rosh-jodesh-5":"rosh-jodesh","rosh-jodesh-6":"rosh-jodesh","rosh-jodesh-7":"rosh-jodesh","rosh-jodesh-8":"rosh-jodesh","rosh-jodesh":"rosh-jodesh","januca-1":"januca","januca-2":"januca","januca":"januca","sefirat-haomer-1":"sefirat-haomer","sefirat-haomer":"sefirat-haomer","kidush-levana-1":"kidush-levana","kidush-levana":"kidush-levana"}};</script>
+  <script src="js/siddur.js"></script>
+  <script>
+    function __siddurInit() {
+      requireAuth();
+      initNav('siddur');
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', __siddurInit);
+    else __siddurInit();
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
+  </script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

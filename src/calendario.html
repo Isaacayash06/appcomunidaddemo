@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>Calendario Hebreo — {{name}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+    @media (max-width: 768px) { .main-content { margin-left: 0; padding-bottom: 80px; } }
+    .cal-heb-inner { padding: 32px 36px 60px; }
+    /* padding-top 60px: el botón hamburguesa es fixed, top:12/left:12,
+       40x40px (hb-btn en nav.js) — sin este espacio el título queda
+       debajo del botón. */
+    @media (max-width: 768px) { .cal-heb-inner { padding: 60px 14px 88px; } }
+
+    /* ── Grid principal ── */
+    .cal-wrap { display: grid; grid-template-columns: 1fr 400px; gap: 28px; align-items: start; }
+    @media (max-width: 900px) { .cal-wrap { grid-template-columns: 1fr; } }
+    .cal-wrap > div:first-child { background: #fff; border-radius: 14px; padding: 24px 28px; box-shadow: 0 1px 12px rgba(27,46,94,.08); }
+
+    /* ── Fecha hebrea ── */
+    .cal-side-hebrew { font-family: var(--font-brand); font-size: .95rem; color: var(--color-text-muted); margin-top: -8px; margin-bottom: 14px; direction: rtl; text-align: left; unicode-bidi: plaintext; }
+    .cal-month-hebrew { font-size: .85rem; font-weight: 500; color: var(--color-text-muted); margin-left: 8px; }
+
+    /* ── Mobile: reordenar — evento arriba, ciudad abajo ── */
+    @media (max-width: 768px) {
+      .cal-heb-inner { display: flex; flex-direction: column; }
+      .page-header  { order: 1; }
+      #cal-container { order: 2; }
+      .city-selector-bar { order: 3; margin-bottom: 0; margin-top: 16px; }
+      .cal-wrap { display: flex; flex-direction: column; align-items: stretch; }
+      .cal-side { order: -1; position: static !important; top: auto; max-height: none; overflow-y: visible; width: 100%; margin-bottom: 16px; }
+    }
+
+    /* ── Selector de ciudad ── */
+    .city-selector-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--color-white); border-radius: var(--radius-md);
+      border: 1.5px solid var(--color-border); padding: 12px 18px;
+      margin-bottom: 20px; flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .city-selector-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .city-selector-label { font-size: .8125rem; font-weight: 600; color: var(--color-text-muted); white-space: nowrap; }
+    .city-select {
+      border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+      padding: 6px 12px; font-size: .875rem; font-family: inherit;
+      color: var(--color-text); background: var(--color-bg);
+      cursor: pointer; outline: none; min-width: 200px; font-weight: 500;
+    }
+    .city-select:focus { border-color: var(--color-primary); }
+    .city-candles-preview {
+      font-size: .8125rem; color: var(--color-text-muted);
+      margin-left: auto; text-align: right;
+    }
+    .city-candles-preview strong { color: var(--color-gold-dark, #9a7a2a); }
+    .city-minutes-note {
+      font-size: .72rem; color: var(--color-text-muted);
+      padding: 3px 8px; background: var(--color-bg);
+      border-radius: 20px; border: 1px solid var(--color-border);
+      white-space: nowrap; flex-shrink: 0;
+    }
+    @media (max-width: 600px) {
+      .city-candles-preview { margin-left: 0; width: 100%; }
+      .city-select { width: 100%; }
+    }
+
+    /* ── Nav mes ── */
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .cal-month-label { font-family: var(--font-brand); font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
+    .cal-nav-btn {
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      background: var(--color-white); border: 1.5px solid var(--color-border);
+      cursor: pointer; transition: all var(--transition-fast); color: var(--color-text);
+    }
+    .cal-nav-btn:hover { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .cal-nav-btn svg { width: 16px; height: 16px; }
+
+    /* ── Grid días ── */
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-header-day { text-align: center; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); padding: 10px 0; }
+    .cal-day {
+      aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: var(--radius-sm); cursor: pointer; position: relative;
+      transition: background var(--transition-fast); font-size: 1rem; font-weight: 400;
+      color: var(--color-text); padding: 4px;
+    }
+    .cal-day:hover { background: var(--color-bg); }
+    .cal-day.other { color: var(--color-text-light); }
+    .cal-day.today { background: var(--color-primary); color: #fff; font-weight: 700; border-radius: var(--radius-sm); }
+    .cal-day.today:hover { background: var(--color-primary); opacity: .9; }
+    .cal-day.selected { background: var(--color-gold-light, #fef9ec); border: 2px solid var(--color-gold); font-weight: 600; }
+    .cal-day.shabbat-day { font-weight: 600; }
+
+    /* ── Selector Gregoriano / Hebreo ── */
+    .cal-modo { display: flex; background: var(--color-bg); border: 1.5px solid var(--color-border); border-radius: 999px; padding: 3px; margin: 0 auto 16px; width: fit-content; max-width: 100%; }
+    .cal-modo button { border: none; background: none; border-radius: 999px; padding: 7px 16px; font: inherit; font-size: .8125rem; font-weight: 600; color: var(--color-text-muted); cursor: pointer; white-space: nowrap; transition: all var(--transition-fast); }
+    .cal-modo button.on { background: var(--color-primary); color: #fff; box-shadow: 0 1px 4px rgba(27,46,94,.25); }
+    .cal-modo .he { font-family: var(--font-brand); margin-left: 4px; }
+
+    /* ── Modo hebreo: día en letras hebreas + día gregoriano pequeño ── */
+    .cal-heb-num { font-family: var(--font-brand); font-size: 1.2rem; font-weight: 700; line-height: 1; direction: rtl; }
+    .cal-greg-num { position: absolute; top: 3px; right: 5px; font-size: .6rem; font-weight: 500; color: var(--color-text-muted); white-space: nowrap; }
+    .cal-day.today .cal-greg-num { color: rgba(255,255,255,.75); }
+    .cal-day.other .cal-heb-num { opacity: .45; }
+    .cal-month-greg { font-size: .75rem; color: var(--color-text-muted); margin-top: 2px; }
+    @media (max-width: 600px) {
+      .cal-heb-num { font-size: 1rem; }
+      .cal-greg-num { font-size: .55rem; top: 2px; right: 3px; }
+    }
+
+    /* ── Dots ── */
+    .cal-dots { display: flex; gap: 2px; position: absolute; bottom: 3px; align-items: center; }
+    .cal-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .dot-candles  { background: var(--color-gold); }
+    .dot-shabbat  { background: var(--color-primary); }
+    .dot-holiday  { background: #10B981; }
+    .dot-fast     { background: #7C3AED; }
+    .dot-chanuka  { background: #2563EB; }
+    .dot-purim    { background: #DB2777; }
+    .dot-roshjodesh { background: #0D9488; }
+    .cal-day.today .cal-dot { background: var(--color-gold); }
+
+    /* ── Panel lateral ── */
+    .cal-side {
+      background: var(--color-white); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm); padding: 20px;
+      position: sticky; top: 20px; align-self: start;
+    }
+    .cal-side-title { font-size: .9375rem; font-weight: 700; color: var(--color-text); margin-bottom: 14px; }
+    .cal-side-heb-es { color: var(--color-gold-dark, #9a7a2a); font-weight: 700; }
+    .cal-empty { text-align: center; color: var(--color-text-light); font-size: .875rem; padding: 24px 0; }
+
+    /* ── Tarjeta Shabat en el panel — acento dorado ── */
+    .side-shabat-card {
+      background: var(--color-gold-light); border-radius: var(--radius-md);
+      padding: 0; margin-bottom: 12px; color: var(--color-text); position: relative; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .side-shabat-card::before {
+      content: ''; position: absolute; top: -40px; right: -50px; width: 220px; height: 220px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 4 93 78 7 78Z' fill='none' stroke='%23C9A84C' stroke-width='1.4'/%3E%3Cpath d='M50 96 7 22 93 22Z' fill='none' stroke='%23C9A84C' stroke-width='1.4'/%3E%3C/svg%3E");
+      opacity: .16; pointer-events: none;
+    }
+    .side-shabat-label {
+      position: relative; display: block; background: var(--color-gold); color: var(--color-primary);
+      padding: 9px 16px; font-size: .625rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    }
+    .side-shabat-parasha { position: relative; font-family: var(--font-brand); font-size: 1.6rem; font-weight: 800; color: var(--color-primary); line-height: 1.15; margin: 16px 16px 0; }
+    .side-shabat-he { position: relative; font-family: var(--font-brand); font-style: italic; font-size: .9rem; color: var(--color-gold-dark); direction: rtl; display: block; margin: 4px 16px 0; }
+    .side-shabat-especial { position: relative; font-size: .7rem; font-weight: 700; color: var(--color-gold-dark); margin: 6px 16px 0; }
+    .side-shabat-times {
+      position: relative; display: flex; gap: 26px; margin: 16px 16px 0;
+      padding-top: 14px; border-top: 1px solid rgba(27,46,94,.1); flex-wrap: wrap;
+    }
+    .side-time-item { display: flex; flex-direction: column; gap: 2px; }
+    .side-time-label { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--color-gold-dark); }
+    .side-time-val { font-family: var(--font-brand); font-size: 1.25rem; font-weight: 800; color: var(--color-primary); }
+    .side-time-sep { display: none; }
+    .side-city-badge {
+      position: relative; display: block;
+      font-size: .68rem; font-weight: 500; color: var(--color-text-muted);
+      margin: 12px 16px 16px; letter-spacing: .03em;
+    }
+
+    /* ── Tarjeta festividad en el panel ── */
+    .side-holiday-card {
+      border-radius: var(--radius-md); padding: 14px;
+      margin-bottom: 10px; border-left: 4px solid var(--color-primary);
+      background: var(--color-bg);
+    }
+    .side-holiday-card.yomtov  { border-left-color: #1B2E5E; }
+    .side-holiday-card.fast    { border-left-color: #7C3AED; background: #F5F3FF; }
+    .side-holiday-card.chanuka { border-left-color: #2563EB; }
+    .side-holiday-card.purim   { border-left-color: #DB2777; }
+    .side-holiday-card.sukkot  { border-left-color: #D97706; }
+    .side-holiday-card.especial{ border-left-color: var(--color-gold); }
+    .side-holiday-card.roshjodesh { border-left-color: #0D9488; }
+    .side-holiday-card.omer    { border-left-color: #64748B; }
+    .side-ayuno-times { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+    .side-ayuno-times .side-time-label { color: #6D28D9; }
+    .side-ayuno-times .side-time-sep { display: block; width: 1px; align-self: stretch; background: #DDD6FE; }
+    .side-ayuno-city { font-size: .68rem; color: var(--color-text-muted); margin-top: 6px; }
+    .side-holiday-name { font-size: .9375rem; font-weight: 600; color: var(--color-text); }
+    .side-holiday-he   { font-family: var(--font-brand); font-size: .9rem; color: var(--color-text-muted); direction: rtl; }
+    .side-holiday-desc { font-size: .75rem; color: var(--color-text-muted); margin-top: 3px; }
+    .side-holiday-time { font-size: .75rem; font-weight: 600; color: var(--color-gold-dark, #9a7a2a); margin-top: 4px; }
+
+    /* ── Candle lighting en viernes ── */
+    .side-candles-card {
+      border-radius: var(--radius-md); padding: 12px 14px;
+      margin-bottom: 10px; background: #fffbf0;
+      border: 1.5px solid #e9d38a; display: flex; align-items: center; gap: 12px;
+    }
+    .side-candles-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .side-candles-info { flex: 1; }
+    .side-candles-label { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--color-text-muted); }
+    .side-candles-time  { font-family: var(--font-brand); font-size: 1.2rem; font-weight: 700; color: var(--color-gold-dark, #9a7a2a); }
+    .side-candles-next  { font-size: .75rem; color: var(--color-text-muted); margin-top: 2px; }
+
+    /* ── Loading ── */
+    .loading-state { text-align:center; padding: 60px 20px; color: var(--color-text-muted); }
+    .loading-spinner { width:32px; height:32px; border:3px solid var(--color-border); border-top-color:var(--color-primary); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── Leyenda ── */
+    .cal-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: .7rem; color: var(--color-text-muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Eventos de comunidad en calendario ── */
+    .cal-ev-item { background:var(--color-bg); border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:8px; border-left:3px solid var(--color-gold); }
+    .cal-ev-item-title { font-size:.875rem; font-weight:600; color:var(--color-text); }
+    .cal-ev-item-hora  { font-size:.75rem; color:var(--color-gold-dark,#9a7a2a); font-weight:500; margin-top:2px; }
+    .cal-ev-item-desc  { font-size:.75rem; color:var(--color-text-muted); margin-top:3px; }
+    .cal-ev-item-del   { float:right; background:none; border:none; color:#ef4444; cursor:pointer; font-size:.8rem; padding:0; opacity:0.6; }
+    .cal-ev-item-del:hover { opacity:1; }
+    .cal-ev-item-link  { display:inline-block; margin-top:6px; font-size:.75rem; font-weight:600; color:var(--color-primary); text-decoration:none; }
+    .cal-ev-item-link:hover { text-decoration:underline; }
+    .cal-add-btn { width:100%; margin-top:10px; padding:8px; border:1.5px dashed var(--color-border); background:none; border-radius:var(--radius-sm); color:var(--color-text-muted); cursor:pointer; font-size:.8125rem; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s; }
+    .cal-add-btn:hover { border-color:var(--color-gold); color:var(--color-gold-dark,#9a7a2a); background:var(--color-bg); }
+    .cal-add-form { background:var(--color-bg); border-radius:var(--radius-sm); padding:12px; margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+    .cal-add-form input, .cal-add-form textarea, .cal-add-form select { border:1.5px solid var(--color-border); border-radius:6px; padding:7px 10px; font-size:.8125rem; font-family:inherit; outline:none; background:#fff; }
+    .cal-add-form input:focus, .cal-add-form textarea:focus { border-color:var(--color-primary); }
+    .cal-add-form-btns { display:flex; gap:8px; }
+    .cal-add-form-btns button { flex:1; padding:7px; border-radius:6px; font-size:.8125rem; cursor:pointer; border:1.5px solid var(--color-border); }
+    .cal-add-form-btns .btn-save { background:var(--color-primary); color:#fff; border-color:var(--color-primary); font-weight:600; }
+    .dot-custom { background: #F59E0B; }
+    .dot-inscripcion { background: #0EA5E9; }
+    .cal-ev-inscripcion { background:#EFF6FF; border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:8px; border-left:3px solid #0EA5E9; }
+    .cal-ev-inscripcion .cal-ev-item-title { font-size:.875rem; font-weight:600; color:var(--color-text); }
+    .cal-ev-inscripcion .cal-ev-item-hora  { font-size:.75rem; color:#0369A1; font-weight:500; margin-top:2px; }
+    .cal-ev-inscripcion .cal-ev-item-desc  { font-size:.75rem; color:var(--color-text-muted); margin-top:3px; }
+    .cal-ev-inscripcion-badge { display:inline-flex; align-items:center; gap:4px; font-size:.68rem; font-weight:600; color:#0369A1; background:#DBEAFE; padding:2px 8px; border-radius:999px; margin-top:5px; }
+  </style>
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+<div id="sidebar-placeholder"></div>
+<div class="main-content">
+  <div class="cal-heb-inner">
+
+      <!-- Header -->
+      <div class="page-header" style="margin-bottom:20px;">
+        <div class="page-header-left">
+          <p class="page-header-label">{{name}}</p>
+          <h1 class="page-title">Calendario Hebreo</h1>
+          <p class="page-subtitle" id="page-subtitle">Cargando horarios…</p>
+        </div>
+      </div>
+
+      <!-- Selector de ciudad -->
+      <div class="city-selector-bar">
+        <span class="city-selector-label">Ciudad:</span>
+        <select id="city-select" class="city-select" onchange="changeCity(this.value)">
+          <optgroup label="España">
+            <option value="madrid">Madrid</option>
+            <option value="barcelona">Barcelona</option>
+            <option value="valencia">Valencia</option>
+            <option value="bilbao">Bilbao</option>
+            <option value="sevilla">Sevilla</option>
+            <option value="malaga">Málaga</option>
+            <option value="palma">Palma de Mallorca</option>
+            <option value="zaragoza">Zaragoza</option>
+          </optgroup>
+          <optgroup label="Israel">
+            <option value="jerusalem">Jerusalén</option>
+            <option value="telaviv">Tel Aviv</option>
+            <option value="haifa">Haifa</option>
+            <option value="beersheva">Beer Sheva</option>
+          </optgroup>
+          <optgroup label="Europa">
+            <option value="london">Londres</option>
+            <option value="paris">París</option>
+            <option value="berlin">Berlín</option>
+            <option value="amsterdam">Ámsterdam</option>
+            <option value="zurich">Zúrich</option>
+            <option value="rome">Roma</option>
+            <option value="lisbon">Lisboa</option>
+            <option value="brussels">Bruselas</option>
+            <option value="vienna">Viena</option>
+            <option value="geneva">Ginebra</option>
+          </optgroup>
+          <optgroup label="América del Norte">
+            <option value="newyork">Nueva York</option>
+            <option value="losangeles">Los Ángeles</option>
+            <option value="miami">Miami</option>
+            <option value="chicago">Chicago</option>
+            <option value="toronto">Toronto</option>
+            <option value="montreal">Montreal</option>
+            <option value="mexico">Ciudad de México</option>
+          </optgroup>
+          <optgroup label="América del Sur">
+            <option value="buenosaires">Buenos Aires</option>
+            <option value="montevideo">Montevideo</option>
+            <option value="saopaulo">São Paulo</option>
+            <option value="bogota">Bogotá</option>
+          </optgroup>
+          <optgroup label="Otros">
+            <option value="johannesburg">Johannesburgo</option>
+            <option value="melbourne">Melbourne</option>
+            <option value="sydney">Sídney</option>
+          </optgroup>
+        </select>
+        <span class="city-minutes-note" id="city-minutes-note">encendido 18 min antes del ocaso</span>
+        <span class="city-candles-preview" id="city-candles-preview"></span>
+      </div>
+
+      <!-- Calendario -->
+      <div id="cal-container">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Cargando calendario…</p>
+        </div>
+      </div>
+
+  </div>
+</div>
+
+<!-- Lightbox: ver flyer de evento a tamaño completo (mismo patrón que home.html) -->
+<div id="evento-lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1100;flex-direction:column;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this) closeEventoLightbox()">
+  <button onclick="closeEventoLightbox()" aria-label="Cerrar" style="position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1;">
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+  </button>
+  <img id="evento-lightbox-img" src="" alt="" style="display:block;width:auto;max-width:100%;max-height:80vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+  <p id="evento-lightbox-title" style="color:#fff;font-weight:700;font-size:1.05rem;text-align:center;margin-top:16px;max-width:600px;"></p>
+</div>
+
+<script src="/vendor/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/media.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/router.js"></script>
+<script>
+/* ═══════════════════════════════════════════
+   CALENDARIO HEBREO — {{name}}
+   API: HebCal.com · Multi-ciudad mundial
+   Horarios reales de encendido de velas
+   por latitud/longitud + timezone local
+═══════════════════════════════════════════ */
+
+/* ─── Ciudades del mundo con horarios reales ─── */
+const CITIES = {
+  // España
+  "madrid":      { name:"Madrid",            country:"España",       flag:"🇪🇸", lat:40.4168,  lon:-3.7038,   tz:"Europe/Madrid",                       b:18, m:42 },
+  "barcelona":   { name:"Barcelona",          country:"España",       flag:"🇪🇸", lat:41.3888,  lon:2.1589,    tz:"Europe/Madrid",                       b:18, m:42 },
+  "valencia":    { name:"Valencia",           country:"España",       flag:"🇪🇸", lat:39.4699,  lon:-0.3763,   tz:"Europe/Madrid",                       b:18, m:42 },
+  "bilbao":      { name:"Bilbao",             country:"España",       flag:"🇪🇸", lat:43.2630,  lon:-2.9350,   tz:"Europe/Madrid",                       b:18, m:42 },
+  "sevilla":     { name:"Sevilla",            country:"España",       flag:"🇪🇸", lat:37.3891,  lon:-5.9845,   tz:"Europe/Madrid",                       b:18, m:42 },
+  "malaga":      { name:"Málaga",             country:"España",       flag:"🇪🇸", lat:36.7213,  lon:-4.4214,   tz:"Europe/Madrid",                       b:18, m:42 },
+  "palma":       { name:"Palma de Mallorca",  country:"España",       flag:"🇪🇸", lat:39.5696,  lon:2.6502,    tz:"Europe/Madrid",                       b:18, m:42 },
+  "zaragoza":    { name:"Zaragoza",           country:"España",       flag:"🇪🇸", lat:41.6561,  lon:-0.8773,   tz:"Europe/Madrid",                       b:18, m:42 },
+  // Israel
+  "jerusalem":   { name:"Jerusalén",          country:"Israel",       flag:"🇮🇱", lat:31.7683,  lon:35.2137,   tz:"Asia/Jerusalem",                      b:40, m:50 },
+  "telaviv":     { name:"Tel Aviv",           country:"Israel",       flag:"🇮🇱", lat:32.0853,  lon:34.7818,   tz:"Asia/Jerusalem",                      b:18, m:42 },
+  "haifa":       { name:"Haifa",              country:"Israel",       flag:"🇮🇱", lat:32.8193,  lon:34.9877,   tz:"Asia/Jerusalem",                      b:18, m:42 },
+  "beersheva":   { name:"Beer Sheva",         country:"Israel",       flag:"🇮🇱", lat:31.2520,  lon:34.7915,   tz:"Asia/Jerusalem",                      b:18, m:42 },
+  // Europa
+  "london":      { name:"Londres",            country:"Reino Unido",  flag:"🇬🇧", lat:51.5074,  lon:-0.1278,   tz:"Europe/London",                       b:18, m:42 },
+  "paris":       { name:"París",              country:"Francia",      flag:"🇫🇷", lat:48.8566,  lon:2.3522,    tz:"Europe/Paris",                        b:18, m:42 },
+  "berlin":      { name:"Berlín",             country:"Alemania",     flag:"🇩🇪", lat:52.5200,  lon:13.4050,   tz:"Europe/Berlin",                       b:18, m:42 },
+  "amsterdam":   { name:"Ámsterdam",          country:"Países Bajos", flag:"🇳🇱", lat:52.3676,  lon:4.9041,    tz:"Europe/Amsterdam",                    b:18, m:42 },
+  "zurich":      { name:"Zúrich",             country:"Suiza",        flag:"🇨🇭", lat:47.3769,  lon:8.5417,    tz:"Europe/Zurich",                       b:18, m:42 },
+  "rome":        { name:"Roma",               country:"Italia",       flag:"🇮🇹", lat:41.9028,  lon:12.4964,   tz:"Europe/Rome",                         b:18, m:42 },
+  "lisbon":      { name:"Lisboa",             country:"Portugal",     flag:"🇵🇹", lat:38.7223,  lon:-9.1393,   tz:"Europe/Lisbon",                       b:18, m:42 },
+  "brussels":    { name:"Bruselas",           country:"Bélgica",      flag:"🇧🇪", lat:50.8503,  lon:4.3517,    tz:"Europe/Brussels",                     b:18, m:42 },
+  "vienna":      { name:"Viena",              country:"Austria",      flag:"🇦🇹", lat:48.2082,  lon:16.3738,   tz:"Europe/Vienna",                       b:18, m:42 },
+  "geneva":      { name:"Ginebra",            country:"Suiza",        flag:"🇨🇭", lat:46.2044,  lon:6.1432,    tz:"Europe/Zurich",                       b:18, m:42 },
+  // América del Norte
+  "newyork":     { name:"Nueva York",         country:"EE.UU.",       flag:"🇺🇸", lat:40.7128,  lon:-74.0060,  tz:"America/New_York",                    b:18, m:42 },
+  "losangeles":  { name:"Los Ángeles",        country:"EE.UU.",       flag:"🇺🇸", lat:34.0522,  lon:-118.2437, tz:"America/Los_Angeles",                 b:18, m:42 },
+  "miami":       { name:"Miami",              country:"EE.UU.",       flag:"🇺🇸", lat:25.7617,  lon:-80.1918,  tz:"America/New_York",                    b:18, m:42 },
+  "chicago":     { name:"Chicago",            country:"EE.UU.",       flag:"🇺🇸", lat:41.8781,  lon:-87.6298,  tz:"America/Chicago",                     b:18, m:42 },
+  "toronto":     { name:"Toronto",            country:"Canadá",       flag:"🇨🇦", lat:43.6532,  lon:-79.3832,  tz:"America/Toronto",                     b:18, m:42 },
+  "montreal":    { name:"Montreal",           country:"Canadá",       flag:"🇨🇦", lat:45.5017,  lon:-73.5673,  tz:"America/Toronto",                     b:18, m:42 },
+  "mexico":      { name:"Ciudad de México",   country:"México",       flag:"🇲🇽", lat:19.4326,  lon:-99.1332,  tz:"America/Mexico_City",                 b:18, m:42 },
+  // América del Sur
+  "buenosaires": { name:"Buenos Aires",       country:"Argentina",    flag:"🇦🇷", lat:-34.6037, lon:-58.3816,  tz:"America/Argentina/Buenos_Aires",      b:18, m:42 },
+  "montevideo":  { name:"Montevideo",         country:"Uruguay",      flag:"🇺🇾", lat:-34.9011, lon:-56.1645,  tz:"America/Montevideo",                  b:18, m:42 },
+  "saopaulo":    { name:"São Paulo",          country:"Brasil",       flag:"🇧🇷", lat:-23.5505, lon:-46.6333,  tz:"America/Sao_Paulo",                   b:18, m:42 },
+  "bogota":      { name:"Bogotá",             country:"Colombia",     flag:"🇨🇴", lat:4.7110,   lon:-74.0721,  tz:"America/Bogota",                      b:18, m:42 },
+  // Otros
+  "johannesburg":{ name:"Johannesburgo",      country:"Sudáfrica",    flag:"🇿🇦", lat:-26.2041, lon:28.0473,   tz:"Africa/Johannesburg",                 b:18, m:42 },
+  "melbourne":   { name:"Melbourne",          country:"Australia",    flag:"🇦🇺", lat:-37.8136, lon:144.9631,  tz:"Australia/Melbourne",                 b:18, m:42 },
+  "sydney":      { name:"Sídney",             country:"Australia",    flag:"🇦🇺", lat:-33.8688, lon:151.2093,  tz:"Australia/Sydney",                    b:18, m:42 },
+};
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_HDR = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
+
+// dateMap[YYYY-MM-DD] = { candles, havdalah, parasha, especial, holidays[], omer }
+let dateMap  = {};
+let loadedYears = new Set();   // años gregorianos ya cargados (un mes hebreo puede cruzar dos)
+let loadedCityKey = null;
+
+/* ─── Modo del calendario: 'gregoriano' | 'hebreo' ─── */
+let calModo = (() => { try { return localStorage.getItem('kehila_cal_modo') === 'hebreo' ? 'hebreo' : 'gregoriano'; } catch(e) { return 'gregoriano'; } })();
+let hebAncla = mediodia(new Date());   // un día cualquiera del mes hebreo visible
+
+/* ─── Calendario hebreo (Intl, sin red) ─── */
+const MES_HEB = {
+  'Tishri':['Tishrei','תשרי'], 'Tishrei':['Tishrei','תשרי'],
+  'Heshvan':['Jeshván','חשון'], 'Cheshvan':['Jeshván','חשון'],
+  'Kislev':['Kislev','כסלו'], 'Tevet':['Tevet','טבת'], 'Shevat':['Shevat','שבט'], "Sh'vat":['Shevat','שבט'], 'Sh’vat':['Shevat','שבט'],
+  'Adar':['Adar','אדר'], 'Adar I':['Adar I','אדר א׳'], 'Adar II':['Adar II','אדר ב׳'],
+  'Nisan':['Nisán','ניסן'], 'Iyar':['Iyar','אייר'], 'Iyyar':['Iyar','אייר'], 'Sivan':['Siván','סיון'],
+  'Tamuz':['Tamuz','תמוז'], 'Tammuz':['Tamuz','תמוז'], 'Av':['Av','אב'], 'Elul':['Elul','אלול'],
+};
+const MES_CORTO = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const _fmtHeb = new Intl.DateTimeFormat('en-u-ca-hebrew', { day:'numeric', month:'long', year:'numeric' });
+
+function mediodia(d) { const x = new Date(d); x.setHours(12,0,0,0); return x; }
+function sumDias(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return mediodia(x); }
+function keyDe(d) { return isoDate(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+/** { d: 5, m: 'Heshvan', y: 5787 } */
+function hebParts(date) {
+  const p = Object.fromEntries(_fmtHeb.formatToParts(date).map(x => [x.type, x.value]));
+  return { d: parseInt(p.day, 10), m: p.month, y: parseInt(p.year, 10) };
+}
+
+/** Mes hebreo que contiene `ancla`: primer y último día gregoriano. */
+function hebMes(ancla) {
+  const p = hebParts(ancla);
+  const inicio = sumDias(ancla, -(p.d - 1));
+  let fin = sumDias(inicio, 28);
+  while (hebParts(sumDias(fin, 1)).m === p.m) fin = sumDias(fin, 1);
+  return { inicio, fin, mes: p.m, ano: p.y };
+}
+
+/** Número en letras hebreas: 5 → ה׳ · 15 → ט״ו · 787 → תשפ״ז */
+function gematria(n) {
+  const L = [[400,'ת'],[300,'ש'],[200,'ר'],[100,'ק'],[90,'צ'],[80,'פ'],[70,'ע'],[60,'ס'],[50,'נ'],[40,'מ'],[30,'ל'],[20,'כ'],[10,'י'],[9,'ט'],[8,'ח'],[7,'ז'],[6,'ו'],[5,'ה'],[4,'ד'],[3,'ג'],[2,'ב'],[1,'א']];
+  let s = '';
+  for (const [v, l] of L) {
+    if (v < 100 && n % 100 === 15) { s += 'טו'; n -= 15; break; }
+    if (v < 100 && n % 100 === 16) { s += 'טז'; n -= 16; break; }
+    while (n >= v) { s += l; n -= v; }
+  }
+  return s.length === 1 ? s + '׳' : s.slice(0, -1) + '״' + s.slice(-1);
+}
+let curYear  = new Date().getFullYear();
+let curMonth = new Date().getMonth(); // 0-based
+let selectedDate = null;
+let customEventsMap = {}; // date → [{id, titulo, hora, descripcion, tipo}]
+const _calUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+const _calIsAdmin = _calUser?.role === 'admin';
+
+// Ciudad activa
+const _savedCityKey = localStorage.getItem('kehila_city') || '{{location.cityKey}}';
+let selectedCity = CITIES[_savedCityKey] || CITIES['{{location.cityKey}}'];
+
+/* ─── Traducciones ─── */
+const PARASHA = {
+  "Bereshit":{"es":"Bereshit","he":"בְּרֵאשִׁית"},
+  "Noach":{"es":"Noaj","he":"נֹחַ"},
+  "Lech-Lecha":{"es":"Lej Lejá","he":"לֶךְ-לְךָ"},
+  "Vayera":{"es":"Vayerá","he":"וַיֵּרָא"},
+  "Chayei Sara":{"es":"Jayé Sara","he":"חַיֵּי שָׂרָה"},
+  "Toldot":{"es":"Toldot","he":"תּוֹלְדֹת"},
+  "Vayetzei":{"es":"Vayetsé","he":"וַיֵּצֵא"},
+  "Vayishlach":{"es":"Vayishláj","he":"וַיִּשְׁלַח"},
+  "Vayeshev":{"es":"Vayeshev","he":"וַיֵּשֶׁב"},
+  "Miketz":{"es":"Mikets","he":"מִקֵּץ"},
+  "Vayigash":{"es":"Vayigash","he":"וַיִּגַּשׁ"},
+  "Vayechi":{"es":"Vayejí","he":"וַיְחִי"},
+  "Shemot":{"es":"Shemot","he":"שְׁמוֹת"},
+  "Vaera":{"es":"Vaerá","he":"וָאֵרָא"},
+  "Bo":{"es":"Bo","he":"בֹּא"},
+  "Beshalach":{"es":"Besháláj","he":"בְּשַׁלַּח"},
+  "Yitro":{"es":"Yitró","he":"יִתְרוֹ"},
+  "Mishpatim":{"es":"Mishpatim","he":"מִּשְׁפָּטִים"},
+  "Terumah":{"es":"Terumá","he":"תְּרוּמָה"},
+  "Tetzaveh":{"es":"Tetsavé","he":"תְּצַוֶּה"},
+  "Ki Tisa":{"es":"Ki Tisá","he":"כִּי תִשָּׂא"},
+  "Vayakhel":{"es":"Vaiakel","he":"וַיַּקְהֵל"},
+  "Pekudei":{"es":"Pekudé","he":"פְקוּדֵי"},
+  "Vayakhel-Pekudei":{"es":"Vaiakel-Pekudé","he":"וַיַּקְהֵל-פְקוּדֵי"},
+  "Vayikra":{"es":"Vaikrá","he":"וַיִּקְרָא"},
+  "Tzav":{"es":"Tsav","he":"צַו"},
+  "Shmini":{"es":"Shminí","he":"שְּׁמִינִי"},
+  "Tazria":{"es":"Tazria","he":"תַזְרִיעַ"},
+  "Metzora":{"es":"Metsora","he":"מְּצֹרָע"},
+  "Tazria-Metzora":{"es":"Tazria-Metsora","he":"תַזְרִיעַ-מְּצֹרָע"},
+  "Achrei Mot":{"es":"Ajaré Mot","he":"אַחֲרֵי מוֹת"},
+  "Kedoshim":{"es":"Kedoshim","he":"קְדֹשִׁים"},
+  "Achrei Mot-Kedoshim":{"es":"Ajaré-Kedoshim","he":"אַחֲרֵי-קְדֹשִׁים"},
+  "Emor":{"es":"Emor","he":"אֱמֹר"},
+  "Behar":{"es":"Behar","he":"בְּהַר"},
+  "Bechukotai":{"es":"Bejukotai","he":"בְּחֻקֹּתַי"},
+  "Behar-Bechukotai":{"es":"Behar-Bejukotai","he":"בְּהַר-בְּחֻקֹּתַי"},
+  "Bamidbar":{"es":"Bamidbar","he":"בְּמִדְבַּר"},
+  "Nasso":{"es":"Nasó","he":"נָשֹׂא"},
+  "Beha'alotcha":{"es":"Behaalotjá","he":"בְּהַעֲלֹתְךָ"},
+  "Sh'lach":{"es":"Shlaj Lejá","he":"שְׁלַח-לְךָ"},
+  "Korach":{"es":"Koraj","he":"קֹרַח"},
+  "Chukat":{"es":"Jukat","he":"חֻקַּת"},
+  "Balak":{"es":"Balak","he":"בָּלָק"},
+  "Chukat-Balak":{"es":"Jukat-Balak","he":"חֻקַּת-בָּלָק"},
+  "Pinchas":{"es":"Pinjás","he":"פִּינְחָס"},
+  "Matot":{"es":"Matot","he":"מַּטּוֹת"},
+  "Masei":{"es":"Masé","he":"מַסְעֵי"},
+  "Matot-Masei":{"es":"Matot-Masé","he":"מַּטּוֹת-מַסְעֵי"},
+  "Devarim":{"es":"Devarim","he":"דְּבָרִים"},
+  "Vaetchanan":{"es":"Vaetjanán","he":"וָאֶתְחַנַּן"},
+  "Eikev":{"es":"Ekev","he":"עֵקֶב"},
+  "Re'eh":{"es":"Reé","he":"רְאֵה"},
+  "Shoftim":{"es":"Shoftim","he":"שֹׁפְטִים"},
+  "Ki Teitzei":{"es":"Ki Tetsé","he":"כִּי-תֵצֵא"},
+  "Ki Tavo":{"es":"Ki Tavó","he":"כִּי-תָבוֹא"},
+  "Nitzavim":{"es":"Nitsavim","he":"נִצָּבִים"},
+  "Vayeilech":{"es":"Vayelej","he":"וַיֵּלֶךְ"},
+  "Nitzavim-Vayeilech":{"es":"Nitsavim-Vayelej","he":"נִצָּבִים-וַיֵּלֶךְ"},
+  "Ha'azinu":{"es":"Haaziní","he":"הַאֲזִינוּ"},
+  "Vezot Haberakhah":{"es":"Vezot Habrajá","he":"וְזֹאת הַבְּרָכָה"},
+};
+
+const HOLIDAYS = {
+  "Rosh Hashana":{"es":"Rosh Hashana","he":"ראש השנה","desc":"Año Nuevo Hebreo","tipo":"yomtov"},
+  "Rosh Hashana II":{"es":"Rosh Hashana (2º día)","he":"ראש השנה","desc":"","tipo":"yomtov"},
+  "Yom Kippur":{"es":"Yom Kipur","he":"יום כיפור","desc":"Día del Gran Ayuno","tipo":"fast"},
+  "Sukkot I":{"es":"Sucot (1er día)","he":"סוכות","desc":"Fiesta de las Cabañas","tipo":"sukkot"},
+  "Sukkot II":{"es":"Sucot (2º día)","he":"סוכות","desc":"","tipo":"sukkot"},
+  "Sukkot III (CH''M)":{"es":"Sucot — Jol Hamoed","he":"סוכות","desc":"Días intermedios","tipo":"sukkot"},
+  "Sukkot IV (CH''M)":{"es":"Sucot — Jol Hamoed","he":"סוכות","desc":"","tipo":"sukkot"},
+  "Sukkot V (CH''M)":{"es":"Sucot — Jol Hamoed","he":"סוכות","desc":"","tipo":"sukkot"},
+  "Sukkot VI (CH''M)":{"es":"Sucot — Jol Hamoed","he":"סוכות","desc":"","tipo":"sukkot"},
+  "Sukkot VII (Hoshana Raba)":{"es":"Hoshaná Rabá","he":"הושענא רבה","desc":"7º día de Sucot","tipo":"sukkot"},
+  "Shmini Atzeret":{"es":"Shminí Atseret","he":"שמיני עצרת","desc":"","tipo":"yomtov"},
+  "Simchat Torah":{"es":"Simjat Torá","he":"שמחת תורה","desc":"Alegría de la Torá","tipo":"yomtov"},
+  "Chanukah: 1 Candle":{"es":"Janucá — 1ª vela","he":"חנוכה","desc":"Fiesta de las Luces","tipo":"chanuka"},
+  "Chanukah: 2 Candles":{"es":"Janucá — 2ª vela","he":"חנוכה","desc":"","tipo":"chanuka"},
+  "Chanukah: 3 Candles":{"es":"Janucá — 3ª vela","he":"חנוכה","desc":"","tipo":"chanuka"},
+  "Chanukah: 4 Candles":{"es":"Janucá — 4ª vela","he":"חנוכה","desc":"","tipo":"chanuka"},
+  "Chanukah: 5 Candles":{"es":"Janucá — 5ª vela","he":"חנוכה","desc":"","tipo":"chanuka"},
+  "Chanukah: 6 Candles":{"es":"Janucá — 6ª vela","he":"חנוכה","desc":"","tipo":"chanuka"},
+  "Chanukah: 7 Candles":{"es":"Janucá — 7ª vela","he":"חנוכה","desc":"","tipo":"chanuka"},
+  "Chanukah: 8 Candles":{"es":"Janucá — 8ª vela","he":"חנוכה","desc":"","tipo":"chanuka"},
+  "Chanukah: 8th Day":{"es":"Janucá — 8º día","he":"חנוכה","desc":"Último día","tipo":"chanuka"},
+  "Purim":{"es":"Purim","he":"פורים","desc":"Fiesta de la Reina Ester","tipo":"purim"},
+  "Shushan Purim":{"es":"Purim de Shushán","he":"פורים שושן","desc":"","tipo":"purim"},
+  "Pesach I":{"es":"Pesaj (1er día)","he":"פסח","desc":"Fiesta de la Libertad","tipo":"yomtov"},
+  "Pesach II":{"es":"Pesaj (2º día)","he":"פסח","desc":"","tipo":"yomtov"},
+  "Pesach III (CH''M)":{"es":"Pesaj — Jol Hamoed","he":"פסח","desc":"Días intermedios","tipo":"yomtov"},
+  "Pesach IV (CH''M)":{"es":"Pesaj — Jol Hamoed","he":"פסח","desc":"","tipo":"yomtov"},
+  "Pesach V (CH''M)":{"es":"Pesaj — Jol Hamoed","he":"פסח","desc":"","tipo":"yomtov"},
+  "Pesach VI (CH''M)":{"es":"Pesaj — Jol Hamoed","he":"פסח","desc":"","tipo":"yomtov"},
+  "Pesach VII":{"es":"Pesaj (7º día)","he":"פסח","desc":"","tipo":"yomtov"},
+  "Pesach VIII":{"es":"Pesaj (8º día)","he":"פסח","desc":"","tipo":"yomtov"},
+  "Shavuot I":{"es":"Shavuot (1er día)","he":"שבועות","desc":"Fiesta de las Semanas","tipo":"yomtov"},
+  "Shavuot II":{"es":"Shavuot (2º día)","he":"שבועות","desc":"","tipo":"yomtov"},
+  "Tu BiShvat":{"es":"Tu Bishvat","he":"ט״ו בשבט","desc":"Año Nuevo de los Árboles","tipo":"especial"},
+  "Lag BaOmer":{"es":"Lag Baomer","he":"ל״ג בעומר","desc":"","tipo":"especial"},
+  "Tish'a B'Av":{"es":"Tishá Beav","he":"תשעה באב","desc":"Ayuno del 9 de Av","tipo":"fast"},
+  // Nombres tal cual los da HebCal (con ’ normalizado a ')
+  "Erev Tish'a B'Av":{"es":"Víspera de Tishá Beav","he":"ערב תשעה באב","desc":"El ayuno empieza esta noche","tipo":"fast"},
+  "Tzom Gedaliah":{"es":"Ayuno de Guedalia","he":"צום גדליה","desc":"","tipo":"fast"},
+  "Ta'anit Esther":{"es":"Ayuno de Ester","he":"תענית אסתר","desc":"","tipo":"fast"},
+  "Tzom Tammuz":{"es":"Ayuno 17 de Tamuz","he":"צום י״ז בתמוז","desc":"","tipo":"fast"},
+  "Asara B'Tevet":{"es":"Ayuno 10 de Tevet","he":"צום עשרה בטבת","desc":"","tipo":"fast"},
+  "Ta'anit Bechorot":{"es":"Ayuno de los primogénitos","he":"תענית בכורות","desc":"Habitualmente se exime con un siyum","tipo":"fast"},
+  "Erev Yom Kippur":{"es":"Víspera de Yom Kipur","he":"ערב יום כיפור","desc":"El ayuno empieza con el encendido","tipo":"yomtov"},
+  "Erev Rosh Hashana":{"es":"Víspera de Rosh Hashana","he":"ערב ראש השנה","desc":"","tipo":"yomtov"},
+  "Erev Sukkot":{"es":"Víspera de Sucot","he":"ערב סוכות","desc":"","tipo":"sukkot"},
+  "Erev Pesach":{"es":"Víspera de Pesaj","he":"ערב פסח","desc":"","tipo":"yomtov"},
+  "Erev Shavuot":{"es":"Víspera de Shavuot","he":"ערב שבועות","desc":"","tipo":"yomtov"},
+  "Erev Purim":{"es":"Víspera de Purim","he":"ערב פורים","desc":"Lectura de la Meguilá por la noche","tipo":"purim"},
+  "Pesach Sheni":{"es":"Pesaj Shení","he":"פסח שני","desc":"","tipo":"especial"},
+  "Tu B'Av":{"es":"Tu Beav","he":"ט״ו באב","desc":"","tipo":"especial"},
+  "Leil Selichot":{"es":"Noche de Selijot","he":"ליל סליחות","desc":"","tipo":"especial"},
+  "Rosh Hashana LaBehemot":{"es":"Rosh Hashaná de los animales","he":"ראש השנה לבהמות","desc":"","tipo":"especial"},
+  "Chag HaBanot":{"es":"Jag Habanot","he":"חג הבנות","desc":"","tipo":"especial"},
+  "Purim Katan":{"es":"Purim Katán","he":"פורים קטן","desc":"","tipo":"purim"},
+  "Shushan Purim Katan":{"es":"Shushán Purim Katán","he":"שושן פורים קטן","desc":"","tipo":"purim"},
+  "Fast of Gedaliah":{"es":"Ayuno de Guedalia","he":"צום גדליה","desc":"","tipo":"fast"},
+  "Fast of Esther":{"es":"Ayuno de Ester","he":"תענית אסתר","desc":"","tipo":"fast"},
+  "Fast of 17th of Tammuz":{"es":"Ayuno 17 de Tamuz","he":"צום י״ז בתמוז","desc":"","tipo":"fast"},
+  "Fast of 10th of Tevet":{"es":"Ayuno 10 de Tevet","he":"צום עשרה בטבת","desc":"","tipo":"fast"},
+  "Yom HaShoah":{"es":"Yom Hashoá","he":"יום השואה","desc":"Día del Holocausto","tipo":"especial"},
+  "Yom HaZikaron":{"es":"Yom Hazikaron","he":"יום הזיכרון","desc":"Día del Recuerdo","tipo":"especial"},
+  "Yom HaAtzma'ut":{"es":"Yom Haatsmaut","he":"יום העצמאות","desc":"Día Independencia Israel","tipo":"especial"},
+  "Yom Yerushalayim":{"es":"Yom Yerushalayim","he":"יום ירושלים","desc":"Día de Jerusalén","tipo":"especial"},
+};
+
+const SHABAT_ESP = {
+  "Shabbat HaGadol":"Shabat HaGadol",
+  "Shabbat Shuva":"Shabat Shuva",
+  "Shabbat Shekalim":"Shabat Shekalim",
+  "Shabbat Zachor":"Shabat Zajor",
+  "Shabbat Parah":"Shabat Pará",
+  "Shabbat HaChodesh":"Shabat HaJodesh",
+  "Shabbat Chazon":"Shabat Jazón",
+  "Shabbat Nachamu":"Shabat Najamú",
+  "Shabbat Shirah":"Shabat Shirá",
+};
+
+function fmtTime(isoStr) {
+  if (!isoStr || isoStr.length <= 10) return null;
+  return new Date(isoStr).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone: selectedCity.tz});
+}
+
+function isoDate(y,m,d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+/* ─── Carga de datos HebCal para la ciudad activa ─── */
+async function ensureData(year) {
+  const cityKey = localStorage.getItem('kehila_city') || '{{location.cityKey}}';
+  if (loadedCityKey !== cityKey) { dateMap = {}; loadedYears = new Set(); }
+  if (loadedYears.has(year)) return;
+
+  selectedCity = CITIES[cityKey] || CITIES['{{location.cityKey}}'];
+  const c = selectedCity;
+  const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&nx=on&o=on&year=${year}&month=x&ss=on&mf=on&c=on&geo=pos&latitude=${c.lat}&longitude=${c.lon}&tzid=${encodeURIComponent(c.tz)}&m=${c.m}&b=${c.b}&s=on&lg=s`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('API error');
+  const data = await res.json();
+
+  (data.items || []).forEach(item => {
+    const dateKey = item.date.slice(0,10);
+    // HebCal usa ’ (tipográfico) en títulos como "Tish’a B’Av"; las claves usan '
+    const title = (item.title || '').replace(/’/g, "'").replace(/^Rosh Hashana \d+$/, 'Rosh Hashana');
+    const get = k => { if (!dateMap[k]) dateMap[k] = { holidays:[] }; return dateMap[k]; };
+
+    if (item.category === 'candles') {
+      get(dateKey).candles = fmtTime(item.date);
+    } else if (item.category === 'havdalah') {
+      get(dateKey).havdalah = fmtTime(item.date);
+    } else if (item.category === 'parashat') {
+      const satD = new Date(dateKey + 'T12:00:00');
+      const friD = new Date(satD); friD.setDate(friD.getDate()-1);
+      const friKey = friD.toISOString().slice(0,10);
+      const raw = item.title.replace(/^Parashat\s+/,'').replace(/^Parasha\s+/,'');
+      const p = PARASHA[raw] || { es: raw, he: item.hebrew || '' };
+      get(friKey).parasha = p;
+      get(friKey).shabatDate = dateKey;
+    } else if (item.category === 'zmanim' && item.subcat === 'fast') {
+      // Inicio / fin de ayuno (alba y salida de estrellas; Tishá Beav, la noche anterior)
+      const memoRaw = (item.memo || '').replace(/’/g, "'");
+      const memo = memoRaw.replace(/^Erev /, '');
+      const nombre = (HOLIDAYS[memo] || {}).es || memo;
+      const hora = fmtTime(item.date);
+      if (/begins/i.test(item.title)) get(dateKey).ayunoInicio = { hora, nombre, noche: memoRaw !== memo };
+      else                            get(dateKey).ayunoFin    = { hora, nombre };
+    } else if (item.category === 'holiday' && SHABAT_ESP[title]) {
+      const satD = new Date(dateKey + 'T12:00:00');
+      const friD = new Date(satD); friD.setDate(friD.getDate()-1);
+      const friKey = friD.toISOString().slice(0,10);
+      get(friKey).especial = SHABAT_ESP[title];
+    } else if (item.category === 'roshchodesh') {
+      const mes = item.title.replace(/^Rosh Chodesh\s+/, '');
+      get(dateKey).holidays.push({ es: `Rosh Jodesh ${(MES_HEB[mes] || [mes])[0]}`, he: item.hebrew || '', desc: 'Inicio del mes hebreo', tipo: 'roshjodesh' });
+    } else if (item.category === 'omer') {
+      const n = parseInt(item.title, 10);
+      if (n) get(dateKey).omer = n;
+    } else if (item.category === 'holiday' || item.category === 'mf') {
+      if (!SHABAT_ESP[title]) {
+        const h = HOLIDAYS[title] || { es: item.title, he: item.hebrew||'', desc:'', tipo:'especial' };
+        const timeStr = fmtTime(item.date);
+        get(dateKey).holidays.push({ ...h, time: timeStr });
+      }
+    }
+  });
+
+  // Yom Kipur: HebCal no da "Fast begins/ends"; el ayuno va del encendido
+  // de la víspera a la havdalá del día.
+  Object.keys(dateMap).forEach(k => {
+    const d = dateMap[k];
+    if (!d.holidays.some(h => h.es === 'Yom Kipur')) return;
+    const prev = new Date(k + 'T12:00:00'); prev.setDate(prev.getDate() - 1);
+    const pk = isoDate(prev.getFullYear(), prev.getMonth(), prev.getDate());
+    if (d.havdalah && !d.ayunoFin) d.ayunoFin = { hora: d.havdalah, nombre: 'Yom Kipur' };
+    if (dateMap[pk] && dateMap[pk].candles && !dateMap[pk].ayunoInicio)
+      dateMap[pk].ayunoInicio = { hora: dateMap[pk].candles, nombre: 'Yom Kipur', encendido: true };
+  });
+
+  loadedYears.add(year);
+  loadedCityKey = cityKey;
+}
+
+/** Días que abarca la vista actual (mes gregoriano o mes hebreo). */
+function rangoVista() {
+  if (calModo === 'hebreo') { const { inicio, fin } = hebMes(hebAncla); return [inicio, fin]; }
+  return [new Date(curYear, curMonth, 1, 12), new Date(curYear, curMonth + 1, 0, 12)];
+}
+
+/** Carga horarios (por año) y eventos (por rango) de la vista actual. */
+async function cargarVista() {
+  const [ini, fin] = rangoVista();
+  for (const y of new Set([ini.getFullYear(), fin.getFullYear()])) await ensureData(y);
+  const from = keyDe(ini), to = keyDe(fin);
+  await Promise.all([
+    loadCustomEvents(from, to),
+    loadComunidadEventos(from, to),
+    loadMisInscripciones()
+  ]);
+}
+
+/* ─── Cambio Gregoriano ↔ Hebreo ─── */
+async function setCalModo(modo) {
+  if (modo === calModo) return;
+  if (modo === 'hebreo') {
+    const hoy = new Date();
+    hebAncla = selectedDate ? mediodia(new Date(selectedDate + 'T12:00:00'))
+      : (hoy.getFullYear() === curYear && hoy.getMonth() === curMonth) ? mediodia(hoy)
+      : new Date(curYear, curMonth, 15, 12);
+  } else {
+    const ref = selectedDate ? new Date(selectedDate + 'T12:00:00') : sumDias(hebMes(hebAncla).inicio, 14);
+    curYear = ref.getFullYear(); curMonth = ref.getMonth();
+  }
+  calModo = modo;
+  try { localStorage.setItem('kehila_cal_modo', modo); } catch(e) {}
+  const sel = selectedDate;
+  document.getElementById('cal-container').innerHTML = `
+    <div class="loading-state"><div class="loading-spinner"></div><p>Cargando calendario…</p></div>`;
+  try { await cargarVista(); } catch(e) { showError(); return; }
+  renderCal();
+  if (sel) selectDate(sel);
+}
+
+async function loadMisInscripciones() {
+  const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+  if (!sb) return;
+  const session = typeof getValidSession === 'function' ? await getValidSession() : null;
+  if (!session) return; // sin sesión real: no se consulta inscripciones
+  try {
+    // Cargar inscripciones del usuario
+    const { data: ins } = await sb
+      .from('inscripciones')
+      .select('evento_id, evento_titulo')
+      .eq('usuario_id', session.user.id);
+    if (!ins || !ins.length) return;
+
+    // Buscar fechas: primero en Supabase, luego en MOCK_EVENTOS
+    const ids = ins.map(i => i.evento_id);
+    let eventosConFecha = [];
+
+    const { data: sbEvs } = await sb.from('eventos').select('id, titulo, fecha, hora, lugar').in('id', ids);
+    if (sbEvs?.length) eventosConFecha = sbEvs;
+
+    // Complementar con MOCK_EVENTOS para los que no estén en Supabase
+    if (typeof MOCK_EVENTOS !== 'undefined') {
+      ins.forEach(i => {
+        if (!eventosConFecha.find(e => String(e.id) === String(i.evento_id))) {
+          const mock = MOCK_EVENTOS.find(e => String(e.id) === String(i.evento_id));
+          if (mock) eventosConFecha.push(mock);
+        }
+      });
+    }
+
+    eventosConFecha.forEach(ev => {
+      if (!ev.fecha) return;
+      const key = ev.fecha.slice(0, 10);
+      if (!customEventsMap[key]) customEventsMap[key] = [];
+      if (!customEventsMap[key].find(e => e.tipo === 'inscripcion' && e.titulo === ev.titulo)) {
+        customEventsMap[key].push({
+          id: 'ins-' + ev.id,
+          titulo: ev.titulo,
+          hora: ev.hora || null,
+          lugar: ev.lugar || null,
+          tipo: 'inscripcion'
+        });
+      }
+    });
+  } catch(e) { /* silencioso */ }
+}
+
+async function loadCustomEvents(from, to) {
+  const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+  if (!sb) return;
+  try {
+    const { data } = await sb.from('calendario_eventos').select('*')
+      .gte('fecha', from).lte('fecha', to).order('hora', { ascending: true });
+    if (data) {
+      data.forEach(ev => {
+        if (!customEventsMap[ev.fecha]) customEventsMap[ev.fecha] = [];
+        if (!customEventsMap[ev.fecha].find(e => e.id === ev.id)) {
+          customEventsMap[ev.fecha].push(ev);
+        }
+      });
+    }
+  } catch(e) { console.warn('loadCustomEvents:', e); }
+}
+
+/**
+ * Eventos creados desde el panel de admin / eventos.html (tabla `eventos`).
+ * Antes solo aparecían en el calendario si el usuario se inscribía — ahora
+ * se muestran para todos como "Evento comunidad", igual que los de
+ * calendario_eventos.
+ */
+async function loadComunidadEventos(from, to) {
+  const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+  if (!sb) return;
+  try {
+    const { data } = await sb.from('eventos')
+      .select('id, titulo, fecha, hora, lugar, descripcion, imagen_url')
+      .gte('fecha', from).lte('fecha', to);
+    if (data && typeof resolveMediaFields === 'function') {
+      await resolveMediaFields(data, [{ bucket: 'community media', field: 'imagen_url' }]);
+    }
+    if (data) {
+      data.forEach(ev => {
+        if (!ev.fecha) return;
+        if (!customEventsMap[ev.fecha]) customEventsMap[ev.fecha] = [];
+        if (!customEventsMap[ev.fecha].find(e => e.id === 'evt-' + ev.id)) {
+          customEventsMap[ev.fecha].push({
+            id: 'evt-' + ev.id,
+            titulo: ev.titulo,
+            hora: ev.hora || null,
+            lugar: ev.lugar || null,
+            descripcion: ev.descripcion || null,
+            imagen_url: ev.imagen_url_signed || null,
+            tipo: 'comunidad'
+          });
+        }
+      });
+    }
+  } catch(e) { console.warn('loadComunidadEventos:', e); }
+}
+
+/* ─── Cambio de ciudad ─── */
+async function changeCity(key) {
+  if (!CITIES[key]) return;
+  localStorage.setItem('kehila_city', key);
+  selectedCity = CITIES[key];
+  loadedCityKey = null;
+  customEventsMap = {};
+  selectedDate = null;
+
+  updateCityUI();
+
+  document.getElementById('cal-container').innerHTML = `
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Cargando horarios para ${selectedCity.name}…</p>
+    </div>`;
+
+  try {
+    await cargarVista();
+    renderCal();
+    updateCandlesPreview();
+  } catch(e) { showError(); }
+}
+
+function updateCityUI() {
+  const c = selectedCity;
+  // Subtítulo
+  const sub = document.getElementById('page-subtitle');
+  if (sub) sub.textContent = `${c.name}, ${c.country} — Shabatot, festividades y horarios`;
+  // Nota de minutos
+  const note = document.getElementById('city-minutes-note');
+  if (note) {
+    if (c.b === 40) {
+      note.textContent = `encendido ${c.b} min antes del ocaso (minhag Yerushalayim)`;
+    } else {
+      note.textContent = `encendido ${c.b} min antes del ocaso`;
+    }
+  }
+}
+
+/* ─── Preview del próximo encendido ─── */
+function updateCandlesPreview() {
+  const preview = document.getElementById('city-candles-preview');
+  if (!preview) return;
+
+  const today = new Date();
+  let nextCandles = null;
+  let nextDate = null;
+
+  for (let i = 0; i < 10; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const key = isoDate(d.getFullYear(), d.getMonth(), d.getDate());
+    if (dateMap[key]?.candles) {
+      // Si es hoy, comprobar que aún no ha pasado la hora
+      if (i === 0) {
+        const [h, m] = dateMap[key].candles.split(':').map(Number);
+        const nowH = today.getHours(), nowM = today.getMinutes();
+        if (nowH > h || (nowH === h && nowM >= m)) continue; // ya pasó
+      }
+      nextDate = d;
+      nextCandles = dateMap[key].candles;
+      break;
+    }
+  }
+
+  if (nextCandles && nextDate) {
+    const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+    const dayStr = nextDate.toLocaleDateString('es-ES', opts);
+    const dayStrCap = dayStr.charAt(0).toUpperCase() + dayStr.slice(1);
+    preview.innerHTML = `Próximo encendido: <strong>${dayStrCap} · ${nextCandles}</strong>`;
+  } else {
+    preview.innerHTML = '';
+  }
+}
+
+/* ─── Renderiza el calendario ─── */
+function renderCal() {
+  const today = new Date();
+  const todayKey = isoDate(today.getFullYear(), today.getMonth(), today.getDate());
+  const heb = calModo === 'hebreo';
+
+  // Días visibles: semanas completas que cubren el mes (gregoriano o hebreo)
+  let inicio, fin, titulo, sub1 = '', sub2 = '';
+  if (heb) {
+    const m = hebMes(hebAncla);
+    inicio = m.inicio; fin = m.fin;
+    const [es, he] = MES_HEB[m.mes] || [m.mes, ''];
+    titulo = `${es} ${m.ano}`;
+    sub1 = `${he} ${gematria(m.ano % 1000)}`;
+    const a = `${inicio.getDate()} ${MES_CORTO[inicio.getMonth()]}`;
+    const b = `${fin.getDate()} ${MES_CORTO[fin.getMonth()]} ${fin.getFullYear()}`;
+    sub2 = `${a}${inicio.getFullYear() !== fin.getFullYear() ? ' ' + inicio.getFullYear() : ''} – ${b}`;
+  } else {
+    inicio = new Date(curYear, curMonth, 1, 12);
+    fin = new Date(curYear, curMonth + 1, 0, 12);
+    titulo = `${MESES[curMonth]} ${curYear}`;
+    try { sub1 = new Intl.DateTimeFormat('he-u-ca-hebrew', { month: 'long', year: 'numeric' }).format(inicio); } catch(e) {}
+  }
+
+  const hdr = heb ? ['DOM','LUN','MAR','MIÉ','JUE','VIE','SHABAT'] : DIAS_HDR;
+  let daysHtml = hdr.map(d => `<div class="cal-header-day">${d}</div>`).join('');
+  const desde = sumDias(inicio, -inicio.getDay());
+  const hasta = sumDias(fin, 6 - fin.getDay());
+  for (let d = desde; d <= hasta; d = sumDias(d, 1)) {
+    const other = d < inicio || d > fin;
+    let label = d.getDate();
+    if (heb) {
+      const g = d.getDate() === 1 || d.getTime() === desde.getTime()
+        ? `${d.getDate()} ${MES_CORTO[d.getMonth()]}` : d.getDate();
+      label = `<span class="cal-heb-num">${gematria(hebParts(d).d)}</span><span class="cal-greg-num">${g}</span>`;
+    }
+    daysHtml += dayCell(label, keyDe(d), other, todayKey);
+  }
+
+  document.getElementById('cal-container').innerHTML = `
+    <div class="cal-wrap">
+      <div>
+        <div class="cal-modo" role="group" aria-label="Tipo de calendario">
+          <button class="${heb ? '' : 'on'}" aria-pressed="${!heb}" onclick="setCalModo('gregoriano')">Gregoriano</button>
+          <button class="${heb ? 'on' : ''}" aria-pressed="${heb}" onclick="setCalModo('hebreo')">Hebreo<span class="he">עברי</span></button>
+        </div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="navMonth(-1)" aria-label="Mes anterior">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+          </button>
+          <div style="text-align:center;">
+            <span class="cal-month-label">${titulo}</span>
+            ${sub1 ? `<div class="cal-month-hebrew">${sub1}</div>` : ''}
+            ${sub2 ? `<div class="cal-month-greg">${sub2}</div>` : ''}
+          </div>
+          <button class="cal-nav-btn" onclick="navMonth(1)" aria-label="Mes siguiente">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+          </button>
+        </div>
+        <div class="cal-grid">${daysHtml}</div>
+        <div class="cal-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--color-gold)"></div>Encendido velas</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--color-primary)"></div>Shabat / Parashá</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div>Festividad</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#0D9488"></div>Rosh Jodesh</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#7C3AED"></div>Ayuno</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div>Evento comunidad</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#0EA5E9"></div>Mis inscripciones</div>
+        </div>
+      </div>
+      <div class="cal-side">
+        <p class="cal-side-title" id="cal-side-title">Selecciona un día</p>
+        <div id="cal-side-detail"><p class="cal-empty">Haz clic en un día para ver la información</p></div>
+      </div>
+    </div>`;
+
+  const hoy = mediodia(today);
+  if (hoy >= inicio && hoy <= fin) selectDate(todayKey);
+}
+
+function dayCell(label, key, other, todayKey) {
+  const info = dateMap[key] || { holidays: [] };
+  const isToday    = key === todayKey;
+  const isSelected = key === selectedDate;
+
+  let classes = 'cal-day';
+  if (other)    classes += ' other';
+  if (isToday)  classes += ' today';
+  if (isSelected && !isToday) classes += ' selected';
+
+  let dots = '';
+  if (info.candles)            dots += `<span class="cal-dot dot-candles"></span>`;
+  if (info.parasha)            dots += `<span class="cal-dot dot-shabbat"></span>`;
+  const PRIO = ['fast', 'chanuka', 'purim', 'yomtov', 'sukkot', 'especial'];
+  const otra = info.holidays.filter(h => h.tipo !== 'roshjodesh')
+    .sort((a, b) => PRIO.indexOf(a.tipo) - PRIO.indexOf(b.tipo))[0];
+  const esAyuno = info.ayunoInicio || info.ayunoFin || (otra && otra.tipo === 'fast');
+  if (esAyuno)                         dots += `<span class="cal-dot dot-fast"></span>`;
+  else if (otra) {
+    if      (otra.tipo === 'chanuka') dots += `<span class="cal-dot dot-chanuka"></span>`;
+    else if (otra.tipo === 'purim')   dots += `<span class="cal-dot dot-purim"></span>`;
+    else                              dots += `<span class="cal-dot dot-holiday"></span>`;
+  }
+  if (info.holidays.some(h => h.tipo === 'roshjodesh')) dots += `<span class="cal-dot dot-roshjodesh"></span>`;
+  const allEvs = customEventsMap[key] || [];
+  if (allEvs.some(e => e.tipo !== 'inscripcion')) dots += `<span class="cal-dot dot-custom"></span>`;
+  if (allEvs.some(e => e.tipo === 'inscripcion')) dots += `<span class="cal-dot dot-inscripcion"></span>`;
+
+  const dotsHtml = dots ? `<div class="cal-dots">${dots}</div>` : '';
+  return `<div class="${classes}" data-key="${key}" onclick="selectDate('${key}')">${label}${dotsHtml}</div>`;
+}
+
+function selectDate(key) {
+  selectedDate = key;
+
+  document.querySelectorAll('.cal-day').forEach(el => {
+    el.classList.remove('selected');
+    if (el.dataset.key === key && !el.classList.contains('today')) {
+      el.classList.add('selected');
+    }
+  });
+
+  const info = dateMap[key] || { holidays: [] };
+  const dateObj = new Date(key + 'T12:00:00');
+  const label = dateObj.toLocaleDateString('es-ES',{ weekday:'long', day:'numeric', month:'long' });
+  const labelCap = label.charAt(0).toUpperCase() + label.slice(1);
+  // Fecha hebrea: fonética en español (en negrita, junto a la gregoriana) y en hebreo debajo
+  let hebEs = '', hebDayLabel = '';
+  try {
+    const hp = hebParts(dateObj);
+    const [mesEs, mesHe] = MES_HEB[hp.m] || [hp.m, ''];
+    hebEs = `${hp.d} de ${mesEs} ${hp.y}`;
+    if (mesHe) hebDayLabel = `${gematria(hp.d)} ${mesHe} ${gematria(hp.y % 1000)}`;
+  } catch(e) {}
+
+  const titleEl = document.getElementById('cal-side-title');
+  titleEl.textContent = labelCap;
+  if (hebEs) {
+    const sp = document.createElement('span');
+    sp.className = 'cal-side-heb-es';
+    sp.textContent = ` · ${hebEs}`;
+    titleEl.appendChild(sp);
+  }
+  // Fecha hebrea bajo el título gregoriano
+  let hebEl = document.getElementById('cal-side-heb');
+  if (!hebEl) {
+    hebEl = document.createElement('p');
+    hebEl.id = 'cal-side-heb';
+    hebEl.className = 'cal-side-hebrew';
+    document.getElementById('cal-side-title').after(hebEl);
+  }
+  hebEl.textContent = hebDayLabel;
+
+  let html = '';
+  let hasContent = false;
+
+  // ── Encendido de velas (viernes o erev yom tov) ──
+  if (info.candles) {
+    hasContent = true;
+    const satD = new Date(dateObj); satD.setDate(satD.getDate()+1);
+    const satKey = satD.toISOString().slice(0,10);
+    const havdalahTime = (dateMap[satKey] || {}).havdalah || null;
+
+    if (info.parasha) {
+      const p = info.parasha;
+      const esp = info.especial ? `<div class="side-shabat-especial">✦ ${info.especial}</div>` : '';
+      const havdalahHTML = havdalahTime
+        ? `<div class="side-time-sep"></div><div class="side-time-item"><span class="side-time-label">Habdalá</span><span class="side-time-val">${havdalahTime}</span></div>`
+        : '';
+      html += `
+        <div class="side-shabat-card">
+          <div class="side-shabat-label">Shabat esta semana</div>
+          <div class="side-shabat-parasha">Parashat ${p.es}</div>
+          <span class="side-shabat-he">${p.he}</span>
+          ${esp}
+          <div class="side-shabat-times">
+            <div class="side-time-item">
+              <span class="side-time-label">Encendido</span>
+              <span class="side-time-val">${info.candles}</span>
+            </div>
+            ${havdalahHTML}
+          </div>
+          <div class="side-city-badge">${selectedCity.name} · ${selectedCity.b} min antes del ocaso</div>
+        </div>`;
+    } else {
+      html += `
+        <div class="side-candles-card">
+          <div class="side-candles-icon">🕯️</div>
+          <div class="side-candles-info">
+            <div class="side-candles-label">Encendido de velas — ${selectedCity.name}</div>
+            <div class="side-candles-time">${info.candles}</div>
+            <div class="side-candles-next">${selectedCity.b} minutos antes del ocaso</div>
+          </div>
+        </div>`;
+    }
+  }
+
+  // ── Sábado: mostrar parashá ──
+  if (info.havdalah && !info.candles) {
+    const friD = new Date(dateObj); friD.setDate(friD.getDate()-1);
+    const friKey = friD.toISOString().slice(0,10);
+    const friInfo = dateMap[friKey] || {};
+    if (friInfo.parasha) {
+      hasContent = true;
+      const p = friInfo.parasha;
+      const esp = friInfo.especial ? `<div class="side-shabat-especial">✦ ${friInfo.especial}</div>` : '';
+      html += `
+        <div class="side-shabat-card">
+          <div class="side-shabat-label">Shabat — Parashá de esta semana</div>
+          <div class="side-shabat-parasha">Parashat ${p.es}</div>
+          <span class="side-shabat-he">${p.he}</span>
+          ${esp}
+          <div class="side-shabat-times">
+            <div class="side-time-item">
+              <span class="side-time-label">Encendido (ayer)</span>
+              <span class="side-time-val">${friInfo.candles || '—'}</span>
+            </div>
+            <div class="side-time-sep"></div>
+            <div class="side-time-item">
+              <span class="side-time-label">Habdalá</span>
+              <span class="side-time-val">${info.havdalah}</span>
+            </div>
+          </div>
+          <div class="side-city-badge">📍 ${selectedCity.flag} ${selectedCity.name}</div>
+        </div>`;
+    }
+  }
+
+  // ── Horario del ayuno ──
+  let ayunoHTML = '';
+  if (info.ayunoInicio || info.ayunoFin) {
+    // Si hoy solo termina (Tishá Beav, Kipur), el inicio fue la víspera
+    let ini = info.ayunoInicio, iniLabel = 'Empieza';
+    if (!ini) {
+      const prev = new Date(dateObj); prev.setDate(prev.getDate() - 1);
+      const pv = dateMap[isoDate(prev.getFullYear(), prev.getMonth(), prev.getDate())];
+      if (pv && pv.ayunoInicio) { ini = pv.ayunoInicio; iniLabel = 'Empezó ayer'; }
+    } else if (ini.encendido) iniLabel = 'Empieza (encendido)';
+    else if (ini.noche)       iniLabel = 'Empieza esta noche';
+    const fin = info.ayunoFin;
+    ayunoHTML = `
+        <div class="side-ayuno-times">
+          ${ini ? `<div class="side-time-item"><span class="side-time-label">${iniLabel}</span><span class="side-time-val">${ini.hora}</span></div>` : ''}
+          ${ini && fin ? '<div class="side-time-sep"></div>' : ''}
+          ${fin ? `<div class="side-time-item"><span class="side-time-label">Termina</span><span class="side-time-val">${fin.hora}</span></div>` : ''}
+        </div>
+        <div class="side-ayuno-city">📍 ${selectedCity.name}</div>`;
+  }
+
+  // ── Festividades ──
+  info.holidays.forEach(h => {
+    hasContent = true;
+    const timeHTML = h.time ? `<div class="side-holiday-time">Encendido: ${h.time} · ${selectedCity.name}</div>` : '';
+    const conAyuno = ayunoHTML && h.tipo === 'fast';
+    html += `
+      <div class="side-holiday-card ${h.tipo}">
+        <div class="side-holiday-name">${h.es}</div>
+        ${h.he ? `<div class="side-holiday-he">${h.he}</div>` : ''}
+        ${h.desc ? `<div class="side-holiday-desc">${h.desc}</div>` : ''}
+        ${timeHTML}
+        ${conAyuno ? ayunoHTML : ''}
+      </div>`;
+    if (conAyuno) ayunoHTML = '';
+  });
+  if (ayunoHTML) {
+    hasContent = true;
+    const nombre = (info.ayunoInicio || info.ayunoFin).nombre;
+    html += `
+      <div class="side-holiday-card fast">
+        <div class="side-holiday-name">Ayuno — ${nombre}</div>
+        ${ayunoHTML}
+      </div>`;
+  }
+
+  // ── Cuenta del Omer ──
+  if (info.omer) {
+    hasContent = true;
+    html += `
+      <div class="side-holiday-card omer">
+        <div class="side-holiday-name">Cuenta del Omer — día ${info.omer}</div>
+        <div class="side-holiday-he">ספירת העומר · ${gematria(info.omer)}</div>
+        <div class="side-holiday-desc">Se cuenta la noche anterior, al salir las estrellas</div>
+      </div>`;
+  }
+
+  // ── Mis eventos inscritos ──
+  const inscrEvs = (customEventsMap[key] || []).filter(e => e.tipo === 'inscripcion');
+  if (inscrEvs.length) {
+    if (hasContent) html += `<hr style="border:none;border-top:1px solid var(--color-border);margin:12px 0;">`;
+    html += `<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#0369A1;margin-bottom:8px;">Mis eventos inscritos</div>`;
+    inscrEvs.forEach(ev => {
+      html += `<div class="cal-ev-inscripcion">
+        <div class="cal-ev-item-title">${ev.titulo}</div>
+        ${ev.hora ? `<div class="cal-ev-item-hora">🕐 ${ev.hora}</div>` : ''}
+        ${ev.lugar ? `<div class="cal-ev-item-desc">📍 ${ev.lugar}</div>` : ''}
+        <span class="cal-ev-inscripcion-badge">✓ Inscrito</span>
+      </div>`;
+    });
+    hasContent = true;
+  }
+
+  // ── Eventos de la comunidad ──
+  const customEvs = (customEventsMap[key] || []).filter(e => e.tipo !== 'inscripcion');
+  if (customEvs.length) {
+    if (hasContent) html += `<hr style="border:none;border-top:1px solid var(--color-border);margin:12px 0;">`;
+    html += `<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted);margin-bottom:8px;">Eventos de la comunidad</div>`;
+    customEvs.forEach(ev => {
+      // Los eventos sincronizados desde la tabla `eventos` (id con prefijo
+      // 'evt-') viven y se gestionan en eventos.html — no se borran desde
+      // aquí (ese botón solo aplica a calendario_eventos), en su lugar
+      // llevan un enlace directo al evento.
+      const isEventosTable = ev.id.startsWith('evt-');
+      const realId = isEventosTable ? ev.id.slice(4) : null;
+      const hasFlyer = !!ev.imagen_url;
+      const evBody = `
+        <div class="cal-ev-item-title">${ev.titulo}</div>
+        ${ev.hora ? `<div class="cal-ev-item-hora">🕐 ${ev.hora}</div>` : ''}
+        ${ev.descripcion ? `<div class="cal-ev-item-desc">${ev.descripcion}</div>` : ''}
+        ${isEventosTable ? `<a class="cal-ev-item-link" href="eventos.html?evento=${realId}" onclick="event.stopPropagation()">Ver en Eventos →</a>` : ''}`;
+      html += hasFlyer
+        ? `<div class="cal-ev-item" id="calev-${ev.id}" style="cursor:pointer;display:flex;gap:10px;align-items:flex-start;" onclick="openEventoLightbox('${key}','${ev.id}')">
+            <img src="${ev.imagen_url}" alt="${ev.titulo}" loading="lazy" decoding="async" style="width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;">
+            <div style="flex:1;min-width:0;">${evBody}</div>
+          </div>`
+        : `<div class="cal-ev-item" id="calev-${ev.id}">
+            ${_calIsAdmin && !isEventosTable ? `<button class="cal-ev-item-del" onclick="deleteCalEv('${ev.id}','${key}',event)" title="Eliminar">✕</button>` : ''}
+            ${evBody}
+          </div>`;
+    });
+    hasContent = true;
+  }
+
+  if (_calIsAdmin) {
+    html += `<button class="cal-add-btn" onclick="showCalAddForm('${key}')">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      Añadir evento a este día
+    </button>
+    <div id="cal-add-form-${key}" style="display:none;">
+      <div class="cal-add-form">
+        <input id="caef-titulo-${key}" placeholder="Título del evento" maxlength="80">
+        <input id="caef-hora-${key}" type="time" placeholder="Hora (opcional)">
+        <textarea id="caef-desc-${key}" placeholder="Descripción (opcional)" rows="2" style="resize:none;"></textarea>
+        <div class="cal-add-form-btns">
+          <button onclick="hideCalAddForm('${key}')">Cancelar</button>
+          <button class="btn-save" onclick="saveCalEv('${key}')">Guardar</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (!hasContent) {
+    html = `<p class="cal-empty">Sin eventos hebreos este día</p>`;
+  }
+
+  document.getElementById('cal-side-detail').innerHTML = html;
+}
+
+function openEventoLightbox(key, id) {
+  const ev = (customEventsMap[key] || []).find(e => e.id === id);
+  if (!ev || !ev.imagen_url) return;
+  document.getElementById('evento-lightbox-img').src = ev.imagen_url;
+  document.getElementById('evento-lightbox-img').alt = ev.titulo || '';
+  document.getElementById('evento-lightbox-title').textContent = ev.titulo || '';
+  document.getElementById('evento-lightbox').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEventoLightbox() {
+  document.getElementById('evento-lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('evento-lightbox').style.display === 'flex') closeEventoLightbox();
+});
+
+function showCalAddForm(key) { document.getElementById(`cal-add-form-${key}`).style.display = ''; }
+function hideCalAddForm(key) { document.getElementById(`cal-add-form-${key}`).style.display = 'none'; }
+
+async function saveCalEv(key) {
+  const titulo = document.getElementById(`caef-titulo-${key}`).value.trim();
+  if (!titulo) { alert('Escribe un título'); return; }
+  const hora  = document.getElementById(`caef-hora-${key}`).value || null;
+  const desc  = document.getElementById(`caef-desc-${key}`).value.trim() || null;
+  const newEv = { fecha: key, titulo, hora, descripcion: desc, tipo: 'comunidad' };
+  const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+  if (sb) {
+    const { data, error } = await sb.from('calendario_eventos').insert(newEv).select().single();
+    if (error) { alert('Error: ' + error.message); return; }
+    if (data) newEv.id = data.id;
+  } else {
+    newEv.id = 'local-' + Date.now();
+  }
+  if (!customEventsMap[key]) customEventsMap[key] = [];
+  customEventsMap[key].push(newEv);
+  renderCal();
+  selectDate(key);
+  if (typeof showToast === 'function') showToast('Evento añadido — todos lo verán', 'success');
+}
+
+async function deleteCalEv(id, key, e) {
+  e.stopPropagation();
+  const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+  if (sb) { try { await sb.from('calendario_eventos').delete().eq('id', id); } catch(_) {} }
+  if (customEventsMap[key]) customEventsMap[key] = customEventsMap[key].filter(ev => ev.id !== id);
+  renderCal();
+  selectDate(key);
+  if (typeof showToast === 'function') showToast('Evento eliminado', 'success');
+}
+
+async function navMonth(delta) {
+  if (calModo === 'hebreo') {
+    const { inicio, fin } = hebMes(hebAncla);
+    hebAncla = delta > 0 ? sumDias(fin, 1) : sumDias(inicio, -1);
+  } else {
+    curMonth += delta;
+    if (curMonth > 11) { curMonth = 0;  curYear++; }
+    if (curMonth < 0)  { curMonth = 11; curYear--; }
+  }
+
+  // ensureData() solo descarga los años que aún no tiene; los eventos se
+  // recargan SIEMPRE al navegar, o el mes nuevo se queda sin los suyos.
+  document.getElementById('cal-container').innerHTML = `
+    <div class="loading-state"><div class="loading-spinner"></div><p>Cargando calendario…</p></div>`;
+  try { await cargarVista(); } catch(e) { showError(); return; }
+
+  selectedDate = null;
+  renderCal();
+}
+
+function showError() {
+  document.getElementById('cal-container').innerHTML = `
+    <div style="text-align:center;padding:60px 20px;color:var(--color-text-muted)">
+      <div style="font-size:2rem;margin-bottom:12px">📡</div>
+      <p>No se pudo cargar el calendario.<br>Verifica tu conexión a internet.</p>
+    </div>`;
+}
+
+/* ─── Init ─── */
+async function __calendarioInit() {
+  requireAuth();
+  initNav('calendario');
+
+  // Restaurar ciudad guardada
+  const savedKey = localStorage.getItem('kehila_city') || '{{location.cityKey}}';
+  selectedCity = CITIES[savedKey] || CITIES['{{location.cityKey}}'];
+  const sel = document.getElementById('city-select');
+  if (sel) sel.value = savedKey;
+  updateCityUI();
+
+  try {
+    await cargarVista();
+    renderCal();
+    updateCandlesPreview();
+  } catch(e) {
+    showError();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', __calendarioInit);
+} else {
+  __calendarioInit();
+}
+</script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

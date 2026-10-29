@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{mikve.name}} — Reservar cita</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    :root {
+      --mk-parchment: #EDE7DC;
+      --mk-surface:   #FDFAF5;
+      --mk-navy:      #0D2545;
+      --mk-gold:      #B8963E;
+      --mk-gold-bg:   #F0E3C0;
+      --mk-gold-pale: #FBF5E4;
+      --mk-border:    #DDD5C7;
+      --mk-text:      #0D2545;
+      --mk-muted:     #8A7E73;
+    }
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: var(--mk-parchment); }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+
+    /* Page header */
+    .mk-page-header { background: var(--mk-navy); position: relative; padding: 44px 24px 0; text-align: center; border-radius: 0 0 36px 36px; overflow: hidden; }
+    .mk-page-header-inner { position: relative; z-index: 1; }
+    .mk-page-header h1 { font-family: var(--font-brand, Georgia, serif); font-size: 2rem; font-weight: 700; color: #fff; margin: 0 0 5px; letter-spacing: -0.01em; }
+    .mk-page-header p { color: var(--mk-gold); font-size: 0.875rem; font-weight: 700; margin: 0 0 28px; letter-spacing: 0.06em; text-transform: uppercase; }
+    @media (max-width: 768px) { .mk-page-header { padding: 56px 24px 0; border-radius: 0 0 24px 24px; } .mk-page-header h1 { font-size: 1.625rem; } }
+
+    /* Reset button */
+    .mk-reset-btn { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; z-index: 2; }
+    .mk-reset-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    .mk-reset-btn svg { width: 15px; height: 15px; }
+
+    /* Container */
+    .mk-container { max-width: 660px; margin: 0 auto; padding: 20px 20px 100px; }
+    @media (max-width: 480px) { .mk-container { padding: 16px 14px 100px; } }
+
+    /* Step tabs */
+    .mk-steps { display: flex; background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 100px; padding: 5px; margin-bottom: 20px; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+    .mk-steps::-webkit-scrollbar { display: none; }
+    .mk-step-btn { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 10px; border-radius: 100px; border: none; background: none; cursor: pointer; font-size: 0.78rem; font-weight: 500; color: var(--mk-muted); white-space: nowrap; font-family: inherit; transition: all 0.2s; }
+    .mk-step-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .mk-step-btn.active { background: var(--mk-gold); color: #fff; font-weight: 700; }
+    .mk-step-btn.done { color: var(--mk-navy); }
+    .mk-step-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    @media (max-width: 480px) { .mk-step-btn span { display: none; } .mk-step-btn svg { width: 16px; height: 16px; } .mk-step-btn { min-width: 36px; padding: 9px 8px; } }
+
+    /* Summary */
+    .mk-summary { display: flex; align-items: center; gap: 14px; background: var(--mk-gold-pale); border: 1px solid var(--mk-gold-bg); border-radius: 16px; padding: 14px 18px; margin-bottom: 12px; }
+    .mk-summary-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--mk-gold-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--mk-navy); }
+    .mk-summary-icon svg { width: 17px; height: 17px; }
+    .mk-summary-text { line-height: 1.4; }
+    .mk-summary-date { font-size: 0.9375rem; font-weight: 700; color: var(--mk-navy); }
+    .mk-summary-detail { font-size: 0.8rem; color: var(--mk-muted); margin-top: 2px; }
+
+    /* Placeholder */
+    .mk-placeholder { display: flex; align-items: center; gap: 10px; background: var(--mk-surface); border: 1px dashed var(--mk-border); border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; color: var(--mk-muted); font-size: 0.875rem; }
+    .mk-placeholder svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--mk-gold); }
+
+    /* Calendar */
+    .mk-cal { background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 20px; padding: 24px 18px 28px; }
+    .mk-cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .mk-cal-nav-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--mk-border); background: transparent; color: var(--mk-navy); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .mk-cal-nav-btn:hover { background: var(--mk-gold-bg); border-color: var(--mk-gold); }
+    .mk-cal-nav-btn svg { width: 16px; height: 16px; }
+    .mk-cal-month { font-family: var(--font-brand, Georgia, serif); font-size: 1.2rem; font-weight: 700; color: var(--mk-navy); }
+    .mk-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .mk-cal-dow { text-align: center; font-size: 0.67rem; font-weight: 600; color: var(--mk-muted); padding: 0 0 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .mk-cal-dow.shabbos { color: var(--mk-gold); }
+    .mk-cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.875rem; font-weight: 500; color: var(--mk-navy); cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; }
+    .mk-cal-day:hover:not(.disabled):not(.selected) { background: var(--mk-gold-bg); }
+    .mk-cal-day.other-month { color: #ccc; pointer-events: none; }
+    .mk-cal-day.today { border-color: var(--mk-gold); color: var(--mk-gold); font-weight: 700; }
+    .mk-cal-day.selected { background: var(--mk-gold); border-color: var(--mk-gold); color: #fff; font-weight: 700; }
+    .mk-cal-day.disabled { color: #ccc; cursor: not-allowed; }
+
+    /* Service cards */
+    .mk-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .mk-options { grid-template-columns: 1fr; } }
+    .mk-option-card { background: var(--mk-surface); border: 1.5px solid var(--mk-border); border-radius: 18px; padding: 20px 16px; display: flex; align-items: center; gap: 13px; cursor: pointer; transition: all 0.2s; }
+    .mk-option-card:hover:not(.selected) { border-color: var(--mk-gold); }
+    .mk-option-card.selected { border-color: var(--mk-gold); background: var(--mk-gold-pale); box-shadow: 0 0 0 3px rgba(184,150,62,0.1); }
+    .mk-option-icon { width: 44px; height: 44px; border-radius: 14px; background: var(--mk-gold-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--mk-navy); }
+    .mk-option-icon svg { width: 22px; height: 22px; }
+    .mk-option-info { flex: 1; }
+    .mk-option-name { font-size: 1rem; font-weight: 700; color: var(--mk-navy); }
+    .mk-option-price { font-size: 0.8rem; color: var(--mk-muted); margin-top: 3px; }
+    .mk-select-btn { padding: 7px 14px; border-radius: 10px; background: var(--mk-gold-bg); border: 1px solid var(--mk-gold); color: var(--mk-navy); font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+    .mk-select-btn:hover { background: var(--mk-gold); color: #fff; }
+    .mk-select-btn.selected-btn { background: var(--mk-gold); color: #fff; }
+
+    /* Time info */
+    .mk-time-info { background: var(--mk-gold-pale); border: 1px solid var(--mk-gold-bg); border-radius: 16px; padding: 14px 18px; margin-bottom: 14px; text-align: center; }
+    .mk-time-info-title { font-weight: 700; color: var(--mk-navy); font-size: 0.875rem; margin-bottom: 5px; }
+    .mk-time-info-sub { font-size: 0.8rem; color: var(--mk-muted); line-height: 1.7; }
+
+    /* Slots */
+    .mk-slot { background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 16px; padding: 15px 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+    .mk-slot:hover:not(.selected) { border-color: var(--mk-gold); }
+    .mk-slot.selected { border-color: var(--mk-gold); background: var(--mk-gold-pale); box-shadow: 0 0 0 3px rgba(184,150,62,0.1); }
+    .mk-slot-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--mk-gold-bg); color: var(--mk-navy); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+    .mk-slot.selected .mk-slot-icon { background: var(--mk-gold); color: #fff; }
+    .mk-slot-icon svg { width: 19px; height: 19px; }
+    .mk-slot-time { font-size: 1.375rem; font-weight: 700; color: var(--mk-navy); line-height: 1; }
+    .mk-slot-time span { font-size: 0.875rem; font-weight: 400; color: var(--mk-muted); margin-left: 2px; }
+    .mk-slot-sub { font-size: 0.75rem; color: var(--mk-muted); margin-top: 3px; }
+    .mk-slot-flex { flex: 1; }
+
+    /* Notes */
+    .mk-notes-box { background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 18px; padding: 22px; }
+    .mk-notes-label { font-size: 0.875rem; font-weight: 600; color: var(--mk-navy); margin-bottom: 12px; display: block; }
+    .mk-notes-ta { width: 100%; box-sizing: border-box; border: 1.5px solid var(--mk-border); border-radius: 12px; padding: 13px; font-size: 0.9rem; font-family: inherit; color: var(--mk-text); resize: vertical; min-height: 110px; background: transparent; transition: border-color 0.15s; }
+    .mk-notes-ta:focus { outline: none; border-color: var(--mk-gold); }
+    .mk-notes-hint { font-size: 0.75rem; color: var(--mk-muted); margin-top: 8px; }
+
+    /* Donation */
+    .mk-donation-intro { background: var(--mk-gold-pale); border: 1px solid var(--mk-gold-bg); border-radius: 16px; padding: 16px 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 14px; }
+    .mk-donation-intro svg { width: 24px; height: 24px; color: var(--mk-gold); flex-shrink: 0; }
+    .mk-donation-title { font-weight: 700; color: var(--mk-navy); font-size: 0.9375rem; margin-bottom: 2px; }
+    .mk-donation-sub { font-size: 0.8rem; color: var(--mk-muted); }
+    .mk-donation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mk-donation-opt { background: var(--mk-surface); border: 1.5px solid var(--mk-border); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; }
+    .mk-donation-opt:hover:not(.selected) { border-color: var(--mk-gold); }
+    .mk-donation-opt.selected { border-color: var(--mk-gold); background: var(--mk-gold-pale); }
+    .mk-donation-badge { width: 36px; height: 36px; border-radius: 10px; background: var(--mk-navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .mk-donation-badge.no { background: var(--mk-gold-bg); color: var(--mk-muted); font-size: 1.1rem; }
+    .mk-donation-amount { font-size: 0.9375rem; font-weight: 600; color: var(--mk-navy); }
+    .mk-donation-custom { grid-column: 1 / -1; }
+
+    /* Payment */
+    .mk-payment-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 560px) { .mk-payment-layout { grid-template-columns: 1fr; } }
+    .mk-payment-summary { background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 18px; overflow: hidden; }
+    .mk-payment-summary-header { background: var(--mk-gold-pale); border-bottom: 1px solid var(--mk-gold-bg); padding: 15px 18px; display: flex; align-items: center; gap: 12px; }
+    .mk-payment-summary-header-icon { width: 38px; height: 38px; border-radius: 11px; background: var(--mk-gold-bg); color: var(--mk-navy); display: flex; align-items: center; justify-content: center; }
+    .mk-payment-summary-header-icon svg { width: 18px; height: 18px; }
+    .mk-pay-date { font-size: 0.9375rem; font-weight: 700; color: var(--mk-navy); }
+    .mk-payment-row { display: flex; align-items: flex-start; gap: 12px; padding: 13px 18px; border-bottom: 1px solid #ede7dc; }
+    .mk-payment-row:last-child { border-bottom: none; }
+    .mk-pay-row-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--mk-gold-bg); color: var(--mk-navy); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .mk-pay-row-icon svg { width: 14px; height: 14px; }
+    .mk-pay-row-label { font-size: 0.7rem; font-weight: 600; color: var(--mk-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .mk-pay-row-value { font-size: 0.875rem; font-weight: 600; color: var(--mk-navy); margin-top: 2px; }
+    .mk-pay-row-note { font-size: 0.75rem; color: var(--mk-muted); margin-top: 2px; line-height: 1.5; }
+    .mk-pay-total { font-size: 1.1rem; font-weight: 700; color: var(--mk-navy); }
+    .mk-payment-method { display: flex; flex-direction: column; gap: 10px; }
+    .mk-payment-method-title { background: var(--mk-gold-pale); border: 1px solid var(--mk-gold-bg); border-radius: 14px; padding: 13px 18px; font-weight: 700; color: var(--mk-navy); text-align: center; font-size: 0.875rem; }
+    .mk-add-card { background: var(--mk-surface); border: 1.5px solid var(--mk-border); border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.15s; }
+    .mk-add-card:hover { border-color: var(--mk-gold); }
+    .mk-add-card svg { width: 22px; height: 22px; color: var(--mk-navy); }
+    .mk-add-card-label { flex: 1; font-size: 0.9375rem; font-weight: 600; color: var(--mk-navy); }
+    .mk-add-card-arrow { color: var(--mk-muted); }
+    .mk-add-card-arrow svg { width: 18px; height: 18px; }
+
+    /* Bottom bar */
+    .mk-bottom-bar { padding: 20px 0 0; display: flex; align-items: center; gap: 12px; }
+    .mk-book-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 15px; background: none; border: 2px solid var(--mk-border); border-radius: 14px; color: var(--mk-muted); font-size: 1rem; font-weight: 700; font-family: inherit; cursor: not-allowed; transition: all 0.2s; }
+    .mk-book-btn.ready { background: var(--mk-gold); border-color: var(--mk-gold); color: #fff; cursor: pointer; }
+    .mk-book-btn.ready:hover { background: #a8863a; }
+    .mk-book-btn svg { width: 18px; height: 18px; }
+    .mk-continue-btn { flex: 1; padding: 15px; background: var(--mk-gold); border: none; border-radius: 14px; color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.15s; letter-spacing: 0.01em; }
+    .mk-continue-btn:hover { background: #a8863a; }
+    .mk-continue-btn:disabled { background: var(--mk-border); color: var(--mk-muted); cursor: not-allowed; }
+
+    /* Confirmed */
+    .mk-confirmed { text-align: center; padding: 48px 24px 80px; }
+    .mk-confirmed-icon { width: 76px; height: 76px; border-radius: 50%; background: var(--mk-gold-pale); border: 2px solid var(--mk-gold-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+    .mk-confirmed-icon svg { width: 38px; height: 38px; color: var(--mk-gold); }
+    .mk-confirmed h2 { font-family: var(--font-brand, Georgia, serif); font-size: 1.5rem; font-weight: 700; color: var(--mk-navy); margin-bottom: 8px; }
+    .mk-confirmed p { color: var(--mk-muted); font-size: 0.9375rem; line-height: 1.6; margin-bottom: 24px; }
+    .mk-confirmed-card { background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 18px; padding: 20px 24px; text-align: left; max-width: 400px; margin: 0 auto 24px; }
+    .mk-confirmed-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+    .mk-confirmed-row:last-child { margin-bottom: 0; }
+    .mk-confirmed-row svg { width: 16px; height: 16px; color: var(--mk-gold); flex-shrink: 0; margin-top: 3px; }
+    .mk-confirmed-row-val { font-size: 0.9rem; color: var(--mk-text); }
+
+    /* Mode toggle */
+    .mk-mode-toggle { display: flex; background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 100px; padding: 4px; margin-bottom: 18px; gap: 2px; }
+    .mk-mode-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 12px; border-radius: 100px; border: none; background: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--mk-muted); font-family: inherit; transition: all 0.2s; }
+    .mk-mode-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .mk-mode-btn.active { background: var(--mk-gold); color: #fff; font-weight: 700; }
+    @media (max-width: 400px) { .mk-mode-btn { padding: 10px 6px; font-size: .8rem; gap: 5px; } }
+
+    /* ── Tevilat Kelim ── */
+    .mk-mode-2l { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; text-align: left; }
+    .mk-mode-2l small { font-size: .66rem; font-weight: 500; opacity: .8; white-space: nowrap; }
+    @media (max-width: 400px) { .mk-mode-2l small { font-size: .58rem; } }
+    .mk-beraja { background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 18px; padding: 18px 20px; margin: 12px 0; }
+    .mk-beraja-label { font-size: 0.875rem; font-weight: 600; color: var(--mk-navy); margin-bottom: 10px; }
+    .mk-beraja-he { font-family: 'Frank Ruhl Libre', var(--font-brand, Georgia, serif); font-size: 1.15rem; line-height: 1.7; direction: rtl; text-align: right; color: var(--mk-navy); }
+    .mk-beraja-tr { font-size: 0.85rem; font-style: italic; color: var(--mk-navy); margin-top: 8px; line-height: 1.5; }
+    .mk-beraja-es { font-size: 0.78rem; color: var(--mk-muted); margin-top: 8px; line-height: 1.5; }
+
+    /* Gallery */
+    .mk-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 20px -24px 0; overflow: hidden; position: relative; z-index: 1; }
+    .mk-gallery img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    @media (max-width: 480px) { .mk-gallery { grid-template-columns: 1fr 1fr; } .mk-gallery img { height: 110px; } .mk-gallery img:last-child { grid-column: 1 / -1; height: 100px; } }
+
+    /* Reserva cards */
+    .mk-reserva-empty { text-align: center; padding: 48px 24px; color: var(--mk-muted); }
+    .mk-reserva-empty svg { width: 44px; height: 44px; margin: 0 auto 12px; display: block; opacity: 0.3; }
+    .mk-reserva-empty p { font-size: 0.9375rem; }
+    .mk-reserva-card { background: var(--mk-surface); border: 1px solid var(--mk-border); border-radius: 18px; overflow: hidden; margin-bottom: 12px; }
+    .mk-reserva-card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--mk-gold-pale); border-bottom: 1px solid var(--mk-gold-bg); }
+    .mk-reserva-date { font-size: 0.9rem; font-weight: 700; color: var(--mk-navy); }
+    .mk-reserva-badge { display: inline-block; padding: 3px 11px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: capitalize; }
+    .mk-reserva-badge.confirmada { background: #D1FAE5; color: #065F46; }
+    .mk-reserva-badge.completada { background: #DBEAFE; color: #1E40AF; }
+    .mk-reserva-badge.cancelada  { background: #FEE2E2; color: #991B1B; }
+    .mk-reserva-card-body { padding: 13px 18px; }
+    .mk-reserva-row { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; font-size: 0.875rem; color: var(--mk-text); }
+    .mk-reserva-row:last-child { margin-bottom: 0; }
+    .mk-reserva-row svg { width: 14px; height: 14px; color: var(--mk-gold); flex-shrink: 0; }
+    .mk-reserva-card-footer { padding: 0 18px 13px; display: flex; justify-content: flex-end; }
+    .mk-cancel-btn { padding: 6px 15px; border-radius: 8px; background: none; border: 1px solid #E5E7EB; color: #EF4444; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .mk-cancel-btn:hover { background: #FEE2E2; border-color: #EF4444; }
+
+    /* Modal */
+    .mk-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 900; align-items: flex-end; justify-content: center; }
+    .mk-modal-overlay.open { display: flex; }
+    .mk-modal-box { background: var(--mk-surface); border-radius: 22px 22px 0 0; padding: 28px 24px calc(28px + env(safe-area-inset-bottom)); width: 100%; max-width: 500px; }
+    .mk-modal-title { font-size: 1.1rem; font-weight: 700; color: var(--mk-navy); margin-bottom: 20px; }
+    .mk-field { margin-bottom: 16px; }
+    .mk-field label { display: block; font-size: 0.8125rem; font-weight: 600; color: var(--mk-navy); margin-bottom: 6px; }
+    .mk-field input { width: 100%; box-sizing: border-box; padding: 11px 13px; border: 1.5px solid var(--mk-border); border-radius: 12px; font-size: 0.9rem; font-family: inherit; color: var(--mk-text); transition: border-color 0.15s; background: transparent; }
+    .mk-field input:focus { outline: none; border-color: var(--mk-gold); }
+    .mk-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mk-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .mk-modal-cancel { flex: 1; padding: 12px; border: 1.5px solid var(--mk-border); border-radius: 12px; background: none; color: var(--mk-muted); font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .mk-modal-confirm { flex: 2; padding: 12px; border: none; border-radius: 12px; background: var(--mk-gold); color: #fff; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0D2545">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+<div id="sidebar-placeholder"></div>
+
+<main class="main-content">
+
+  <div class="mk-page-header">
+    <button class="mk-reset-btn" onclick="resetBooking()" title="Reiniciar reserva">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+    </button>
+    <div class="mk-page-header-inner">
+      <h1>{{mikve.name}}</h1>
+      <p>Reserva tu visita</p>
+    </div>
+    <div class="mk-gallery">
+      <img src="img/placeholder.svg" alt="{{mikve.name}}" onerror="this.parentElement.style.display='none'">
+      <img src="img/placeholder.svg" alt="{{mikve.name}}" onerror="this.style.display='none'">
+      <img src="img/placeholder.svg" alt="{{mikve.name}}" onerror="this.style.display='none'">
+    </div>
+  </div>
+
+  <div class="mk-container">
+
+    <!-- Mode toggle -->
+    <div class="mk-mode-toggle">
+      <button class="mk-mode-btn active" id="mk-btn-booking" onclick="mkSwitchMode('booking')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+        Nueva reserva
+      </button>
+      <button class="mk-mode-btn" id="mk-btn-reservas" onclick="mkSwitchMode('reservas')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+        Mis reservas
+      </button>
+    </div>
+
+    <!-- Booking view -->
+    <div id="mk-booking-view">
+
+    <!-- Section toggle: women's mikve vs men's showers -->
+    <div class="mk-mode-toggle" style="margin-bottom:14px;">
+      <button class="mk-mode-btn active" id="mk-gender-mujer" onclick="mkSetGender('mujer')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+        Mujeres
+      </button>
+      <button class="mk-mode-btn" id="mk-gender-hombre" onclick="mkSetGender('hombre')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+        Hombres
+      </button>
+      <button class="mk-mode-btn" id="mk-gender-kelim" onclick="mkSetGender('kelim')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5h18M4.5 10.5l1.2 7.2A2.25 2.25 0 0 0 7.92 19.5h8.16a2.25 2.25 0 0 0 2.22-1.8l1.2-7.2M9 10.5V7.5a3 3 0 0 1 6 0v3"/></svg>
+        <span class="mk-mode-2l">Tevilat Kelim<small>(inmersión de utensilios)</small></span>
+      </button>
+    </div>
+
+    <div class="mk-steps" id="mk-steps">
+      <button class="mk-step-btn active" data-step="1" onclick="goToStep(1)">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+        <span>Fecha</span>
+      </button>
+      <button class="mk-step-btn" data-step="2" onclick="goToStep(2)" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm2.498-4.501h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm2.504-4.498h.008v.008h-.008v-.008Zm0 2.248h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Z"/></svg>
+        <span>Servicio</span>
+      </button>
+      <button class="mk-step-btn" data-step="3" onclick="goToStep(3)" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        <span>Hora</span>
+      </button>
+      <button class="mk-step-btn" data-step="4" onclick="goToStep(4)" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+        <span>Notas</span>
+      </button>
+      <button class="mk-step-btn" data-step="5" onclick="goToStep(5)" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+        <span>Donación</span>
+      </button>
+      <button class="mk-step-btn" data-step="6" onclick="goToStep(6)" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
+        <span>Pago</span>
+      </button>
+    </div>
+
+    <div id="mk-content"></div>
+
+    <div class="mk-bottom-bar" id="mk-bottom-bar">
+      <button class="mk-continue-btn" id="mk-continue-btn" onclick="handleContinue()" disabled>Continuar</button>
+    </div>
+
+    </div><!-- /mk-booking-view -->
+
+    <!-- Mis reservas view -->
+    <div id="mk-reservas-view" style="display:none;"></div>
+
+  </div>
+
+</main>
+
+<!-- Stripe card modal -->
+<div class="mk-modal-overlay" id="card-modal">
+  <div class="mk-modal-box" onclick="event.stopPropagation()">
+    <div class="mk-modal-title">Añadir tarjeta</div>
+    <p style="font-size:0.8rem;color:var(--mk-muted);margin-bottom:14px;">🔒 Pago seguro con Stripe</p>
+    <div id="mk-stripe-card-element" style="border:1.5px solid var(--mk-border);border-radius:10px;padding:12px 14px;background:#fff;"></div>
+    <div id="mk-stripe-card-error" style="color:#e53e3e;font-size:0.78rem;margin-top:7px;min-height:14px;"></div>
+    <div class="mk-modal-actions">
+      <button class="mk-modal-cancel" onclick="cerrarCardModal()">Cancelar</button>
+      <button class="mk-modal-confirm" id="mk-stripe-save-btn" onclick="confirmarTarjeta()">Guardar tarjeta</button>
+    </div>
+  </div>
+</div>
+
+<script defer src="https://js.stripe.com/v3/"></script>
+<script src="/vendor/supabase.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/router.js"></script>
+<script>
+  const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+  const booking = { step:1, gender:'mujer', date:null, service:null, time:null, notes:'', donation:0, donationLabel:'No', card:null, confirmed:false,
+                    kelim: { tipos: [], otro: '', ayuda: null } };
+
+  function __mikveInit() { requireAuth(); initNav('mikve'); getMikveServices(); renderStep(); }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mikveInit);
+  } else {
+    __mikveInit();
+  }
+
+  const BCN_LAT = {{location.lat}} * Math.PI / 180;
+  const BCN_LON = {{location.lon}};
+  const TZEIT_DEG = 6.0;
+
+  function _solarData(date) {
+    const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+    const decl = -23.45 * Math.cos(2 * Math.PI * (dayOfYear + 10) / 365) * Math.PI / 180;
+    const solarNoon = 12 - BCN_LON / 15;
+    const B = (360 / 365 * (dayOfYear - 81)) * Math.PI / 180;
+    const EoT = (9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B)) / 60;
+    const tz = (date.getMonth() + 1 >= 4 && date.getMonth() + 1 <= 10) ? 2 : 1;
+    return { decl, solarNoon, EoT, tz };
+  }
+  function calcSunset(date) {
+    const { decl, solarNoon, EoT, tz } = _solarData(date);
+    const cosH = -Math.tan(BCN_LAT) * Math.tan(decl);
+    const H = Math.acos(Math.max(-1, Math.min(1, cosH))) * 180 / Math.PI;
+    return solarNoon + H / 15 - EoT + tz;
+  }
+  function calcTzeit(date, deg) {
+    const { decl, solarNoon, EoT, tz } = _solarData(date);
+    const cosH = (-Math.sin(deg * Math.PI / 180) - Math.sin(BCN_LAT) * Math.sin(decl)) / (Math.cos(BCN_LAT) * Math.cos(decl));
+    const H = Math.acos(Math.max(-1, Math.min(1, cosH))) * 180 / Math.PI;
+    return solarNoon + H / 15 - EoT + tz;
+  }
+  function earliestTevilah(date) { return calcTzeit(date, TZEIT_DEG); }
+  function formatHour(d) { const h=Math.floor(d),m=Math.round((d-h)*60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
+
+  let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
+  const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Shabbos'];
+
+  function renderCalendar() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+    let doW = DAYS_EN.map((d,i) => `<div class="mk-cal-dow${i===6?' shabbos':''}">${d.slice(0,3)}</div>`).join('');
+    let cells = '';
+    for (let i = firstDay - 1; i >= 0; i--) cells += `<div class="mk-cal-day other-month">${daysInPrev - i}</div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(calYear, calMonth, d); date.setHours(0,0,0,0);
+      const isPast = date < today || (booking.gender === 'kelim' && date.getDay() === 6);   // kelim: nunca en Shabat
+      const isSel = booking.date && date.getFullYear()===booking.date.getFullYear() && date.getMonth()===booking.date.getMonth() && date.getDate()===booking.date.getDate();
+      const isToday = date.getTime() === today.getTime();
+      let cls = 'mk-cal-day' + (isPast?' disabled':isSel?' selected':isToday?' today':'');
+      cells += `<div class="${cls}" ${isPast?'':` onclick="selectDate(${calYear},${calMonth},${d})"`}>${d}</div>`;
+    }
+    const rem = (firstDay + daysInMonth) % 7;
+    for (let i = 1; i <= (rem===0?0:7-rem); i++) cells += `<div class="mk-cal-day other-month">${i}</div>`;
+    return `<div class="mk-cal"><div class="mk-cal-nav">
+      <button class="mk-cal-nav-btn" onclick="changeMonth(-1)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+      <div class="mk-cal-month">${MONTHS_ES[calMonth]} ${calYear}</div>
+      <button class="mk-cal-nav-btn" onclick="changeMonth(1)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+    </div><div class="mk-cal-grid">${doW}${cells}</div></div>`;
+  }
+
+  function changeMonth(dir) { calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;} document.getElementById('mk-content').innerHTML=renderStep1(); updateContinueBtn(); }
+  function selectDate(y,m,d) { booking.date=new Date(y,m,d); booking.service=null; booking.time=null; document.getElementById('mk-content').innerHTML=renderStep1(); updateContinueBtn(); }
+  function formatDateLong(date) {
+    const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  }
+
+  function renderStep() { const fns=[null,renderStep1,renderStep2,renderStep3,renderStep4,renderStep5,renderStep6]; document.getElementById('mk-content').innerHTML=fns[booking.step](); updateTabs(); updateContinueBtn(); trackMikvePaso(booking.step); }
+  // Embudo de reserva (analytics): cada paso alcanzado, una vez por visita
+  const _mkPasosVistos = new Set();
+  function trackMikvePaso(n) {
+    if (_mkPasosVistos.has(n) || typeof trackEvent !== 'function') return;
+    _mkPasosVistos.add(n);
+    trackEvent('mikve_paso', { paso: String(n) });
+  }
+
+  const _calIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>`;
+  const _dropIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4.444 5.332-6.667 9.111-6.667 11.667C5.333 18.701 8.313 21 12 21s6.667-2.299 6.667-5.333C18.667 12.111 16.444 8.332 12 3Z"/></svg>`;
+  const _clockIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`;
+
+  function renderStep1() {
+    const ph = booking.date
+      ? `<div class="mk-summary"><div class="mk-summary-icon">${_calIcon}</div><div class="mk-summary-text"><div class="mk-summary-date">${formatDateLong(booking.date)}</div></div></div>`
+      : `<div class="mk-placeholder">${_calIcon} Por favor selecciona una fecha</div>`;
+    return ph + renderCalendar();
+  }
+
+  // Services — men's section offers only Ducha (€10 fixed); women's uses admin config
+  function getMikveServices() {
+    if (booking.gender === 'hombre') return [{ id:'ducha', name:'Ducha', price: 10 }];
+    if (booking.gender === 'kelim')  return [{ id:'kelim', name:'Tevilat Kelim', price: KELIM_PRECIO }];
+    try {
+      const d = JSON.parse(localStorage.getItem('mikve_servicios'));
+      if (d && d.length) return d.map(s => ({ id: 'svc' + s.id, name: s.nombre, price: Number(s.precio) }));
+    } catch(e) {}
+    return [{id:'ducha',name:'Ducha',price:30},{id:'bano',name:'Baño',price:30}];
+  }
+
+  function renderStep2() {
+    if (booking.gender === 'kelim') return renderKelimObjetos();
+    const services = getMikveServices();
+    const cards = services.map(s => {
+      const sel = booking.service?.id===s.id;
+      return `<div class="mk-option-card ${sel?'selected':''}" onclick="selectService('${s.id}','${s.name}',${s.price})">
+        <div class="mk-option-icon">${_dropIcon}</div>
+        <div class="mk-option-info"><div class="mk-option-name">${s.name}</div><div class="mk-option-price">€${s.price.toFixed(2)}</div></div>
+        <button class="mk-select-btn ${sel?'selected-btn':''}" onclick="selectService('${s.id}','${s.name}',${s.price})">Seleccionar</button>
+      </div>`;
+    }).join('');
+    const ph = booking.service
+      ? `<div class="mk-summary"><div class="mk-summary-icon">${_calIcon}</div><div class="mk-summary-text"><div class="mk-summary-date">${formatDateLong(booking.date)}</div></div></div><div class="mk-placeholder" style="color:var(--mk-navy);border-style:solid;">${_dropIcon}&nbsp; Servicio: ${booking.service.name} — €${booking.service.price.toFixed(2)}</div>`
+      : `<div class="mk-summary"><div class="mk-summary-icon">${_calIcon}</div><div class="mk-summary-text"><div class="mk-summary-date">${formatDateLong(booking.date)}</div></div></div><div class="mk-placeholder">${_dropIcon} Por favor selecciona un servicio</div>`;
+    return ph + `<div class="mk-options">${cards}</div>`;
+  }
+
+  function renderSlots(slots) {
+    return slots.map(h => {
+      const hh=Math.floor(h), mm=h%1===0.5?'30':'00';
+      const tk=`${String(hh).padStart(2,'0')}:${mm}`, sel=booking.time===tk;
+      return `<div class="mk-slot ${sel?'selected':''}" onclick="selectTime('${tk}')">
+        <div class="mk-slot-icon">${_clockIcon}</div>
+        <div class="mk-slot-flex"><div class="mk-slot-time">${tk}</div><div class="mk-slot-sub">Cita de 30 minutos</div></div>
+        <button class="mk-select-btn ${sel?'selected-btn':''}" onclick="selectTime('${tk}')">Seleccionar</button>
+      </div>`;
+    }).join('');
+  }
+
+  function renderStep3() {
+    const summary = `<div class="mk-summary"><div class="mk-summary-icon">${_calIcon}</div><div class="mk-summary-text"><div class="mk-summary-date">${formatDateLong(booking.date)}</div><div class="mk-summary-detail">Servicio: ${booking.service.name} €${booking.service.price.toFixed(2)}</div></div></div>`;
+
+    // Men's showers — fixed daytime hours, no zman tevilah
+    if (booking.gender === 'hombre') {
+      const slots=[];
+      for (let h=8;  h<14; h+=0.5) slots.push(h);   // 8:00 – 13:30
+      for (let h=16; h<20; h+=0.5) slots.push(h);   // 16:00 – 19:30
+      return summary +
+        `<div class="mk-time-info"><div class="mk-time-info-title">Selecciona una hora</div><div class="mk-time-info-sub">Horario de duchas:<br><strong>8:00 – 14:00</strong> y <strong>16:00 – 20:00</strong></div></div>` +
+        renderSlots(slots);
+    }
+
+    // Kelim — horario de día; el viernes solo por la mañana (antes de Shabat)
+    if (booking.gender === 'kelim') {
+      const viernes = booking.date.getDay() === 5;
+      const slots=[];
+      for (let h=9; h<14; h+=0.5) slots.push(h);                  // 9:00 – 13:30
+      if (!viernes) for (let h=16; h<20; h+=0.5) slots.push(h);   // 16:00 – 19:30
+      return summary +
+        `<div class="mk-time-info"><div class="mk-time-info-title">Selecciona una hora</div><div class="mk-time-info-sub">Horario de tevilat kelim:<br><strong>9:00 – 14:00</strong>${viernes ? ' (viernes solo por la mañana)' : ' y <strong>16:00 – 20:00</strong>'}</div></div>` +
+        renderSlots(slots);
+    }
+
+    // Women's mikve — slots from earliest permitted immersion time until night
+    const sunset=calcSunset(booking.date), tevilah=earliestTevilah(booking.date);
+    const slots=[]; let h=Math.ceil(tevilah*2)/2; while(h<=23.5){slots.push(h);h+=0.5;}
+    return summary +
+      `<div class="mk-time-info"><div class="mk-time-info-title">Selecciona una hora</div><div class="mk-time-info-sub">Shkiá: <strong>${formatHour(sunset)}</strong><br>Zman Tevilá — minhag Baal HaTanya (6°): <strong>${formatHour(tevilah)}</strong></div></div>` +
+      renderSlots(slots);
+  }
+
+  function renderStep4() {
+    if (booking.gender === 'kelim') return renderKelimAyuda();
+    return `<div class="mk-summary"><div class="mk-summary-icon">${_calIcon}</div><div class="mk-summary-text"><div class="mk-summary-date">${formatDateLong(booking.date)}</div><div class="mk-summary-detail">Servicio: ${booking.service.name} · Hora: ${booking.time}</div></div></div>
+    <div class="mk-notes-box"><label class="mk-notes-label">Notas para el mikve (opcional)</label><textarea class="mk-notes-ta" id="mk-notes-ta" placeholder="Ej: Es mi primera visita..." oninput="booking.notes=this.value">${escHtml(booking.notes)}</textarea><div class="mk-notes-hint">Esta información es confidencial y solo la verá el personal del mikve.</div></div>`;
+  }
+
+  function renderStep5() {
+    const opts=[{id:'no',label:'No, gracias',amount:0},{id:'d18',label:'€ 18',amount:18},{id:'d36',label:'€ 36',amount:36},{id:'d50',label:'€ 50',amount:50},{id:'d72',label:'€ 72',amount:72},{id:'d100',label:'€ 100',amount:100}];
+    const optsHtml = opts.map(o => {
+      const sel=booking.donationLabel===o.label;
+      const badge=o.amount===0?`<div class="mk-donation-badge no">⊘</div>`:`<div class="mk-donation-badge">€</div>`;
+      return `<div class="mk-donation-opt ${sel?'selected':''}" onclick="selectDonation(${o.amount},'${o.label}')">${badge}<div class="mk-donation-amount">${o.label}</div><button class="mk-select-btn ${sel?'selected-btn':''}" onclick="selectDonation(${o.amount},'${o.label}')">Seleccionar</button></div>`;
+    }).join('');
+    return `<div class="mk-summary"><div class="mk-summary-icon">${_calIcon}</div><div class="mk-summary-text"><div class="mk-summary-date">${formatDateLong(booking.date)}</div><div class="mk-summary-detail">Servicio: ${booking.service.name} · Hora: ${booking.time}</div></div></div>
+    <div class="mk-donation-intro"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg><div><div class="mk-donation-title">¿Deseas hacer una donación?</div><div class="mk-donation-sub">Tu donación apoya el mantenimiento del mikve.</div></div></div>
+    <div class="mk-donation-grid">${optsHtml}</div>`;
+  }
+
+  function renderStep6() {
+    const total=booking.service.price+booking.donation;
+    const infoIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>`;
+    const receiptIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/></svg>`;
+    const cardHtml = booking.card
+      ? `<div class="mk-add-card" style="border-color:var(--mk-gold);background:var(--mk-gold-pale);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:22px;height:22px;color:var(--mk-navy);"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg><span class="mk-add-card-label">Tarjeta ···· ${escHtml(booking.card.last4)}</span><span style="font-size:0.75rem;color:var(--mk-muted);">Cambiar</span></div>`
+      : `<div class="mk-add-card" onclick="abrirCardModal()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:22px;height:22px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg><span class="mk-add-card-label">Añadir tarjeta</span><span class="mk-add-card-arrow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></span></div>`;
+    return `<div class="mk-payment-layout">
+      <div class="mk-payment-summary">
+        <div class="mk-payment-summary-header"><div class="mk-payment-summary-header-icon">${_calIcon}</div><div class="mk-pay-date">${formatDateLong(booking.date)}</div></div>
+        <div class="mk-payment-row"><div class="mk-pay-row-icon">${_dropIcon}</div><div><div class="mk-pay-row-label">Servicio</div><div class="mk-pay-row-value">${booking.service.name} — €${booking.service.price.toFixed(2)}</div></div></div>
+        <div class="mk-payment-row"><div class="mk-pay-row-icon">${_clockIcon}</div><div><div class="mk-pay-row-label">Hora</div><div class="mk-pay-row-value">${booking.time}</div></div></div>
+        ${booking.donation>0?`<div class="mk-payment-row"><div class="mk-pay-row-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg></div><div><div class="mk-pay-row-label">Donación</div><div class="mk-pay-row-value">€${booking.donation.toFixed(2)}</div></div></div>`:''}
+        <div class="mk-payment-row"><div class="mk-pay-row-icon">${infoIcon}</div><div><div class="mk-pay-row-note">Cancelación con tarifa no reembolsable de €2,00.</div></div></div>
+        <div class="mk-payment-row"><div class="mk-pay-row-icon">${receiptIcon}</div><div><div class="mk-pay-row-label">Total</div><div class="mk-pay-total">€${total.toFixed(2)}</div></div></div>
+      </div>
+      ${total > 0 ? `<div class="mk-payment-method"><div class="mk-payment-method-title">Método de pago</div>${cardHtml}</div>` : `<div class="mk-payment-method"><div class="mk-payment-method-title">Sin coste</div><p style="font-size:.85rem;color:var(--mk-muted);margin:0;">No hace falta tarjeta. Pulsa «Confirmar reserva».</p></div>`}
+    </div>`;
+  }
+
+  /* ═══ Tevilat Kelim: inmersión de utensilios (gratuito, donación opcional) ═══ */
+  const KELIM_PRECIO = 0;
+  const KELIM_TIPOS = [
+    { id:'metal',   nombre:'Metal',             sub:'Ollas, cubiertos · con berajá' },
+    { id:'vidrio',  nombre:'Vidrio',            sub:'Vasos, platos · con berajá' },
+    { id:'porcel',  nombre:'Porcelana',         sub:'Loza esmaltada · sin berajá' },
+    { id:'electro', nombre:'Electrodomésticos', sub:'Hervidor, tostadora…' },
+    { id:'otro',    nombre:'Otro',              sub:'¿Dudas? Te orientamos' },
+  ];
+
+  function kelimListo() {
+    const ok = booking.kelim.tipos.length > 0;
+    if (ok && !booking.service) booking.service = getMikveServices()[0];   // p.ej. tras cambiar la fecha
+    return ok;
+  }
+  function kelimResumen() {
+    const k = booking.kelim;
+    const tipos = k.tipos.map(id => (KELIM_TIPOS.find(t => t.id === id) || {}).nombre).filter(Boolean).join(', ');
+    return [
+      `Objetos: ${tipos}${k.otro ? ` (${k.otro})` : ''}`,
+      `Ayuda: ${k.ayuda ? 'Sí' : 'No'}`,
+      booking.notes ? `Notas: ${booking.notes}` : '',
+    ].filter(Boolean).join(' · ');
+  }
+  function _klRefresh() { document.getElementById('mk-content').innerHTML = booking.step === 4 ? renderKelimAyuda() : renderKelimObjetos(); }
+  function _klSummary(detalle) {
+    return `<div class="mk-summary"><div class="mk-summary-icon">${_calIcon}</div><div class="mk-summary-text"><div class="mk-summary-date">${formatDateLong(booking.date)}</div><div class="mk-summary-detail">${detalle}</div></div></div>`;
+  }
+
+  function renderKelimObjetos() {
+    const k = booking.kelim;
+    const cards = KELIM_TIPOS.map(t => {
+      const sel = k.tipos.includes(t.id);
+      return `<div class="mk-option-card ${sel?'selected':''}" onclick="toggleKelimTipo('${t.id}')">
+        <div class="mk-option-icon">${_dropIcon}</div>
+        <div class="mk-option-info"><div class="mk-option-name">${t.nombre}</div><div class="mk-option-price">${t.sub}</div></div>
+        <button class="mk-select-btn ${sel?'selected-btn':''}">${sel ? 'Elegido' : 'Seleccionar'}</button>
+      </div>`;
+    }).join('');
+    const ph = k.tipos.length
+      ? `<div class="mk-placeholder" style="color:var(--mk-navy);border-style:solid;">${_dropIcon}&nbsp; ${KELIM_TIPOS.filter(t => k.tipos.includes(t.id)).map(t => t.nombre).join(', ')} — Gratis</div>`
+      : `<div class="mk-placeholder">${_dropIcon} ¿Qué vas a tevilar? Puedes elegir varios</div>`;
+    const otro = k.tipos.includes('otro') || k.tipos.includes('electro')
+      ? `<div class="mk-notes-box" style="margin-top:12px;"><label class="mk-notes-label">¿Qué objetos son?</label><textarea class="mk-notes-ta" style="min-height:70px;" maxlength="120" placeholder="Ej: tostadora, termo de acero…" oninput="booking.kelim.otro=this.value">${escHtml(k.otro)}</textarea></div>`
+      : '';
+    const intro = `<div class="mk-time-info"><div class="mk-time-info-title">¿Qué es la tevilat kelim?</div><div class="mk-time-info-sub">Los utensilios de cocina y mesa fabricados o comprados a un no judío se sumergen en la mikve antes de usarlos por primera vez.<br><strong>Puedes traer cualquier tipo de objeto.</strong></div></div>`;
+    const noNecesitan = `<div class="mk-time-info" style="margin-top:12px;"><div class="mk-time-info-title">No necesitan tevilá</div><div class="mk-time-info-sub">Madera, plástico, papel, silicona, barro sin esmaltar y desechables de un solo uso.<br>¿Dudas? Elige «Otro» o pregunta al Rav.</div></div>`;
+    return _klSummary('Tevilat Kelim · Gratis') + intro + ph + `<div class="mk-options">${cards}</div>` + otro + noNecesitan;
+  }
+  function toggleKelimTipo(id) {
+    const t = booking.kelim.tipos;
+    booking.kelim.tipos = t.includes(id) ? t.filter(x => x !== id) : [...t, id];
+    booking.service = getMikveServices()[0];
+    _klRefresh(); updateContinueBtn();
+  }
+
+  function renderKelimAyuda() {
+    const a = booking.kelim.ayuda;
+    const opt = (val, nombre, sub) => `<div class="mk-option-card ${a===val?'selected':''}" onclick="setKelimAyuda(${val})">
+        <div class="mk-option-icon">${_dropIcon}</div>
+        <div class="mk-option-info"><div class="mk-option-name">${nombre}</div><div class="mk-option-price">${sub}</div></div>
+        <button class="mk-select-btn ${a===val?'selected-btn':''}">Seleccionar</button>
+      </div>`;
+    const ph = a === null
+      ? `<div class="mk-placeholder">${_dropIcon} ¿Necesitas ayuda para tevilar?</div>`
+      : `<div class="mk-placeholder" style="color:var(--mk-navy);border-style:solid;">${_dropIcon}&nbsp; ${a ? 'Te ayudaremos en el mikve' : 'Lo haces por tu cuenta'}</div>`;
+    return _klSummary(`Tevilat Kelim · Hora: ${booking.time}`) + ph +
+      `<div class="mk-options">${opt(false, 'No', 'Sé hacerlo')}${opt(true, 'Sí', 'Te acompañamos')}</div>` +
+      berajaHtml() + kelimPasosHtml() +
+      `<div class="mk-notes-box"><label class="mk-notes-label">Notas (opcional)</label><textarea class="mk-notes-ta" style="min-height:80px;" placeholder="Ej: traigo una vajilla completa..." oninput="booking.notes=this.value">${escHtml(booking.notes)}</textarea></div>`;
+  }
+  function setKelimAyuda(v) { booking.kelim.ayuda = v; _klRefresh(); updateContinueBtn(); }
+
+  /** Berajá de la tevilat kelim (con un solo objeto se dice «keli»). */
+  function berajaHtml() {
+    return `<div class="mk-beraja">
+      <div class="mk-beraja-label">Berajá (antes de sumergir el primer objeto)</div>
+      <div class="mk-beraja-he">בָּרוּךְ אַתָּה ה׳ אֱלֹקֵינוּ מֶלֶךְ הָעוֹלָם אֲשֶׁר קִדְּשָׁנוּ בְּמִצְוֹתָיו וְצִוָּנוּ עַל טְבִילַת כֵּלִים</div>
+      <div class="mk-beraja-tr">Baruj Atá Ado-nai Elo-heinu Mélej haolam asher kidshanu bemitzvotav vetzivanu al tevilat kelim.</div>
+      <div class="mk-beraja-es">Bendito eres Tú, Señor nuestro Di-s, Rey del universo, que nos santificó con Sus preceptos y nos ordenó la inmersión de los utensilios.</div>
+      <div class="mk-beraja-es">Se dice <strong>una sola vez</strong> antes del primer objeto y vale para todos. Si es un solo objeto: «al tevilat <em>keli</em>». La porcelana se sumerge sin berajá (si traes también metal o vidrio, empieza por uno de ellos).</div>
+    </div>`;
+  }
+  function kelimPasosHtml() {
+    return `<div class="mk-time-info" style="text-align:left;"><div class="mk-time-info-title">Cómo hacer la tevilá</div><div class="mk-time-info-sub">
+      1. Antes de venir, quita etiquetas, pegatinas y restos de pegamento.<br>
+      2. Di la berajá y sumerge cada objeto entero, de una vez.<br>
+      3. Sujétalo con la mano suelta y mojada, para que el agua llegue a todo.<br>
+      4. ¿Dudas? Pregunta en el mikve o al Rav.</div></div>`;
+  }
+
+  function selectService(id,name,price) { booking.service={id,name,price}; booking.time=null; document.getElementById('mk-content').innerHTML=renderStep2(); updateContinueBtn(); }
+  function selectTime(tk) { booking.time=tk; document.getElementById('mk-content').innerHTML=renderStep3(); updateContinueBtn(); }
+  function selectDonation(amount,label) { booking.donation=amount; booking.donationLabel=label; document.getElementById('mk-content').innerHTML=renderStep5(); updateContinueBtn(); }
+
+  function scrollToStepsTop() { const el=document.getElementById('mk-steps'); if(!el)return; const y=el.getBoundingClientRect().top+window.pageYOffset-12; window.scrollTo({top:Math.max(y,0)}); }
+  function goToStep(n) { if(n>booking.step&&!canAdvance())return; booking.step=n; renderStep(); scrollToStepsTop(); }
+  function handleContinue() { if(!canAdvance())return; if(booking.step<6){booking.step++;renderStep();scrollToStepsTop();}else{confirmarReserva();} }
+  function canAdvance() { switch(booking.step){case 1:return!!booking.date;case 2:return booking.gender==='kelim'?kelimListo():!!booking.service;case 3:return!!booking.time;case 4:return booking.gender!=='kelim'||booking.kelim.ayuda!==null;case 5:return booking.donationLabel!=='';case 6:return!!booking.card||totalReserva()===0;default:return false;} }
+  function totalReserva() { return (booking.service?.price||0) + (booking.donation||0); }
+  function updateTabs() { document.querySelectorAll('.mk-step-btn').forEach(btn=>{const n=parseInt(btn.dataset.step);btn.classList.remove('active','done');btn.disabled=false;if(n===booking.step)btn.classList.add('active');else if(n<booking.step)btn.classList.add('done');else if(n>booking.step+1)btn.disabled=true;}); }
+  function updateContinueBtn() { const btn=document.getElementById('mk-continue-btn');if(booking.step===6){const gratis=totalReserva()===0;btn.textContent=(booking.card||gratis)?'Confirmar reserva':'Añadir tarjeta para continuar';btn.disabled=!(booking.card||gratis);}else{btn.textContent='Continuar';btn.disabled=!canAdvance();} }
+  function resetBooking() { booking.step=1;booking.date=null;booking.service=null;booking.time=null;booking.notes='';booking.donation=0;booking.donationLabel='';booking.card=null;booking.confirmed=false;booking.kelim={tipos:[],otro:'',ayuda:null};calYear=new Date().getFullYear();calMonth=new Date().getMonth();const bb=document.getElementById('mk-bottom-bar');if(bb)bb.style.display='';renderStep();window.scrollTo({top:0,behavior:'smooth'}); }
+
+  // Switch between women's mikve and men's showers — different services & hours
+  function mkSetGender(g) {
+    if (booking.gender === g) return;
+    booking.gender = g;
+    document.getElementById('mk-gender-mujer').classList.toggle('active', g === 'mujer');
+    document.getElementById('mk-gender-hombre').classList.toggle('active', g === 'hombre');
+    document.getElementById('mk-gender-kelim').classList.toggle('active', g === 'kelim');
+    // Pasos 2 y 4 cambian de nombre en kelim: Objetos / Ayuda
+    const lbl = (n, t) => { const el = document.querySelector(`.mk-step-btn[data-step="${n}"] span`); if (el) el.textContent = t; };
+    lbl(2, g === 'kelim' ? 'Objetos' : 'Servicio');
+    lbl(4, g === 'kelim' ? 'Ayuda' : 'Notas');
+    resetBooking();
+  }
+
+  async function confirmarReserva() {
+    const btn = document.getElementById('mk-continue-btn');
+    btn.disabled = true; btn.textContent = 'Procesando pago...';
+    try {
+      const user = getCurrentUser();
+      const total = booking.service.price + booking.donation;
+      const session = await sb.auth.getSession();
+      const token = session?.data?.session?.access_token;
+      const esKelim = booking.gender === 'kelim';
+      const servicioTxt = booking.gender === 'hombre' ? booking.service.name + ' (Hombres)' : booking.service.name;
+      const notasTxt = esKelim ? kelimResumen() : (booking.notes || null);
+      let paymentIntent = null;
+
+      if (total > 0) {
+      // 1. Create payment intent
+      const res = await fetch(SUPABASE_URL + '/functions/v1/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ amount: total, campana_nombre: 'Reserva Mikve', dedicatoria: booking.notes || '' })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.clientSecret) throw new Error(data.error || 'Error creando pago');
+      _mkClientSecret = data.clientSecret;
+
+      // 2. Confirm payment with Stripe
+      const stripe = getStripe();
+      const { error: stripeErr, paymentIntent: pi } = await stripe.confirmCardPayment(_mkClientSecret, {
+        payment_method: booking.card.paymentMethodId
+      });
+      if (stripeErr) throw new Error(stripeErr.message);
+      if (pi.status !== 'succeeded') throw new Error('Pago no completado');
+      paymentIntent = pi;
+      }
+
+      // 3. Save booking in Supabase
+      const fecha = booking.date.toISOString().split('T')[0];
+      const [hh, mm] = booking.time.split(':');
+      const { error } = await sb.from('mikve_reservas').insert({
+        usuario_id: user.userId, fecha,
+        hora: `${hh.padStart(2,'0')}:${mm}:00`,
+        servicio: servicioTxt,
+        precio: booking.service.price,
+        donacion: booking.donation,
+        total,
+        notas: notasTxt,
+        estado: 'confirmada',
+        stripe_payment_intent: paymentIntent ? paymentIntent.id : null
+      });
+      if (error) throw error;
+
+      // 4. Avisar al encargado del mikve (email + push). Fire-and-forget:
+      //    si falla, la reserva ya está guardada y no debe romper el flujo.
+      fetch(SUPABASE_URL + '/functions/v1/notify-mikve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+          nombre:   user.name || '',
+          email:    user.email || '',
+          fecha:    formatDateLong(booking.date),
+          hora:     booking.time,
+          servicio: esKelim ? `${servicioTxt} — ${notasTxt}` : servicioTxt,
+          precio:   booking.service.price,
+          donacion: booking.donation,
+          total
+        })
+      }).catch(() => {});
+
+    } catch(err) {
+      showToast(err.message || 'Error al procesar el pago', 'error');
+      if (typeof trackEvent === 'function') trackEvent('mikve_error', { msg: String(err.message || '').slice(0, 120) });
+      btn.disabled = false; btn.textContent = 'Confirmar reserva';
+      return;
+    }
+    if (typeof trackEvent === 'function') trackEvent('mikve_ok', { servicio: booking.service?.name || null, total: booking.service.price + booking.donation });
+    booking.confirmed = true;
+    mostrarConfirmacion();
+  }
+
+  function mostrarConfirmacion() {
+    const total=booking.service.price+booking.donation;
+    document.getElementById('mk-content').innerHTML=`<div class="mk-confirmed">
+      <div class="mk-confirmed-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></div>
+      <h2>¡Reserva confirmada!</h2>
+      <p>${booking.gender === 'kelim' ? 'Tu cita para tevilat kelim ha sido reservada. Recibirás un recordatorio antes de tu visita.' : 'Tu cita en el {{mikve.name}} ha sido reservada. Recibirás un recordatorio antes de tu visita.'}</p>
+      ${booking.gender === 'kelim' ? berajaHtml() + kelimPasosHtml() : ''}
+      <div class="mk-confirmed-card">
+        <div class="mk-confirmed-row"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg><div class="mk-confirmed-row-val">${formatDateLong(booking.date)}</div></div>
+        <div class="mk-confirmed-row"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><div class="mk-confirmed-row-val">${booking.time}</div></div>
+        <div class="mk-confirmed-row"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4.444 5.332-6.667 9.111-6.667 11.667C5.333 18.701 8.313 21 12 21s6.667-2.299 6.667-5.333C18.667 12.111 16.444 8.332 12 3Z"/></svg><div class="mk-confirmed-row-val">${booking.gender === 'kelim' ? escHtml(kelimResumen()) : `${booking.service.name} — €${booking.service.price.toFixed(2)}`}</div></div>
+        <div class="mk-confirmed-row"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/></svg><div class="mk-confirmed-row-val">Total: €${total.toFixed(2)}</div></div>
+      </div>
+      <button class="mk-continue-btn" style="max-width:300px;margin:0 auto;display:block;" onclick="resetBooking()">Nueva reserva</button>
+    </div>`;
+    document.getElementById('mk-bottom-bar').style.display='none';
+    document.querySelectorAll('.mk-step-btn').forEach(b=>b.disabled=true);
+  }
+
+  /* ── Stripe ──────────────────────────────────────── */
+  const STRIPE_PK = '{{integrations.stripePublishableKey}}';
+  let _mkStripe = null, _mkCardElement = null, _mkClientSecret = null;
+
+  function getStripe() {
+    if (!_mkStripe && typeof Stripe !== 'undefined') _mkStripe = Stripe(STRIPE_PK);
+    return _mkStripe;
+  }
+
+  function abrirCardModal() {
+    document.getElementById('card-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    // Mount Stripe card element
+    const stripe = getStripe();
+    if (!stripe) return;
+    if (_mkCardElement) { _mkCardElement.destroy(); _mkCardElement = null; }
+    const elements = stripe.elements();
+    _mkCardElement = elements.create('card', { style: { base: { fontSize: '16px', color: '#1A202C' } } });
+    _mkCardElement.mount('#mk-stripe-card-element');
+    _mkCardElement.on('change', e => {
+      document.getElementById('mk-stripe-card-error').textContent = e.error ? e.error.message : '';
+    });
+  }
+
+  function cerrarCardModal() {
+    document.getElementById('card-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  async function confirmarTarjeta() {
+    const btn = document.getElementById('mk-stripe-save-btn');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    document.getElementById('mk-stripe-card-error').textContent = '';
+    // Validate card is complete by creating a payment method
+    const stripe = getStripe();
+    const { paymentMethod, error } = await stripe.createPaymentMethod({ type: 'card', card: _mkCardElement });
+    if (error) {
+      document.getElementById('mk-stripe-card-error').textContent = error.message;
+      btn.disabled = false; btn.textContent = 'Guardar tarjeta';
+      return;
+    }
+    booking.card = { last4: paymentMethod.card.last4, paymentMethodId: paymentMethod.id };
+    cerrarCardModal();
+    document.getElementById('mk-content').innerHTML = renderStep6();
+    updateContinueBtn();
+    btn.disabled = false; btn.textContent = 'Guardar tarjeta';
+  }
+
+  // ─── Mis Reservas ──────────────────────────────────────────────────────────
+  function mkSwitchMode(mode) {
+    document.getElementById('mk-booking-view').style.display = mode === 'booking' ? '' : 'none';
+    document.getElementById('mk-reservas-view').style.display = mode === 'reservas' ? '' : 'none';
+    document.getElementById('mk-btn-booking').classList.toggle('active', mode === 'booking');
+    document.getElementById('mk-btn-reservas').classList.toggle('active', mode === 'reservas');
+    if (mode === 'reservas') mkLoadReservas();
+  }
+
+  async function mkLoadReservas() {
+    const view = document.getElementById('mk-reservas-view');
+    view.innerHTML = '<div style="text-align:center;padding:48px 24px;color:var(--mk-muted);">Cargando...</div>';
+    if (!sb) { view.innerHTML = '<div class="mk-reserva-empty"><p>Sin conexión a Supabase.</p></div>'; return; }
+    try {
+      const user = getCurrentUser();
+      const { data, error } = await sb.from('mikve_reservas')
+        .select('*').eq('usuario_id', user.userId)
+        .order('fecha', { ascending: false });
+      if (error) throw error;
+      mkRenderReservas(data || []);
+    } catch(e) {
+      view.innerHTML = '<div class="mk-reserva-empty"><p>Error al cargar reservas.</p></div>';
+    }
+  }
+
+  function mkRenderReservas(rows) {
+    const view = document.getElementById('mk-reservas-view');
+    const calSvg = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>`;
+    if (!rows.length) {
+      view.innerHTML = `<div class="mk-reserva-empty">${calSvg}<p>Aún no tienes reservas.</p></div>`;
+      return;
+    }
+    const clockSvg = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`;
+    const dropSvg  = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4.444 5.332-6.667 9.111-6.667 11.667C5.333 18.701 8.313 21 12 21s6.667-2.299 6.667-5.333C18.667 12.111 16.444 8.332 12 3Z"/></svg>`;
+    const euroSvg  = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 7.756a4.5 4.5 0 1 0 0 8.488M7.5 10.5h5.25m-5.25 3h5.25M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`;
+    const cards = rows.map(r => {
+      const dateStr = r.fecha ? new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-ES', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '—';
+      const estado = r.estado || 'confirmada';
+      const footer = estado === 'confirmada'
+        ? `<div class="mk-reserva-card-footer"><button class="mk-cancel-btn" onclick="mkCancelarReserva('${r.id}')">Cancelar reserva</button></div>`
+        : '';
+      return `<div class="mk-reserva-card">
+        <div class="mk-reserva-card-header">
+          <div class="mk-reserva-date">${escHtml(dateStr)}</div>
+          <span class="mk-reserva-badge ${escHtml(estado)}">${escHtml(estado)}</span>
+        </div>
+        <div class="mk-reserva-card-body">
+          <div class="mk-reserva-row">${clockSvg} ${escHtml(r.hora ? r.hora.slice(0,5) : '—')}</div>
+          <div class="mk-reserva-row">${dropSvg} ${escHtml(r.servicio || '—')}</div>
+          <div class="mk-reserva-row">${euroSvg} <strong>€${Number(r.total||0).toFixed(2)}</strong></div>
+          ${r.notas ? `<div class="mk-reserva-row" style="color:var(--mk-muted);font-style:italic;font-size:.8rem;">${escHtml(r.notas)}</div>` : ''}
+          ${String(r.servicio || '').startsWith('Tevilat Kelim') && estado === 'confirmada' ? `<details style="margin-top:8px;"><summary style="cursor:pointer;font-size:.82rem;font-weight:600;color:var(--mk-navy);">Ver la berajá</summary>${berajaHtml()}</details>` : ''}
+        </div>
+        ${footer}
+      </div>`;
+    }).join('');
+    view.innerHTML = `<div style="margin-bottom:10px;font-size:.8rem;color:var(--mk-muted);">${rows.length} reserva${rows.length!==1?'s':''}</div>` + cards;
+  }
+
+  async function mkCancelarReserva(id) {
+    if (!confirm('¿Cancelar esta reserva?')) return;
+    if (!sb) return;
+    try {
+      const { error } = await sb.from('mikve_reservas').update({ estado: 'cancelada' }).eq('id', id);
+      if (error) throw error;
+      showToast('Reserva cancelada', 'success');
+      mkLoadReservas();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  }
+</script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

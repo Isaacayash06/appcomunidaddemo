@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/sb/:path*", "destination": "{{integrations.supabaseUrl}}/:path*" }
+  ],
+  "headers": [
+    {
+      "source": "/sb/storage/v1/object/sign/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, max-age=604800, immutable" }
+      ]
+    }
+  ]
+}

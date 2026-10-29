@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>Política de Privacidad — {{name}}</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body { background: var(--color-bg); }
+    .priv-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+    .priv-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .priv-logo img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .priv-logo-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+    .priv-hero {
+      background: var(--color-primary);
+      color: #fff;
+      border-radius: var(--radius-lg);
+      padding: 32px 36px;
+      margin-bottom: 36px;
+    }
+    .priv-hero h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      font-family: var(--font-brand);
+    }
+    .priv-hero p {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      line-height: 1.6;
+    }
+    .priv-updated {
+      font-size: 0.8rem;
+      opacity: 0.65;
+      margin-top: 8px;
+    }
+    .priv-section {
+      background: var(--color-white);
+      border-radius: var(--radius-md);
+      padding: 28px 32px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .priv-section h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .priv-section h2 .priv-num {
+      background: var(--color-primary);
+      color: #fff;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .priv-section p,
+    .priv-section li {
+      font-size: 0.9rem;
+      color: var(--color-text);
+      line-height: 1.7;
+    }
+    .priv-section ul {
+      padding-left: 20px;
+      margin: 10px 0;
+    }
+    .priv-section li { margin-bottom: 5px; }
+    .priv-section strong { color: var(--color-text); }
+    .priv-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      margin-top: 12px;
+    }
+    .priv-table th {
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--color-text-muted);
+      padding: 8px 12px;
+      border-bottom: 2px solid var(--color-border);
+      background: var(--color-bg);
+    }
+    .priv-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--color-border-light);
+      color: var(--color-text);
+      vertical-align: top;
+    }
+    .priv-table tr:last-child td { border-bottom: none; }
+    .priv-highlight {
+      background: #EFF6FF;
+      border-left: 4px solid var(--color-primary);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 14px 18px;
+      margin: 12px 0;
+      font-size: 0.875rem;
+      color: #1e40af;
+      line-height: 1.6;
+    }
+    .priv-contact-card {
+      background: var(--color-bg);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      margin-top: 12px;
+      font-size: 0.875rem;
+      line-height: 1.8;
+    }
+    .priv-contact-card strong { color: var(--color-primary); display: block; margin-bottom: 4px; }
+    .priv-footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--color-border);
+    }
+    @media (max-width: 600px) {
+      .priv-section { padding: 20px 18px; }
+      .priv-hero { padding: 24px 20px; }
+      .priv-hero h1 { font-size: 1.3rem; }
+    }
+  </style>
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+
+<div class="priv-wrap">
+
+  <!-- Logo -->
+  <div class="priv-logo">
+    <img src="img/icon-192.png" alt="{{name}}">
+    <span class="priv-logo-name">{{name}}</span>
+  </div>
+
+  <!-- Hero -->
+  <div class="priv-hero">
+    <h1>Política de Privacidad</h1>
+    <p>En {{name}} nos tomamos muy en serio la protección de tus datos personales. Esta política explica qué información recopilamos, cómo la usamos y cuáles son tus derechos.</p>
+    <p class="priv-updated">Última actualización: abril de 2026</p>
+  </div>
+
+  <!-- 1. Responsable -->
+  <div class="priv-section">
+    <h2><span class="priv-num">1</span> Responsable del tratamiento</h2>
+    <div class="priv-contact-card">
+      <strong>Identidad</strong>
+      {{name}} ({{centerName}})
+      <strong style="margin-top:10px;">Dirección</strong>
+      {{contact.address}}
+      <strong style="margin-top:10px;">Correo electrónico</strong>
+      <a href="mailto:{{contact.email}}" style="color:var(--color-primary);">{{contact.email}}</a>
+    </div>
+  </div>
+
+  <!-- 2. Qué datos recogemos -->
+  <div class="priv-section">
+    <h2><span class="priv-num">2</span> Datos que recopilamos</h2>
+    <p>Recogemos únicamente los datos necesarios para el funcionamiento de la app:</p>
+    <table class="priv-table">
+      <thead>
+        <tr>
+          <th>Dato</th>
+          <th>Cuándo se recoge</th>
+          <th>Finalidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Nombre completo</strong></td>
+          <td>Al registrarse</td>
+          <td>Identificación en la comunidad</td>
+        </tr>
+        <tr>
+          <td><strong>Correo electrónico</strong></td>
+          <td>Al registrarse</td>
+          <td>Acceso a la cuenta y comunicaciones</td>
+        </tr>
+        <tr>
+          <td><strong>Teléfono</strong></td>
+          <td>Al registrarse (opcional)</td>
+          <td>Contacto para eventos y actividades</td>
+        </tr>
+        <tr>
+          <td><strong>País y ciudad</strong></td>
+          <td>Al registrarse</td>
+          <td>Asignación a comunidad local</td>
+        </tr>
+        <tr>
+          <td><strong>Secciones visitadas</strong></td>
+          <td>Durante el uso</td>
+          <td>Analíticas internas de la app. La administración solo ve totales agregados, nunca la actividad de una persona concreta</td>
+        </tr>
+        <tr>
+          <td><strong>Noticias leídas</strong></td>
+          <td>Durante el uso</td>
+          <td>Analíticas internas de la app (solo totales agregados)</td>
+        </tr>
+        <tr>
+          <td><strong>Uso de funciones y errores técnicos</strong> (p. ej. pasos de una reserva o inscripción completados, errores de la app, tipo de dispositivo y versión de la app)</td>
+          <td>Durante el uso</td>
+          <td>Detectar dónde la app resulta difícil de usar y corregir fallos (solo totales agregados)</td>
+        </tr>
+        <tr>
+          <td><strong>Documento de identidad (foto/escaneo)</strong></td>
+          <td>Al registrarse — solo para verificación de identidad</td>
+          <td>Verificación de pertenencia a la comunidad. Solo accesible por la administración. Eliminado tras aprobación o rechazo.</td>
+        </tr>
+        <tr>
+          <td><strong>Número de documento (DNI/NIE/Pasaporte)</strong></td>
+          <td>Al registrarse</td>
+          <td>Verificación de identidad interna de la comunidad</td>
+        </tr>
+        <tr>
+          <td><strong>Fecha de nacimiento y nacionalidad</strong></td>
+          <td>Al registrarse</td>
+          <td>Verificación de identidad y asignación a grupo de edad</td>
+        </tr>
+        <tr>
+          <td><strong>Dirección postal</strong></td>
+          <td>Al registrarse</td>
+          <td>Asignación a comunidad local y envíos si aplica. No compartida con otros miembros.</td>
+        </tr>
+        <tr>
+          <td><strong>Datos de rendimiento y uso de la app</strong></td>
+          <td>Automáticamente durante el uso</td>
+          <td>Mejora del rendimiento (Vercel Analytics — datos anonimizados, sin identificación personal)</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="priv-highlight">
+      <strong>Pertenencia y práctica religiosa:</strong> Al formar parte de esta comunidad, tratamos datos relativos a tus creencias y práctica religiosa, que constituyen una categoría especial de datos según el artículo 9 RGPD. Estos datos se tratan al amparo del artículo 9.2.d) RGPD, que permite a las entidades religiosas sin ánimo de lucro tratar los datos de sus propios miembros en el desarrollo de sus actividades legítimas, sin cederlos fuera de la entidad sin tu consentimiento.<br><br>
+      <strong>Documentos de identidad:</strong> Las fotos o escaneos de documentos (DNI, NIE, Pasaporte) son datos personales especialmente sensibles por su función identificativa, aunque no constituyen "categoría especial" en el sentido del artículo 9 RGPD. Se almacenan cifrados en Supabase Storage, solo son accesibles por la administración de la comunidad, y se eliminan una vez completada la verificación de identidad o en caso de rechazo de la solicitud.<br><br>
+      <strong>Pagos:</strong> No procesamos datos de pago directamente. Los donativos se procesan mediante <strong>Stripe</strong> (stripe.com/es/privacy). Para compras en la tienda, los pagos se realizan fuera de la app. No almacenamos datos de tarjetas de crédito.
+    </div>
+  </div>
+
+  <!-- 3. Finalidad y base legal -->
+  <div class="priv-section">
+    <h2><span class="priv-num">3</span> Finalidad y base legal</h2>
+    <table class="priv-table">
+      <thead>
+        <tr>
+          <th>Finalidad</th>
+          <th>Base legal (RGPD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Gestionar tu cuenta y acceso a la app</td>
+          <td>Ejecución de contrato (art. 6.1.b)</td>
+        </tr>
+        <tr>
+          <td>Gestionar tu pertenencia y participación en la vida religiosa de la comunidad</td>
+          <td>Art. 9.2.d) RGPD — entidad religiosa sin ánimo de lucro, tratamiento limitado a sus miembros</td>
+        </tr>
+        <tr>
+          <td>Enviarte comunicaciones sobre eventos y noticias de la comunidad</td>
+          <td>Interés legítimo (art. 6.1.f)</td>
+        </tr>
+        <tr>
+          <td>Mejorar la app mediante analíticas de uso internas (solo consultadas como totales agregados)</td>
+          <td>Interés legítimo (art. 6.1.f)</td>
+        </tr>
+        <tr>
+          <td>Cumplir obligaciones legales</td>
+          <td>Obligación legal (art. 6.1.c)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 4. Almacenamiento -->
+  <div class="priv-section">
+    <h2><span class="priv-num">4</span> Dónde se almacenan tus datos</h2>
+    <p>Los datos se almacenan en <strong>Supabase</strong>, un proveedor de base de datos en la nube que cumple con el RGPD. Los servidores están ubicados en Zúrich (Suiza), país que cuenta con una decisión de adecuación de la Comisión Europea que reconoce su nivel de protección de datos como equivalente al de la Unión Europea, por lo que la transferencia de datos a Suiza está permitida por el RGPD sin garantías adicionales.</p>
+    <p style="margin-top:10px;">Puedes consultar la política de privacidad de Supabase en <a href="https://supabase.com/privacy" style="color:var(--color-primary);" target="_blank">supabase.com/privacy</a>.</p>
+  </div>
+
+  <!-- 4b. Terceros -->
+  <div class="priv-section">
+    <h2><span class="priv-num">4b</span> Proveedores externos</h2>
+    <table class="priv-table">
+      <thead><tr><th>Proveedor</th><th>Finalidad</th><th>Política de privacidad</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Supabase</strong></td>
+          <td>Base de datos, autenticación y almacenamiento de archivos (servidores en Zúrich, Suiza — país con decisión de adecuación de la UE)</td>
+          <td><a href="https://supabase.com/privacy" target="_blank" style="color:var(--color-primary);">supabase.com/privacy</a></td>
+        </tr>
+        <tr>
+          <td><strong>Stripe</strong></td>
+          <td>Procesamiento de donativos. No almacenamos datos de tarjetas.</td>
+          <td><a href="https://stripe.com/es/privacy" target="_blank" style="color:var(--color-primary);">stripe.com/es/privacy</a></td>
+        </tr>
+        <tr>
+          <td><strong>Vercel Analytics</strong></td>
+          <td>Métricas de rendimiento anónimas (sin datos personales ni cookies de seguimiento)</td>
+          <td><a href="https://vercel.com/legal/privacy-policy" target="_blank" style="color:var(--color-primary);">vercel.com/legal/privacy-policy</a></td>
+        </tr>
+        <tr>
+          <td><strong>HebCal API</strong></td>
+          <td>Datos del calendario hebreo (API pública, sin datos de usuario)</td>
+          <td><a href="https://www.hebcal.com/home/privacy-policy" target="_blank" style="color:var(--color-primary);">hebcal.com/privacy-policy</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 5. Plazo de conservación -->
+  <div class="priv-section">
+    <h2><span class="priv-num">5</span> Plazo de conservación</h2>
+    <ul>
+      <li>Los datos de tu cuenta se conservan mientras mantengas una cuenta activa.</li>
+      <li>Los documentos de identidad se eliminan tras la verificación (máx. 30 días desde la aprobación o rechazo).</li>
+      <li>Si solicitas la baja, tus datos se eliminarán en un plazo máximo de <strong>30 días hábiles</strong>.</li>
+      <li>Los datos de analíticas (visitas, lecturas, uso de funciones) se vinculan a tu cuenta solo para poder contar personas distintas; si eliminas tu cuenta, quedan anonimizados.</li>
+    </ul>
+  </div>
+
+  <!-- 5b. Eliminación de cuenta -->
+  <div class="priv-section">
+    <h2><span class="priv-num">5b</span> Eliminación de cuenta</h2>
+    <p>Puedes solicitar la eliminación de tu cuenta directamente desde la app:</p>
+    <ol style="padding-left:20px;margin-top:10px;">
+      <li style="margin-bottom:6px;font-size:.9rem;line-height:1.6;">Accede a <strong>Mi Perfil</strong> desde el menú de la app.</li>
+      <li style="margin-bottom:6px;font-size:.9rem;line-height:1.6;">Desplázate hasta la sección <strong>Zona de peligro</strong>.</li>
+      <li style="margin-bottom:6px;font-size:.9rem;line-height:1.6;">Haz clic en <strong>Solicitar eliminación de cuenta</strong> y confirma.</li>
+    </ol>
+    <p style="margin-top:12px;font-size:.9rem;line-height:1.6;">
+      También puedes solicitar la eliminación enviando un email a
+      <a href="mailto:{{contact.email}}" style="color:var(--color-primary);">{{contact.email}}</a>
+      indicando tu nombre y dirección de correo registrada.
+      Tu cuenta y todos tus datos personales se eliminarán en un plazo máximo de <strong>30 días hábiles</strong>.
+    </p>
+  </div>
+
+  <!-- 6. Tus derechos -->
+  <div class="priv-section">
+    <h2><span class="priv-num">6</span> Tus derechos</h2>
+    <p>De acuerdo con el RGPD y la LOPDGDD, tienes los siguientes derechos:</p>
+    <ul>
+      <li><strong>Acceso</strong> — solicitar una copia de los datos que tenemos sobre ti.</li>
+      <li><strong>Rectificación</strong> — corregir datos inexactos o incompletos.</li>
+      <li><strong>Supresión</strong> — solicitar la eliminación de tus datos ("derecho al olvido").</li>
+      <li><strong>Oposición</strong> — oponerte al tratamiento de tus datos para fines de marketing.</li>
+      <li><strong>Portabilidad</strong> — recibir tus datos en formato legible por máquina.</li>
+      <li><strong>Limitación</strong> — solicitar que restrinjamos el uso de tus datos en determinadas circunstancias.</li>
+    </ul>
+    <div class="priv-highlight">
+      Para ejercer cualquiera de estos derechos, escríbenos a <a href="mailto:{{contact.email}}" style="color:#1e40af;font-weight:600;">{{contact.email}}</a>. Responderemos en un plazo máximo de <strong>30 días</strong>.
+    </div>
+    <p style="margin-top:12px;">Si consideras que el tratamiento de tus datos no es adecuado, puedes presentar una reclamación ante la <strong>Agencia Española de Protección de Datos</strong> (AEPD) en <a href="https://www.aepd.es" style="color:var(--color-primary);" target="_blank">www.aepd.es</a>.</p>
+  </div>
+
+  <!-- 7. Menores -->
+  <div class="priv-section">
+    <h2><span class="priv-num">7</span> Menores de edad</h2>
+    <p>Esta app está dirigida a mayores de 16 años. No recopilamos conscientemente datos de menores de 16 años sin el consentimiento de sus tutores legales. Si detectamos que un menor ha proporcionado datos sin consentimiento, los eliminaremos de inmediato.</p>
+  </div>
+
+  <!-- 8. Cookies -->
+  <div class="priv-section">
+    <h2><span class="priv-num">8</span> Cookies y almacenamiento local</h2>
+    <p>La app utiliza <strong>localStorage</strong> del navegador exclusivamente para mantener tu sesión activa y guardar preferencias de idioma. No utilizamos cookies de terceros ni de seguimiento publicitario.</p>
+  </div>
+
+  <!-- 9. Cambios -->
+  <div class="priv-section">
+    <h2><span class="priv-num">9</span> Cambios en esta política</h2>
+    <p>Podemos actualizar esta política ocasionalmente. Te notificaremos de cambios relevantes a través de la app. La fecha de "última actualización" en la parte superior indica cuándo se realizaron los últimos cambios.</p>
+  </div>
+
+  <!-- 10. Contacto -->
+  <div class="priv-section">
+    <h2><span class="priv-num">10</span> Contacto</h2>
+    <p>Para cualquier consulta sobre esta política de privacidad:</p>
+    <div class="priv-contact-card">
+      <strong>{{name}}</strong>
+      {{contact.address}}<br>
+      <a href="mailto:{{contact.email}}" style="color:var(--color-primary);">{{contact.email}}</a>
+    </div>
+  </div>
+
+  <div class="priv-footer">
+    <p>© 2026 {{name}} · <a href="home.html" style="color:var(--color-primary);">Volver a la app</a></p>
+  </div>
+
+</div>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

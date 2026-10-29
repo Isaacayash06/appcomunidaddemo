@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Voluntariado</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: var(--color-bg); }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+    .page-inner { max-width: 960px; margin: 0 auto; padding: 32px 32px 80px; }
+    @media (max-width: 768px) { .page-inner { padding: 20px 16px 88px; } }
+
+    /* Header */
+    .vol-header { text-align: center; margin-bottom: 32px; }
+    .vol-header-icon { width: 56px; height: 56px; background: var(--color-gold-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+    .vol-header-icon svg { width: 28px; height: 28px; color: var(--color-gold-dark); }
+    .vol-header h1 { font-family: var(--font-brand); font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: 8px; }
+    .vol-header p { color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 20px; }
+    .vol-stats { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
+    .vol-stat { text-align: center; }
+    .vol-stat-num { font-family: var(--font-brand); font-size: 1.8rem; font-weight: 700; color: var(--color-primary); }
+    .vol-stat-label { font-size: 0.8rem; color: var(--color-text-muted); margin-top: 2px; }
+
+    /* Filtros */
+    .filters-bar { background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 14px 20px; display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; box-shadow: var(--shadow-sm); }
+    .filter-select { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.875rem; color: var(--color-text); background: var(--color-bg); outline: none; cursor: pointer; }
+    .filter-select:focus { border-color: var(--color-primary); }
+    .filters-label { font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted); }
+
+    /* Section title */
+    .section-title { font-family: var(--font-brand); font-size: 1.3rem; font-weight: 700; color: var(--color-text); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .section-title span.badge { font-family: var(--font-ui); font-size: 0.75rem; font-weight: 600; background: var(--color-gold-light); color: var(--color-gold-dark); padding: 3px 10px; border-radius: var(--radius-full); }
+
+    /* Oportunidad card */
+    .vol-grid { display: flex; flex-direction: column; gap: 16px; }
+    .vol-card { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; display: flex; box-shadow: var(--shadow-sm); transition: box-shadow var(--transition-fast); }
+    .vol-card:hover { box-shadow: var(--shadow-md); }
+    .vol-card-band { width: 5px; flex-shrink: 0; }
+    .vol-card-band.urgente { background: var(--color-danger); }
+    .vol-card-band.pronto { background: var(--color-warning); }
+    .vol-card-band.flexible { background: var(--color-success); }
+    .vol-card-body { flex: 1; padding: 20px; }
+    .vol-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+    .vol-card-title { font-size: 1rem; font-weight: 700; color: var(--color-text); }
+    .vol-urgencia { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.06em; }
+    .vol-urgencia.urgente { background: #FEE2E2; color: var(--color-danger); }
+    .vol-urgencia.pronto { background: #FEF3C7; color: #B45309; }
+    .vol-urgencia.flexible { background: #D1FAE5; color: #065F46; }
+    .vol-area { display: inline-block; border: 1.5px solid var(--color-gold); color: var(--color-gold-dark); font-size: 0.7rem; font-weight: 600; padding: 2px 9px; border-radius: var(--radius-full); margin-bottom: 8px; }
+    .vol-desc { font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.55; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .vol-requisitos { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .vol-req { font-size: 0.72rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: 3px 9px; color: var(--color-text-muted); }
+    .vol-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .vol-meta-item { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color: var(--color-text-muted); }
+    .vol-meta-item svg { width: 14px; height: 14px; }
+    .vol-plazas { margin-top: 12px; }
+    .vol-plazas-text { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 5px; }
+    .progress-bar { background: var(--color-border); border-radius: var(--radius-full); height: 6px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: var(--radius-full); background: var(--color-primary); transition: width 0.5s ease; }
+    .vol-card-actions { display: flex; align-items: flex-end; padding: 20px 20px 20px 0; }
+    .btn-primary { padding: 10px 20px; border: none; border-radius: var(--radius-sm); background: var(--color-primary); color: white; font-family: var(--font-ui); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background var(--transition-fast); white-space: nowrap; }
+    .btn-primary:hover { background: var(--color-primary-dark); }
+    @media (max-width: 600px) { .vol-card { flex-direction: column; } .vol-card-band { width: 100%; height: 5px; } .vol-card-actions { padding: 0 20px 20px; } }
+    .no-results { text-align: center; padding: 40px; color: var(--color-text-muted); }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: var(--z-overlay); align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: var(--radius-lg); max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-xl); }
+    .modal-header { padding: 24px 24px 16px; display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid var(--color-border); position: sticky; top: 0; background: white; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+    .modal-title { font-family: var(--font-brand); font-size: 1.15rem; font-weight: 700; color: var(--color-primary); }
+    .modal-close { width: 32px; height: 32px; border: none; background: var(--color-bg); border-radius: 50%; cursor: pointer; font-size: 1.1rem; color: var(--color-text-muted); transition: background var(--transition-fast); }
+    .modal-close:hover { background: var(--color-border); }
+    .modal-body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 0.85rem; font-weight: 600; color: var(--color-text); }
+    .form-input, .form-select, .form-textarea { padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.875rem; color: var(--color-text); outline: none; transition: border-color var(--transition-fast); width: 100%; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--color-primary); }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .char-counter { font-size: 0.75rem; color: var(--color-text-muted); text-align: right; }
+    .btn-primary-full { width: 100%; padding: 12px; border: none; border-radius: var(--radius-sm); background: var(--color-primary); color: white; font-family: var(--font-ui); font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: background var(--transition-fast); }
+    .btn-primary-full:hover { background: var(--color-primary-dark); }
+
+    /* Historial personal */
+    .historial-card { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+    .historial-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--color-primary); display: flex; align-items: center; justify-content: center; color: white; font-family: var(--font-brand); font-size: 1.1rem; font-weight: 700; flex-shrink: 0; }
+    .historial-stats { display: flex; gap: 20px; flex-wrap: wrap; margin: 10px 0; }
+    .historial-stat { text-align: center; }
+    .historial-stat-num { font-size: 1.4rem; font-weight: 700; color: var(--color-primary); font-family: var(--font-brand); }
+    .historial-stat-label { font-size: 0.72rem; color: var(--color-text-muted); }
+    .historial-actividades { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .historial-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--color-text-muted); }
+    .historial-item::before { content: '✓'; color: var(--color-success); font-weight: 700; }
+
+    /* Muro reconocimientos */
+    .reconocimientos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    @media (max-width: 600px) { .reconocimientos-grid { grid-template-columns: repeat(2, 1fr); } }
+    .recon-card { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px 12px; text-align: center; box-shadow: var(--shadow-sm); }
+    .recon-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-brand); font-size: 1rem; font-weight: 700; color: white; margin: 0 auto 8px; }
+    .recon-avatar[data-color="0"] { background: #1B2E5E; }
+    .recon-avatar[data-color="1"] { background: #2A6049; }
+    .recon-avatar[data-color="2"] { background: #7B3F00; }
+    .recon-avatar[data-color="3"] { background: #1A4A6E; }
+    .recon-avatar[data-color="4"] { background: #4A1A6E; }
+    .recon-avatar[data-color="5"] { background: #6E1A1A; }
+    .recon-avatar[data-color="6"] { background: #1A5C38; }
+    .recon-avatar[data-color="7"] { background: #4A4A00; }
+    .recon-name { font-size: 0.8rem; font-weight: 600; color: var(--color-text); margin-bottom: 3px; }
+    .recon-horas { font-size: 0.75rem; color: var(--color-text-muted); }
+    .recon-estrella { font-size: 1rem; }
+
+    .section-gap { margin-top: 40px; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="page-inner">
+
+      <!-- Header -->
+      <div class="vol-header">
+        <div class="vol-header-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+        </div>
+        <h1>Voluntariado Comunitario</h1>
+        <p>Cada hora que donas construye comunidad</p>
+        <div class="vol-stats">
+          <div class="vol-stat"><div class="vol-stat-num">127</div><div class="vol-stat-label">voluntarios activos</div></div>
+          <div class="vol-stat"><div class="vol-stat-num">843</div><div class="vol-stat-label">horas donadas este año</div></div>
+          <div class="vol-stat"><div class="vol-stat-num" id="openCount">8</div><div class="vol-stat-label">oportunidades abiertas</div></div>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filters-bar">
+        <span class="filters-label">Filtrar:</span>
+        <select class="filter-select" id="filterCat" onchange="renderOportunidades()">
+          <option value="">Todas las categorías</option>
+          <option>Educación</option>
+          <option>Eventos</option>
+          <option>Bienestar</option>
+          <option>Comunicación</option>
+          <option>Logística</option>
+          <option>Enseñanza</option>
+        </select>
+        <select class="filter-select" id="filterComp" onchange="renderOportunidades()">
+          <option value="">Cualquier compromiso</option>
+          <option value="semana">Semanal</option>
+          <option value="mes">Mensual</option>
+          <option value="evento">Puntual</option>
+        </select>
+        <select class="filter-select" id="filterMod" onchange="renderOportunidades()">
+          <option value="">Toda modalidad</option>
+          <option>Presencial</option>
+          <option>Online</option>
+        </select>
+      </div>
+
+      <!-- Oportunidades -->
+      <div class="section-title">
+        Oportunidades activas <span class="badge" id="countBadge">8</span>
+      </div>
+      <div class="vol-grid" id="volGrid"></div>
+
+      <!-- Historial personal -->
+      <div class="section-gap">
+        <div class="section-title">Mi historial de voluntariado</div>
+        <div class="historial-card" id="historialCard"></div>
+      </div>
+
+      <!-- Reconocimientos -->
+      <div class="section-gap">
+        <div class="section-title">Voluntarios destacados</div>
+        <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:16px">Gracias a estas personas que hacen posible la comunidad</p>
+        <div class="reconocimientos-grid" id="reconGrid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal Apuntarme -->
+  <div class="modal-overlay" id="modalApuntar">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="apuntarTitle">Apuntarme</span>
+        <button class="modal-close" onclick="closeModal('modalApuntar')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Tu nombre</label>
+          <input type="text" class="form-input" id="apuntarNombre">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tu email</label>
+          <input type="email" class="form-input" id="apuntarEmail">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Disponibilidad preferida</label>
+          <select class="form-select" id="apuntarDisp">
+            <option>Lunes</option><option>Martes</option><option>Miércoles</option>
+            <option>Jueves</option><option>Viernes</option><option>Sábado noche</option>
+            <option>Domingo</option><option>Flexible — me adapto</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">¿Por qué quieres participar?</label>
+          <textarea class="form-textarea" id="apuntarMotivo" maxlength="300" oninput="document.getElementById('apuntarCount').textContent=this.value.length" placeholder="Cuéntanos tu motivación..."></textarea>
+          <span class="char-counter"><span id="apuntarCount">0</span>/300</span>
+        </div>
+        <button class="btn-primary-full" onclick="confirmarInscripcion()">Confirmar inscripción</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/supabase.js"></script>  <script src="js/auth.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+  <script>
+    const OPORTUNIDADES = [
+      { id:'v1', titulo:'Apoyo escolar Talmud Torah', area:'Talmud Torah', categoria:'Educación', urgencia:'urgente', descripcion:'Ayudar a niños de 8-12 años con dificultades de aprendizaje en las materias del colegio. Se trabaja en grupos pequeños de 3-4 alumnos con materiales ya preparados.', requisitos:['Paciencia con niños','Bachillerato o superior','Compromiso mínimo 1 mes'], compromiso:'2h/semana', modalidad:'Presencial', plazas:2, cubiertas:0 },
+      { id:'v2', titulo:'Coordinación eventos Shabat', area:'Eventos', categoria:'Eventos', urgencia:'flexible', descripcion:'Ayudar a organizar y coordinar los eventos de Shabat mensuales: preparación del espacio, recepción de invitados, coordinación con el catering kosher y gestión de inscripciones.', requisitos:['Organización','Disponibilidad viernes tarde'], compromiso:'4h/mes', modalidad:'Presencial', plazas:3, cubiertas:1 },
+      { id:'v3', titulo:'Visitas Bikur Jolim', area:'Ezra', categoria:'Bienestar', urgencia:'pronto', descripcion:'Visitar a miembros de la comunidad enfermos o mayores que necesitan compañía y apoyo emocional. Coordinado con el departamento de Ezra. Formación previa incluida.', requisitos:['Empatía','Discreción','Carnet de conducir (valorable)'], compromiso:'Según disponibilidad', modalidad:'Presencial', plazas:5, cubiertas:2 },
+      { id:'v4', titulo:'Gestión redes sociales', area:'Comunicación', categoria:'Comunicación', urgencia:'flexible', descripcion:'Crear contenido y gestionar las redes sociales de la comunidad (Instagram, Facebook, Telegram). Publicaciones sobre eventos, noticias y vida comunitaria en español y hebreo.', requisitos:['Manejo de redes sociales','Creatividad','Conocimiento judío básico'], compromiso:'3h/semana', modalidad:'Online', plazas:2, cubiertas:1 },
+      { id:'v5', titulo:'Reparto cenas Ezra', area:'Ezra', categoria:'Logística', urgencia:'urgente', descripcion:'Recoger y repartir cenas de Shabat preparadas por la comunidad a familias y personas mayores que no pueden cocinar. Ruta organizada en Madrid, coordinada cada semana.', requisitos:['Carnet de conducir','Disponibilidad viernes','Puntualidad'], compromiso:'Viernes 2h', modalidad:'Presencial', plazas:3, cubiertas:1 },
+      { id:'v6', titulo:'Recepción nuevos miembros', area:'Secretaría', categoria:'Eventos', urgencia:'pronto', descripcion:'Dar la bienvenida a nuevos miembros en eventos de integración. Mostrar las instalaciones, presentarlos a la comunidad y resolver dudas iniciales con amabilidad.', requisitos:['Carisma','Conocimiento de la comunidad'], compromiso:'Por evento', modalidad:'Presencial', plazas:4, cubiertas:2 },
+      { id:'v7', titulo:'Mantenimiento web {{name}}', area:'Digital', categoria:'Comunicación', urgencia:'flexible', descripcion:'Colaborar en el mantenimiento y mejora continua de la plataforma digital {{name}}: corrección de errores, actualización de contenidos y mejoras de experiencia de usuario.', requisitos:['Conocimientos HTML/CSS/JS','Git básico'], compromiso:'Flexible', modalidad:'Online', plazas:2, cubiertas:0 },
+      { id:'v8', titulo:'Clases hebreo para adultos', area:'Enseñanza', categoria:'Enseñanza', urgencia:'pronto', descripcion:'Impartir clases de hebreo conversacional para adultos principiantes en grupos pequeños de 4-6 personas. Metodología comunicativa, materiales proporcionados por la comunidad.', requisitos:['Hebreo fluido','Experiencia docente (valorable)'], compromiso:'1h/semana', modalidad:'Presencial', plazas:2, cubiertas:1 }
+    ];
+
+    const RECONOCIDOS = [
+      { nombre:'Miriam S.', horas:48, del_mes:true, color:'6' },
+      { nombre:'Yosef K.', horas:36, del_mes:false, color:'2' },
+      { nombre:'Sara L.', horas:30, del_mes:false, color:'3' },
+      { nombre:'David M.', horas:28, del_mes:false, color:'0' },
+      { nombre:'Rachel A.', horas:24, del_mes:false, color:'1' },
+      { nombre:'Avi G.', horas:20, del_mes:false, color:'4' },
+      { nombre:'Noa B.', horas:18, del_mes:false, color:'5' },
+      { nombre:'Tamar R.', horas:16, del_mes:false, color:'7' }
+    ];
+
+    let currentVolId = null;
+
+    function renderOportunidades() {
+      const cat = document.getElementById('filterCat').value;
+      const comp = document.getElementById('filterComp').value;
+      const mod = document.getElementById('filterMod').value;
+
+      const filtered = OPORTUNIDADES.filter(o => {
+        const matchCat = !cat || o.categoria === cat;
+        const matchMod = !mod || o.modalidad === mod;
+        const matchComp = !comp || (comp === 'semana' && o.compromiso.includes('semana')) || (comp === 'mes' && o.compromiso.includes('mes')) || (comp === 'evento' && (o.compromiso.includes('evento') || o.compromiso.includes('Puntual') || o.compromiso.includes('disponibilidad')));
+        return matchCat && matchMod && matchComp;
+      });
+
+      document.getElementById('countBadge').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        document.getElementById('volGrid').innerHTML = '<div class="no-results"><p>No hay oportunidades con esos filtros.</p></div>';
+        return;
+      }
+
+      document.getElementById('volGrid').innerHTML = filtered.map(o => {
+        const pct = Math.round((o.cubiertas / o.plazas) * 100);
+        const libres = o.plazas - o.cubiertas;
+        return `
+          <div class="vol-card">
+            <div class="vol-card-band ${o.urgencia}"></div>
+            <div class="vol-card-body">
+              <div class="vol-card-top">
+                <div>
+                  <span class="vol-area">${o.area}</span>
+                  <div class="vol-card-title">${o.titulo}</div>
+                </div>
+                <span class="vol-urgencia ${o.urgencia}">${o.urgencia === 'urgente' ? 'Urgente' : o.urgencia === 'pronto' ? 'Pronto' : 'Flexible'}</span>
+              </div>
+              <p class="vol-desc">${o.descripcion}</p>
+              <div class="vol-requisitos">${o.requisitos.slice(0,3).map(r=>`<span class="vol-req">${r}</span>`).join('')}</div>
+              <div class="vol-meta">
+                <span class="vol-meta-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                  ${o.compromiso}
+                </span>
+                <span class="vol-meta-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                  ${o.modalidad}
+                </span>
+              </div>
+              <div class="vol-plazas">
+                <div class="vol-plazas-text">${o.cubiertas} de ${o.plazas} plazas cubiertas · <strong style="color:${libres > 0 ? 'var(--color-success)' : 'var(--color-danger)'}">${libres} libre${libres !== 1 ? 's' : ''}</strong></div>
+                <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+              </div>
+            </div>
+            <div class="vol-card-actions">
+              <button class="btn-primary" onclick="openApuntar('${o.id}')" ${libres === 0 ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>
+                ${libres === 0 ? 'Sin plazas' : 'Apuntarme'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderHistorial() {
+      const user = getCurrentUser();
+      const name = user ? user.name : 'Miembro';
+      const initials = user ? (user.initials || name.split(' ').map(w=>w[0]).join('').slice(0,2)) : 'MG';
+      document.getElementById('historialCard').innerHTML = `
+        <div class="historial-avatar">${initials}</div>
+        <div style="flex:1">
+          <div style="font-size:1rem;font-weight:700;color:var(--color-text);margin-bottom:4px">${name}</div>
+          <span style="background:var(--color-success-light);color:#065F46;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:var(--radius-full);">Voluntario activo</span>
+          <div class="historial-stats">
+            <div class="historial-stat"><div class="historial-stat-num">12</div><div class="historial-stat-label">horas donadas</div></div>
+            <div class="historial-stat"><div class="historial-stat-num">3</div><div class="historial-stat-label">actividades</div></div>
+          </div>
+          <div class="historial-actividades">
+            <div class="historial-item">Coordinación Shabat · Feb 2026 · 4h</div>
+            <div class="historial-item">Apoyo escolar Talmud Torah · Mar 2026 · 8h</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderReconocimientos() {
+      document.getElementById('reconGrid').innerHTML = RECONOCIDOS.map(r => `
+        <div class="recon-card">
+          <div class="recon-avatar" data-color="${r.color}">${r.nombre.split(' ').map(w=>w[0]).join('')}</div>
+          <div class="recon-name">${r.nombre} ${r.del_mes ? '<span class="recon-estrella">⭐</span>' : ''}</div>
+          <div class="recon-horas">${r.horas}h donadas</div>
+          ${r.del_mes ? '<div style="font-size:0.68rem;color:var(--color-gold-dark);font-weight:600;margin-top:3px">Voluntario del mes</div>' : ''}
+        </div>
+      `).join('');
+    }
+
+    function openApuntar(id) {
+      const op = OPORTUNIDADES.find(o => o.id === id);
+      if (!op) return;
+      currentVolId = id;
+      document.getElementById('apuntarTitle').textContent = `Apuntarme: ${op.titulo}`;
+      const user = getCurrentUser();
+      if (user) {
+        document.getElementById('apuntarNombre').value = user.name || '';
+        document.getElementById('apuntarEmail').value = user.email || '';
+      }
+      document.getElementById('modalApuntar').classList.add('open');
+    }
+
+    async function confirmarInscripcion() {
+      const nombre = document.getElementById('apuntarNombre')?.value?.trim() || '';
+      const email  = document.getElementById('apuntarEmail')?.value?.trim() || '';
+      const notas  = document.getElementById('apuntarNotas')?.value?.trim() || '';
+      const user   = getCurrentUser();
+      const op     = OPORTUNIDADES.find(o => o.id === currentVolId);
+
+      const registro = {
+        voluntariado_id: currentVolId,
+        voluntariado_titulo: op?.titulo || '',
+        usuario_id: user?.userId || user?.id || null,
+        usuario_nombre: nombre || user?.name || 'Miembro',
+        usuario_email: email || user?.email || '',
+        notas
+      };
+
+      const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+      if (sb) {
+        const { error } = await sb.from('inscripciones_voluntariado').insert(registro);
+        if (error) {
+          showToast('Error al registrar: ' + error.message, 'error');
+          return;
+        }
+        // Incrementar cubiertas en Supabase si tiene id de Supabase
+        if (op && op.supabase_id) {
+          await sb.from('voluntariados').update({ cubiertas: (op.cubiertas || 0) + 1 }).eq('id', op.supabase_id);
+        }
+      }
+
+      if (op) op.cubiertas = Math.min((op.cubiertas || 0) + 1, op.plazas);
+      closeModal('modalApuntar');
+      renderOportunidades();
+      showToast('¡Inscripción confirmada! El coordinador se pondrá en contacto contigo.', 'success');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+    });
+
+    initNav('voluntariado');
+    renderOportunidades();
+    renderHistorial();
+    renderReconocimientos();
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
+  </script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

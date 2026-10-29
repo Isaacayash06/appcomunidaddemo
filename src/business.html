@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Jewish Business & Co-Work</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    /* ─── Layout base ─── */
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+    .biz-inner { max-width: 1100px; margin: 0 auto; padding: 32px 32px 80px; }
+    @media (max-width: 768px) { .biz-inner { padding: 20px 14px 96px; } }
+
+    /* ─── Hero Header ─── */
+    .biz-hero {
+      background: linear-gradient(135deg, var(--color-primary) 0%, #2A4080 60%, #1B2E5E 100%);
+      border-radius: var(--radius-lg);
+      padding: 40px 36px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .biz-hero::before {
+      content: '\272A';
+      position: absolute;
+      right: -20px; top: -30px;
+      font-size: 160px;
+      opacity: .04;
+      color: #fff;
+      pointer-events: none;
+      font-family: serif;
+    }
+    .biz-hero-title {
+      font-family: var(--font-brand);
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .biz-hero-sub {
+      font-size: .9375rem;
+      color: rgba(255,255,255,.72);
+      margin-bottom: 24px;
+    }
+    .biz-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-hero-primary {
+      background: var(--color-gold);
+      color: #1B2E5E;
+      border: none;
+      padding: 10px 22px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      font-family: var(--font-ui);
+    }
+    .btn-hero-primary:hover { background: var(--color-gold-dark); transform: translateY(-1px); }
+    .btn-hero-secondary {
+      background: rgba(255,255,255,.14);
+      color: #fff;
+      border: 1.5px solid rgba(255,255,255,.3);
+      padding: 10px 22px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      font-family: var(--font-ui);
+    }
+    .btn-hero-secondary:hover { background: rgba(255,255,255,.22); }
+
+    /* ─── Tabs ─── */
+    .biz-tabs {
+      display: flex;
+      background: var(--color-white);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 5px;
+      gap: 4px;
+      margin-bottom: 28px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .biz-tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      font-family: var(--font-ui);
+    }
+    .tab-btn:hover { color: var(--color-primary); background: var(--color-bg); }
+    .tab-btn.active {
+      background: var(--color-primary);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ─── Tab panels ─── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ─── Filters bar (Tab 1) ─── */
+    .filters-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+    .search-input-wrap svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: var(--color-text-muted);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: .875rem;
+      color: var(--color-text);
+      background: var(--color-white);
+      font-family: var(--font-ui);
+      transition: border-color var(--transition-fast);
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--color-primary); }
+    .filter-select {
+      padding: 10px 14px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: .875rem;
+      color: var(--color-text);
+      background: var(--color-white);
+      font-family: var(--font-ui);
+      cursor: pointer;
+      outline: none;
+      transition: border-color var(--transition-fast);
+    }
+    .filter-select:focus { border-color: var(--color-primary); }
+
+    /* ─── Business Grid ─── */
+    .biz-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 900px) { .biz-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px)  { .biz-grid { grid-template-columns: 1fr; } }
+
+    /* ─── Business Card ─── */
+    .biz-card {
+      background: var(--color-white);
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--color-border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+    }
+    .biz-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .biz-card.new-card { animation: fadeSlideIn .4s ease both; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .biz-card-header { display: flex; align-items: flex-start; gap: 12px; }
+    .biz-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #fff;
+      flex-shrink: 0;
+      letter-spacing: .5px;
+    }
+    .biz-card-meta { flex: 1; min-width: 0; }
+    .biz-card-name {
+      font-weight: 700;
+      font-size: .9375rem;
+      color: var(--color-text);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .biz-card-owner {
+      font-size: .78rem;
+      color: var(--color-text-muted);
+    }
+    .biz-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .badge-categoria {
+      padding: 3px 9px;
+      border-radius: var(--radius-full);
+      font-size: .72rem;
+      font-weight: 600;
+      background: var(--color-info-light);
+      color: var(--color-info);
+    }
+    .badge-verificado {
+      padding: 3px 9px;
+      border-radius: var(--radius-full);
+      font-size: .72rem;
+      font-weight: 700;
+      background: var(--color-gold-light);
+      color: var(--color-gold-dark);
+    }
+
+    .biz-desc {
+      font-size: .8375rem;
+      color: var(--color-text-muted);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .biz-horario {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .78rem;
+      color: var(--color-text-muted);
+    }
+    .biz-horario svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    .biz-location {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .78rem;
+      color: var(--color-text-muted);
+    }
+    .biz-location svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    .biz-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tag-pill {
+      padding: 3px 9px;
+      background: var(--color-border-light);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      font-size: .72rem;
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+
+    .biz-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 6px;
+    }
+    .btn-ver-mas {
+      flex: 1;
+      padding: 9px 0;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: .8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: background var(--transition-fast);
+    }
+    .btn-ver-mas:hover { background: var(--color-primary-dark); }
+    .btn-contactar {
+      flex: 1;
+      padding: 9px 0;
+      background: var(--color-white);
+      color: var(--color-primary);
+      border: 1.5px solid var(--color-primary);
+      border-radius: var(--radius-sm);
+      font-size: .8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: all var(--transition-fast);
+    }
+    .btn-contactar:hover { background: var(--color-primary); color: #fff; }
+
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--color-text-muted);
+    }
+    .no-results svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: .4; display: block; margin-left: auto; margin-right: auto; }
+
+    /* ─── Co-Work Grid (Tab 2) ─── */
+    .cowork-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 900px) { .cowork-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px)  { .cowork-grid { grid-template-columns: 1fr; } }
+
+    .cowork-card {
+      background: var(--color-white);
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--color-border);
+      padding: 22px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+    }
+    .cowork-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+    .cowork-card-top { display: flex; align-items: center; gap: 13px; }
+    .cowork-avatar {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-full);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1rem; color: #fff; flex-shrink: 0;
+    }
+    .cowork-name-wrap { flex: 1; min-width: 0; }
+    .cowork-name { font-weight: 700; font-size: .9375rem; color: var(--color-text); }
+    .cowork-prof { font-size: .78rem; color: var(--color-text-muted); margin-top: 1px; }
+
+    .badge-tipo {
+      display: inline-block;
+      padding: 4px 11px;
+      border-radius: var(--radius-full);
+      font-size: .72rem;
+      font-weight: 700;
+    }
+    .tipo-socio      { background: #EEF2FF; color: #1B2E5E; }
+    .tipo-inversor   { background: var(--color-gold-light); color: var(--color-gold-dark); }
+    .tipo-mentoria   { background: #D1FAE5; color: #065F46; }
+    .tipo-cofundador { background: #EDE9FE; color: #5B21B6; }
+    .tipo-empleado   { background: #DBEAFE; color: #1D4ED8; }
+
+    .cowork-desc {
+      font-size: .8375rem;
+      color: var(--color-text-muted);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .cowork-meta { font-size: .78rem; color: var(--color-text-muted); }
+    .cowork-meta strong { color: var(--color-text); font-weight: 600; }
+
+    .btn-conectar {
+      width: 100%;
+      padding: 10px 0;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: .875rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: background var(--transition-fast);
+      margin-top: auto;
+    }
+    .btn-conectar:hover { background: var(--color-primary-dark); }
+
+    /* ─── Publish Form (Tab 3) ─── */
+    .publish-form-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .form-section {
+      background: var(--color-white);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .form-section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-section-title::before {
+      content: '';
+      display: block;
+      width: 4px; height: 18px;
+      background: var(--color-gold);
+      border-radius: 2px;
+    }
+    .form-row { display: flex; gap: 16px; }
+    @media (max-width: 600px) { .form-row { flex-direction: column; } }
+    .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; margin-bottom: 14px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label { font-size: .8125rem; font-weight: 600; color: var(--color-text); }
+    .form-label span { color: var(--color-danger); margin-left: 2px; }
+    .form-input, .form-select, .form-textarea {
+      padding: 10px 13px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: .875rem;
+      color: var(--color-text);
+      background: var(--color-white);
+      font-family: var(--font-ui);
+      outline: none;
+      transition: border-color var(--transition-fast);
+      width: 100%;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--color-primary); }
+    .form-textarea { resize: vertical; min-height: 90px; }
+    .char-counter { font-size: .75rem; color: var(--color-text-muted); text-align: right; }
+    .char-counter.over { color: var(--color-danger); }
+
+    /* Services */
+    .services-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .services-input-row .form-input { flex: 1; margin-bottom: 0; }
+    .btn-add-service {
+      padding: 10px 16px;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: .8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      white-space: nowrap;
+      transition: background var(--transition-fast);
+    }
+    .btn-add-service:hover { background: var(--color-primary-dark); }
+    .services-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .service-pill {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 11px;
+      background: var(--color-primary);
+      color: #fff;
+      border-radius: var(--radius-full);
+      font-size: .78rem;
+      font-weight: 600;
+    }
+    .service-pill button {
+      background: none; border: none; color: rgba(255,255,255,.7);
+      cursor: pointer; font-size: 1rem; line-height: 1;
+      padding: 0; margin-left: 2px; transition: color var(--transition-fast);
+    }
+    .service-pill button:hover { color: #fff; }
+
+    /* Schedule */
+    .schedule-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border-light);
+    }
+    .schedule-row:last-child { border-bottom: none; }
+    .toggle-cb { display: none; }
+    .toggle-label {
+      position: relative;
+      width: 36px; height: 20px;
+      background: var(--color-border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .toggle-label::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 14px; height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform var(--transition-fast);
+    }
+    .toggle-cb:checked + .toggle-label { background: var(--color-primary); }
+    .toggle-cb:checked + .toggle-label::after { transform: translateX(16px); }
+    .day-name { font-size: .85rem; font-weight: 600; color: var(--color-text); width: 90px; flex-shrink: 0; }
+    .schedule-times { display: flex; align-items: center; gap: 8px; }
+    .schedule-times input {
+      padding: 6px 10px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: .8125rem;
+      color: var(--color-text);
+      background: var(--color-white);
+      font-family: var(--font-ui);
+      outline: none;
+      transition: border-color var(--transition-fast);
+      width: 90px;
+    }
+    .schedule-times input:focus { border-color: var(--color-primary); }
+    .schedule-sep { font-size: .8rem; color: var(--color-text-muted); }
+    .schedule-closed { font-size: .8rem; color: var(--color-text-light); }
+    .shabat-toggle-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 14px; padding: 12px;
+      background: var(--color-gold-light);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(201,168,76,.3);
+    }
+    .shabat-toggle-row span { font-size: .875rem; font-weight: 600; color: var(--color-gold-dark); }
+
+    /* Socios */
+    .socios-toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .socios-toggle-row label { font-size: .875rem; font-weight: 600; color: var(--color-text); cursor: pointer; }
+    #socios-section { display: none; }
+
+    /* Color picker */
+    .color-picker { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .color-circle {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: transform var(--transition-fast), border-color var(--transition-fast);
+      box-sizing: border-box;
+    }
+    .color-circle:hover { transform: scale(1.15); }
+    .color-circle.selected { border-color: var(--color-text); transform: scale(1.12); }
+
+    .logo-preview-wrap { display: flex; align-items: center; gap: 14px; }
+    .logo-preview-box {
+      width: 72px; height: 72px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1.5rem; color: #fff;
+      transition: background var(--transition-fast);
+    }
+    .logo-preview-text { font-size: .8125rem; color: var(--color-text-muted); line-height: 1.5; }
+
+    /* Submit */
+    .btn-publish {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--color-primary) 0%, #2A4080 100%);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: all var(--transition-fast);
+      box-shadow: var(--shadow-md);
+    }
+    .btn-publish:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+    /* ─── Modals ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.52);
+      z-index: var(--z-modal);
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 20px;
+      overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--color-white);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 580px;
+      box-shadow: var(--shadow-xl);
+      position: relative;
+      animation: modalIn .25s ease;
+      margin: auto;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.94) translateY(12px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: var(--color-bg);
+      border: none;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--transition-fast);
+      z-index: 1;
+    }
+    .modal-close:hover { background: var(--color-border); }
+    .modal-header { padding: 28px 28px 0; }
+    .modal-body   { padding: 20px 28px 28px; }
+
+    /* Business detail modal */
+    .modal-biz-logo-large {
+      width: 80px; height: 80px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1.6rem; color: #fff;
+      margin-bottom: 14px;
+    }
+    .modal-biz-name {
+      font-size: 1.3rem; font-weight: 800; color: var(--color-text);
+      margin-bottom: 4px; font-family: var(--font-brand);
+    }
+    .modal-biz-owner { font-size: .8375rem; color: var(--color-text-muted); margin-bottom: 12px; }
+    .modal-section-label {
+      font-size: .78rem; font-weight: 700; color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin: 16px 0 8px;
+    }
+    .modal-desc-full { font-size: .875rem; color: var(--color-text); line-height: 1.6; }
+    .modal-services { display: flex; flex-wrap: wrap; gap: 7px; }
+    .modal-service-tag {
+      padding: 4px 11px;
+      background: var(--color-info-light); color: var(--color-info);
+      border-radius: var(--radius-full); font-size: .78rem; font-weight: 600;
+    }
+    .modal-schedule-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .modal-schedule-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 10px; background: var(--color-bg); border-radius: var(--radius-xs); font-size: .8125rem;
+    }
+    .modal-schedule-day { font-weight: 600; color: var(--color-text); }
+    .modal-schedule-hrs { color: var(--color-text-muted); }
+    .modal-contact-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 0; border-bottom: 1px solid var(--color-border-light); font-size: .875rem;
+    }
+    .modal-contact-row:last-child { border-bottom: none; }
+    .modal-contact-row svg { width: 15px; height: 15px; color: var(--color-primary); flex-shrink: 0; }
+    .modal-contact-row a { color: var(--color-primary); text-decoration: none; }
+    .modal-contact-row a:hover { text-decoration: underline; }
+    .modal-socios-banner {
+      background: var(--color-info-light);
+      border: 1px solid rgba(59,130,246,.25);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px; margin-top: 12px;
+    }
+    .modal-socios-banner-title {
+      font-weight: 700; font-size: .875rem; color: var(--color-info);
+      margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+    }
+    .modal-socios-banner p { font-size: .8375rem; color: var(--color-text-muted); margin-bottom: 10px; }
+    .btn-proponer {
+      padding: 9px 18px; background: var(--color-info); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-size: .8125rem; font-weight: 700; cursor: pointer;
+      font-family: var(--font-ui); transition: background var(--transition-fast);
+    }
+    .btn-proponer:hover { background: #2563EB; }
+    .modal-map-placeholder {
+      background: var(--color-bg);
+      border: 1.5px dashed var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 24px; text-align: center;
+      font-size: .8125rem; color: var(--color-text-muted); margin-top: 8px;
+    }
+
+    /* Conectar modal */
+    .modal-conectar-title {
+      font-size: 1.1rem; font-weight: 800; color: var(--color-text);
+      margin-bottom: 6px; font-family: var(--font-brand);
+    }
+    .modal-conectar-sub { font-size: .875rem; color: var(--color-text-muted); margin-bottom: 16px; }
+    .btn-enviar-solicitud {
+      width: 100%; padding: 12px;
+      background: var(--color-primary); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-size: .9rem; font-weight: 700; cursor: pointer;
+      font-family: var(--font-ui); transition: background var(--transition-fast); margin-top: 12px;
+    }
+    .btn-enviar-solicitud:hover { background: var(--color-primary-dark); }
+
+    /* Avatar data-color helpers */
+    [data-color="0"] { background: #1B2E5E; }
+    [data-color="1"] { background: #9B1D20; }
+    [data-color="2"] { background: #1B5E20; }
+    [data-color="3"] { background: #4A148C; }
+    [data-color="4"] { background: #E65100; }
+    [data-color="5"] { background: #006064; }
+    [data-color="6"] { background: #880E4F; }
+    [data-color="7"] { background: #37474F; }
+  /* ── Upload area ── */
+  .upload-area { border:2px dashed #e2e8f0; border-radius:10px; cursor:pointer; transition:border-color .15s,background .15s; overflow:hidden; }
+  .upload-area:hover { border-color:#1B2E5E; background:rgba(27,46,94,.03); }
+  .upload-placeholder { display:flex; flex-direction:column; align-items:center; gap:6px; padding:20px; color:#a0aec0; }
+  .upload-hint { font-size:.73rem; }
+  .biz-logo-img { width:52px; height:52px; border-radius:10px; object-fit:cover; flex-shrink:0; }
+
+  /* ── Newspaper Logo Section ── */
+  @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&display=swap');
+  .biz-np-section {
+    background: var(--color-white);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .biz-np-masthead {
+    background: #1a202c;
+    padding: 14px 22px 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    border-bottom: 3px solid #c9a84c;
+  }
+  .biz-np-num {
+    font-family: 'Frank Ruhl Libre', Georgia, serif;
+    font-size: .7rem;
+    font-weight: 700;
+    color: #c9a84c;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .biz-np-title {
+    font-family: 'Frank Ruhl Libre', Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f5f0e8;
+    letter-spacing: .02em;
+  }
+  .biz-np-body { padding: 20px 22px; }
+  .biz-np-rule {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 16px 0;
+  }
+  .biz-np-label {
+    font-family: Georgia, serif;
+    font-size: .78rem;
+    font-weight: 700;
+    color: #1a202c;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .biz-np-label span { color: #a0aec0; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .biz-np-upload-zone {
+    border: 2px solid #1a202c;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    overflow: hidden;
+    background: #fafaf8;
+  }
+  .biz-np-upload-zone:hover { background: #f0ede4; }
+  .biz-np-upload-ph {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 22px 16px;
+    color: #718096;
+  }
+  .biz-np-upload-ph svg { width: 28px; height: 28px; color: #1a202c; opacity: .4; }
+  .biz-np-upload-ph-title {
+    font-family: Georgia, serif;
+    font-size: .875rem;
+    font-weight: 700;
+    color: #1a202c;
+  }
+  .biz-np-upload-ph-hint {
+    font-family: Georgia, serif;
+    font-size: .73rem;
+    color: #a0aec0;
+    font-style: italic;
+  }
+  .biz-np-palette-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .biz-np-palette-label {
+    font-family: Georgia, serif;
+    font-size: .75rem;
+    color: #718096;
+    font-style: italic;
+    white-space: nowrap;
+  }
+  .biz-np-preview-frame {
+    border: 2px solid #1a202c;
+    border-radius: 2px;
+    padding: 16px;
+    background: #fafaf8;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .biz-np-preview-hint {
+    font-family: Georgia, serif;
+    font-size: .8rem;
+    color: #718096;
+    font-style: italic;
+    line-height: 1.55;
+  }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div id="sidebar-placeholder"></div>
+
+  <main class="main-content">
+    <div class="biz-inner">
+
+      <!-- Hero -->
+      <header class="biz-hero">
+        <div class="biz-hero-title">Jewish Business &amp; Co-Work</div>
+        <div class="biz-hero-sub">Conecta, colabora y crece con la comunidad</div>
+        <div class="biz-hero-ctas">
+          <button class="btn-hero-primary" id="cta-publicar">Publicar mi negocio</button>
+          <button class="btn-hero-secondary" id="cta-colaborar">Buscar colaboraci&#243;n</button>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <div class="biz-tabs" role="tablist">
+        <button class="tab-btn active" data-tab="tab-directorio" role="tab" aria-selected="true">Directorio</button>
+        <button class="tab-btn" data-tab="tab-cowork" role="tab" aria-selected="false">Co-Work &amp; Socios</button>
+        <button class="tab-btn" data-tab="tab-publicar" role="tab" aria-selected="false">Publicar negocio</button>
+      </div>
+
+      <!-- TAB 1: DIRECTORIO -->
+      <div class="tab-panel active" id="tab-directorio">
+        <div class="filters-bar">
+          <div class="search-input-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+            <input type="text" class="search-input" id="biz-search" placeholder="Buscar negocio, profesional o servicio...">
+          </div>
+          <select class="filter-select" id="filter-cat">
+            <option value="">Todos</option>
+            <option>Alimentaci&#243;n</option>
+            <option>Legal</option>
+            <option>M&#233;dico</option>
+            <option>Inmobiliaria</option>
+            <option>Tecnolog&#237;a</option>
+            <option>Educaci&#243;n</option>
+            <option>Finanzas</option>
+            <option>Construcci&#243;n</option>
+            <option>Moda</option>
+            <option>Hosteler&#237;a</option>
+            <option>Otro</option>
+          </select>
+          <select class="filter-select" id="filter-city">
+            <option value="">Todas</option>
+            <option>Madrid</option>
+            <option>Barcelona</option>
+            <option>M&#225;laga</option>
+            <option>Valencia</option>
+            <option>Sevilla</option>
+            <option>Online</option>
+          </select>
+        </div>
+        <div class="biz-grid" id="biz-grid"></div>
+      </div>
+
+      <!-- TAB 2: CO-WORK & SOCIOS -->
+      <div class="tab-panel" id="tab-cowork">
+        <div class="cowork-grid" id="cowork-grid"></div>
+      </div>
+
+      <!-- TAB 3: PUBLICAR NEGOCIO -->
+      <div class="tab-panel" id="tab-publicar">
+        <div class="publish-form-wrap">
+          <form id="publish-form" novalidate>
+
+            <!-- Secci&#243;n 1: Info b&#225;sica -->
+            <div class="form-section">
+              <div class="form-section-title">Informaci&#243;n b&#225;sica</div>
+              <div class="form-group">
+                <label class="form-label" for="f-nombre">Nombre del negocio<span>*</span></label>
+                <input type="text" class="form-input" id="f-nombre" placeholder="Ej: Shalom Catering" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="f-cat">Categor&#237;a<span>*</span></label>
+                  <select class="form-select" id="f-cat" required>
+                    <option value="">Seleccionar...</option>
+                    <option>Alimentaci&#243;n</option>
+                    <option>Legal</option>
+                    <option>M&#233;dico</option>
+                    <option>Inmobiliaria</option>
+                    <option>Tecnolog&#237;a</option>
+                    <option>Educaci&#243;n</option>
+                    <option>Finanzas</option>
+                    <option>Construcci&#243;n</option>
+                    <option>Moda</option>
+                    <option>Hosteler&#237;a</option>
+                    <option>Otro</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-anio">A&#241;o de fundaci&#243;n</label>
+                  <input type="number" class="form-input" id="f-anio" placeholder="Ej: 2020" min="1900" max="2100">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-desc-corta">Descripci&#243;n corta (m&#225;x. 150 caracteres)<span>*</span></label>
+                <input type="text" class="form-input" id="f-desc-corta" placeholder="Una frase que resume tu negocio" maxlength="150" required>
+                <div class="char-counter" id="desc-corta-counter">0 / 150</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-desc-full">Descripci&#243;n completa</label>
+                <textarea class="form-textarea" id="f-desc-full" placeholder="Cu&#233;ntanos m&#225;s sobre tu negocio, historia, valores y propuesta de valor..." rows="4"></textarea>
+              </div>
+            </div>
+
+            <!-- Secci&#243;n 2: Servicios -->
+            <div class="form-section">
+              <div class="form-section-title">Servicios</div>
+              <div class="services-input-row">
+                <input type="text" class="form-input" id="f-servicio-input" placeholder="Ej: Implantolog&#237;a, Catering kosher...">
+                <button type="button" class="btn-add-service" id="btn-add-service">A&#241;adir</button>
+              </div>
+              <div class="services-pills" id="services-pills"></div>
+              <div id="services-limit-msg" style="display:none;font-size:.78rem;color:var(--color-danger);margin-top:6px;">M&#225;ximo 10 servicios.</div>
+            </div>
+
+            <!-- Secci&#243;n 3: Horarios -->
+            <div class="form-section">
+              <div class="form-section-title">Horarios</div>
+              <div id="schedule-rows"></div>
+              <div class="shabat-toggle-row">
+                <input type="checkbox" class="toggle-cb" id="shabat-toggle">
+                <label class="toggle-label" for="shabat-toggle"></label>
+                <span>Horario especial Shabat</span>
+              </div>
+            </div>
+
+            <!-- Secci&#243;n 4: Contacto -->
+            <div class="form-section">
+              <div class="form-section-title">Contacto y ubicaci&#243;n</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="f-tel">Tel&#233;fono</label>
+                  <input type="tel" class="form-input" id="f-tel" placeholder="+34 600 000 000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-email">Email</label>
+                  <input type="email" class="form-input" id="f-email" placeholder="info@negocio.es">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-web">Sitio web</label>
+                <input type="url" class="form-input" id="f-web" placeholder="www.minegocio.es">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="f-ciudad">Ciudad</label>
+                  <select class="form-select" id="f-ciudad">
+                    <option value="">Seleccionar...</option>
+                    <option>Madrid</option>
+                    <option>Barcelona</option>
+                    <option>M&#225;laga</option>
+                    <option>Valencia</option>
+                    <option>Sevilla</option>
+                    <option>Online</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="f-dir">Direcci&#243;n</label>
+                  <input type="text" class="form-input" id="f-dir" placeholder="C/ Mayor 1">
+                </div>
+              </div>
+              <div class="socios-toggle-row">
+                <input type="checkbox" class="toggle-cb" id="toggle-socios">
+                <label class="toggle-label" for="toggle-socios"></label>
+                <label for="toggle-socios">&#191;Buscas socios o colaboradores?</label>
+              </div>
+              <div id="socios-section">
+                <div class="form-group">
+                  <label class="form-label" for="f-socios-desc">Describe qu&#233; buscas</label>
+                  <textarea class="form-textarea" id="f-socios-desc" placeholder="Ej: Busco distribuidor en {{city}}, co-fundador t&#233;cnico, inversor para escalar..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Secci&#243;n 5: Logo -->
+            <div class="form-section">
+              <div class="form-section-title">Identidad Visual</div>
+
+              <!-- Upload -->
+              <div class="form-group">
+                <label class="form-label" for="upload-area-biz">Logotipo <span style="color:#a0aec0;font-weight:400;">(opcional &mdash; JPG o PNG cuadrado)</span></label>
+                <div class="biz-np-upload-zone" id="upload-area-biz">
+                  <input type="file" id="file-biz" accept="image/*" hidden>
+                  <div class="biz-np-upload-ph" id="upload-ph-biz" style="display:flex;">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+                    <span class="biz-np-upload-ph-title">Subir logotipo</span>
+                    <span class="biz-np-upload-ph-hint">Haz clic o arrastra una imagen</span>
+                  </div>
+                  <div id="upload-filled-biz" style="display:none;position:relative;">
+                    <img id="upload-img-biz" style="width:100%;max-height:200px;object-fit:contain;padding:12px;background:#fafaf8;">
+                    <button type="button" onclick="clearBizLogo()" style="position:absolute;top:8px;right:8px;background:#1a202c;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;line-height:24px;text-align:center;padding:0;">&times;</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Color -->
+              <div class="form-group">
+                <label class="form-label">Color de fondo <span style="color:#a0aec0;font-weight:400;">(si no se sube logo)</span></label>
+                <div class="color-picker" id="color-picker">
+                  <div class="color-circle selected" data-color-val="#1B5E20" style="background:#1B5E20"></div>
+                  <div class="color-circle" data-color-val="#1B2E5E" style="background:#1B2E5E"></div>
+                  <div class="color-circle" data-color-val="#880E4F" style="background:#880E4F"></div>
+                  <div class="color-circle" data-color-val="#E65100" style="background:#E65100"></div>
+                  <div class="color-circle" data-color-val="#4A148C" style="background:#4A148C"></div>
+                  <div class="color-circle" data-color-val="#37474F" style="background:#37474F"></div>
+                </div>
+              </div>
+
+              <!-- Preview -->
+              <div class="form-group">
+                <label class="form-label">Previsualización</label>
+                <div class="biz-np-preview-frame">
+                  <div class="logo-preview-box" id="logo-preview" style="background:#1B5E20;border-radius:8px;flex-shrink:0;">AB</div>
+                  <div class="biz-np-preview-hint">Si subes un logotipo, aparecer&#225; en la ficha de tu negocio.<br>Si no, se mostrar&#225;n tus iniciales sobre el color elegido.</div>
+                </div>
+              </div>
+
+            </div>
+
+            <button type="submit" class="btn-publish" style="background:#1a202c;border-radius:2px;letter-spacing:.04em;font-family:'Frank Ruhl Libre',Georgia,serif;font-size:1rem;">Publicar negocio</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+<!-- Modal: Business Detail -->
+<div class="modal-overlay" id="modal-biz" role="dialog" aria-modal="true" aria-label="Detalle del negocio">
+  <div class="modal-box">
+    <button class="modal-close" id="close-modal-biz" aria-label="Cerrar">&times;</button>
+    <div class="modal-header" id="modal-biz-header"></div>
+    <div class="modal-body"   id="modal-biz-body"></div>
+  </div>
+</div>
+
+<!-- Modal: Conectar -->
+<div class="modal-overlay" id="modal-conectar" role="dialog" aria-modal="true" aria-label="Solicitud de conexion">
+  <div class="modal-box">
+    <button class="modal-close" id="close-modal-conectar" aria-label="Cerrar">&times;</button>
+    <div class="modal-body">
+      <div class="modal-conectar-title" id="conectar-title">Solicitud de conexi&#243;n</div>
+      <div class="modal-conectar-sub"   id="conectar-sub">Pres&#233;ntate y explica qu&#233; te interesa.</div>
+      <textarea class="form-textarea" id="conectar-msg" placeholder="Pres&#233;ntate brevemente..." rows="5" style="width:100%;margin-top:4px;"></textarea>
+      <button class="btn-enviar-solicitud" id="btn-enviar-solicitud">Enviar solicitud</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal: Crop Logo -->
+<div class="modal-overlay" id="modal-crop" role="dialog" aria-modal="true" aria-label="Encuadrar logo">
+  <div class="modal-box" style="max-width:340px;padding:24px;">
+    <div style="font-weight:700;font-size:1.05rem;color:var(--color-primary);margin-bottom:6px;">Encuadrar logotipo</div>
+    <p style="font-size:.8125rem;color:#64748b;margin-bottom:14px;">Arrastra para reposicionar &middot; Rueda del rat&oacute;n o pellizca para hacer zoom</p>
+    <div id="crop-viewport" style="width:280px;height:280px;overflow:hidden;position:relative;margin:0 auto 16px;border-radius:10px;border:2.5px solid var(--color-primary);cursor:grab;touch-action:none;user-select:none;background:#f1f5f9;">
+      <img id="crop-img" alt="" style="position:absolute;transform-origin:0 0;pointer-events:none;max-width:none;">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button id="crop-cancel" type="button" style="flex:1;padding:10px;border:1.5px solid #cbd5e1;border-radius:8px;background:#fff;cursor:pointer;font-size:.875rem;font-weight:500;">Cancelar</button>
+      <button id="crop-confirm" type="button" style="flex:2;padding:10px;background:var(--color-primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.875rem;font-weight:600;">Confirmar recorte</button>
+    </div>
+  </div>
+</div>
+
+<script src="/vendor/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/media.js"></script>
+<script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+<script src="js/data.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ── Crop state ── */
+  var _croppedBizLogo = null;
+  var _cropRawDataUrl  = null;
+  var _cropNW = 0, _cropNH = 0;
+  var _cropX = 0, _cropY = 0, _cropScale = 1;
+  var _cropDragging = false, _cropLX = 0, _cropLY = 0;
+  var _cropLastDist = 0;
+  var CROP_VP = 280;
+
+  function _cropInit(dataUrl) {
+    _cropRawDataUrl = dataUrl;
+    var img = new Image();
+    img.onload = function () {
+      _cropNW = img.naturalWidth; _cropNH = img.naturalHeight;
+      _cropScale = Math.max(CROP_VP / _cropNW, CROP_VP / _cropNH);
+      _cropX = (CROP_VP - _cropNW * _cropScale) / 2;
+      _cropY = (CROP_VP - _cropNH * _cropScale) / 2;
+      document.getElementById('crop-img').src = dataUrl;
+      _cropRender();
+      document.getElementById('modal-crop').classList.add('open');
+    };
+    img.src = dataUrl;
+  }
+
+  function _cropRender() {
+    document.getElementById('crop-img').style.transform =
+      'translate(' + _cropX + 'px,' + _cropY + 'px) scale(' + _cropScale + ')';
+  }
+
+  function _cropClose() {
+    document.getElementById('modal-crop').classList.remove('open');
+  }
+
+  function _cropConfirm() {
+    var canvas = document.createElement('canvas');
+    canvas.width = 400; canvas.height = 400;
+    var ctx = canvas.getContext('2d');
+    var img = new Image();
+    img.onload = function () {
+      var srcX = -_cropX / _cropScale;
+      var srcY = -_cropY / _cropScale;
+      var srcW = CROP_VP / _cropScale;
+      var srcH = CROP_VP / _cropScale;
+      ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, 400, 400);
+      _croppedBizLogo = canvas.toDataURL('image/jpeg', 0.92);
+      document.getElementById('upload-img-biz').src = _croppedBizLogo;
+      document.getElementById('upload-ph-biz').style.display = 'none';
+      document.getElementById('upload-filled-biz').style.display = 'block';
+      _cropClose();
+    };
+    img.src = _cropRawDataUrl;
+  }
+
+  /* Crop viewport events */
+  (function () {
+    var vp = document.getElementById('crop-viewport');
+    if (!vp) return;
+
+    /* Mouse */
+    vp.addEventListener('mousedown', function (e) {
+      _cropDragging = true; _cropLX = e.clientX; _cropLY = e.clientY;
+      vp.style.cursor = 'grabbing'; e.preventDefault();
+    });
+    document.addEventListener('mousemove', function (e) {
+      if (!_cropDragging) return;
+      _cropX += e.clientX - _cropLX; _cropY += e.clientY - _cropLY;
+      _cropLX = e.clientX; _cropLY = e.clientY;
+      _cropRender();
+    });
+    document.addEventListener('mouseup', function () {
+      _cropDragging = false; vp.style.cursor = 'grab';
+    });
+
+    /* Wheel zoom (centered on cursor) */
+    vp.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      var rect = vp.getBoundingClientRect();
+      var px = e.clientX - rect.left;
+      var py = e.clientY - rect.top;
+      var delta = e.deltaY > 0 ? 0.9 : 1.1;
+      var newScale = Math.max(0.2, Math.min(10, _cropScale * delta));
+      _cropX = px - (px - _cropX) * (newScale / _cropScale);
+      _cropY = py - (py - _cropY) * (newScale / _cropScale);
+      _cropScale = newScale;
+      _cropRender();
+    }, { passive: false });
+
+    /* Touch drag + pinch */
+    vp.addEventListener('touchstart', function (e) {
+      if (e.touches.length === 1) {
+        _cropDragging = true;
+        _cropLX = e.touches[0].clientX; _cropLY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        _cropDragging = false;
+        _cropLastDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY);
+      }
+      e.preventDefault();
+    }, { passive: false });
+    vp.addEventListener('touchmove', function (e) {
+      if (e.touches.length === 1 && _cropDragging) {
+        _cropX += e.touches[0].clientX - _cropLX;
+        _cropY += e.touches[0].clientY - _cropLY;
+        _cropLX = e.touches[0].clientX; _cropLY = e.touches[0].clientY;
+        _cropRender();
+      } else if (e.touches.length === 2) {
+        var dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY);
+        var rect = vp.getBoundingClientRect();
+        var cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+        var cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+        var ratio = dist / (_cropLastDist || dist);
+        var newScale = Math.max(0.2, Math.min(10, _cropScale * ratio));
+        _cropX = cx - (cx - _cropX) * (newScale / _cropScale);
+        _cropY = cy - (cy - _cropY) * (newScale / _cropScale);
+        _cropScale = newScale;
+        _cropLastDist = dist;
+        _cropRender();
+      }
+      e.preventDefault();
+    }, { passive: false });
+    vp.addEventListener('touchend', function () { _cropDragging = false; });
+
+    /* Buttons */
+    document.getElementById('crop-confirm').addEventListener('click', _cropConfirm);
+    document.getElementById('crop-cancel').addEventListener('click', function () {
+      _cropClose();
+      var input = document.getElementById('file-biz'); if (input) input.value = '';
+    });
+  })();
+
+  /* ── Upload helpers ── */
+  function uploadAreaSetup(id) {
+    var area = document.getElementById('upload-area-' + id);
+    var input = document.getElementById('file-' + id);
+    if (!area || !input) return;
+    area.addEventListener('click', function() { input.click(); });
+    input.addEventListener('change', function() {
+      var file = input.files[0]; if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) { _cropInit(e.target.result); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function clearBizLogo() {
+    var input = document.getElementById('file-biz'); if (input) input.value = '';
+    var img = document.getElementById('upload-img-biz'); if (img) img.src = '';
+    _croppedBizLogo = null;
+    document.getElementById('upload-ph-biz').style.display = 'flex';
+    document.getElementById('upload-filled-biz').style.display = 'none';
+  }
+
+  function getBizLogo() { return _croppedBizLogo || null; }
+
+  requireAuth();
+  initNav('business');
+
+  /* ─── Constants ─── */
+  var DAYS = [
+    { key: 'lun', label: 'Lunes' },
+    { key: 'mar', label: 'Martes' },
+    { key: 'mie', label: 'Mi\u00e9rcoles' },
+    { key: 'jue', label: 'Jueves' },
+    { key: 'vie', label: 'Viernes' },
+    { key: 'sab', label: 'S\u00e1bado' },
+    { key: 'dom', label: 'Domingo' }
+  ];
+  var DAY_LABELS = { lun:'Lun', mar:'Mar', mie:'Mi\u00e9', jue:'Jue', vie:'Vie', sab:'S\u00e1b', dom:'Dom' };
+
+  /* ─── State ─── */
+  var selectedColor = '#1B5E20';
+  var formServices  = [];
+  uploadAreaSetup('biz');
+  var currentConectarNombre = '';
+  var editingBizId   = null;
+  var existingLogoUrl = null;
+  var currentUserId  = (getCurrentUser() || {}).userId || null;
+
+  /* ─── Helpers ─── */
+  function getInitials(name) {
+    if (!name || !name.trim()) return '??';
+    return name.trim().split(/\s+/).map(function (w) { return w[0] || ''; }).join('').slice(0, 2).toUpperCase();
+  }
+
+  function getHorarioSummary(horario) {
+    if (!horario) return 'Consultar horario';
+    var lun = horario.lun || '';
+    if (lun && lun !== 'Cerrado' && lun !== 'Flexible') return 'Lun\u2013Vie: ' + lun;
+    if (lun === 'Flexible') return 'Horario flexible';
+    return 'Consultar horario';
+  }
+
+  function tipoBadgeClass(tipo) {
+    var map = {
+      'Busco socio': 'tipo-socio',
+      'Busco inversor': 'tipo-inversor',
+      'Ofrezco mentor\u00eda': 'tipo-mentoria',
+      'Busco co-fundador': 'tipo-cofundador',
+      'Busco empleado': 'tipo-empleado'
+    };
+    return map[tipo] || 'tipo-socio';
+  }
+
+  /* ══════════════════════════════════
+     TABS
+  ══════════════════════════════════ */
+  var tabBtns   = document.querySelectorAll('.tab-btn');
+  var tabPanels = document.querySelectorAll('.tab-panel');
+
+  function activateTab(tabId) {
+    try {
+      tabBtns.forEach(function (b) {
+        b.classList.toggle('active', b.dataset.tab === tabId);
+        b.setAttribute('aria-selected', String(b.dataset.tab === tabId));
+      });
+      tabPanels.forEach(function (p) {
+        p.classList.toggle('active', p.id === tabId);
+      });
+    } catch (e) { console.error(e); }
+  }
+
+  try {
+    tabBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        try { activateTab(btn.dataset.tab); } catch (e) { console.error(e); }
+      });
+    });
+    document.getElementById('cta-publicar').addEventListener('click', function () {
+      try { activateTab('tab-publicar'); } catch (e) { console.error(e); }
+    });
+    document.getElementById('cta-colaborar').addEventListener('click', function () {
+      try { activateTab('tab-cowork'); } catch (e) { console.error(e); }
+    });
+  } catch (e) { console.error(e); }
+
+  /* ══════════════════════════════════
+     TAB 1 — DIRECTORIO
+  ══════════════════════════════════ */
+  var bizGrid    = document.getElementById('biz-grid');
+  var searchEl   = document.getElementById('biz-search');
+  var filterCat  = document.getElementById('filter-cat');
+  var filterCity = document.getElementById('filter-city');
+
+  function buildBizCard(b) {
+    var initials = getInitials(b.nombre);
+    var verif = b.verificado ? '<span class="badge-verificado">\u2713 Miembro verificado</span>' : '';
+    var tags  = (b.servicios || []).slice(0, 3).map(function (s) {
+      return '<span class="tag-pill">' + escHtml(s) + '</span>';
+    }).join('');
+    var logoUrl = b.logoImgSigned && /^https?:\/\//i.test(b.logoImgSigned) ? escHtml(b.logoImgSigned) : '';
+    return '<div class="biz-card" data-id="' + escHtml(b.id) + '">'
+      + '<div class="biz-card-header">'
+        + (logoUrl ? '<img src="' + logoUrl + '" class="biz-logo-img" alt="' + escHtml(b.nombre) + '" loading="lazy" decoding="async">' : '<div class="biz-logo" style="background:' + escHtml(b.color) + '">' + escHtml(initials) + '</div>')
+        + '<div class="biz-card-meta">'
+          + '<div class="biz-card-name">' + escHtml(b.nombre) + '</div>'
+          + '<div class="biz-card-owner">Por ' + escHtml(b.propietario) + '</div>'
+        + '</div>'
+      + '</div>'
+      + '<div class="biz-badges"><span class="badge-categoria">' + escHtml(b.categoria) + '</span>' + verif + '</div>'
+      + '<div class="biz-desc">' + escHtml(b.descripcion) + '</div>'
+      + '<div class="biz-horario">'
+        + '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>'
+        + escHtml(getHorarioSummary(b.horario))
+      + '</div>'
+      + '<div class="biz-location">'
+        + '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>'
+        + escHtml(b.ciudad) + (b.direccion ? ' \u00b7 ' + escHtml(b.direccion) : '')
+      + '</div>'
+      + (tags ? '<div class="biz-tags">' + tags + '</div>' : '')
+      + '<div class="biz-card-actions">'
+        + '<button class="btn-ver-mas" data-id="' + escHtml(b.id) + '">Ver m\u00e1s</button>'
+        + (b.usuario_id && b.usuario_id === currentUserId
+            ? '<button class="btn-editar-biz" data-id="' + escHtml(b.id) + '" style="background:#eff6ff;border:1.5px solid #bfdbfe;color:#1d4ed8;padding:8px 16px;border-radius:8px;font-size:.875rem;font-weight:600;cursor:pointer;">Editar</button>'
+            : '<button class="btn-contactar" data-id="' + escHtml(b.id) + '" data-tel="' + escHtml(b.telefono || '') + '">Contactar</button>')
+      + '</div>'
+    + '</div>';
+  }
+
+  function filterAndRender() {
+    try {
+      var q    = searchEl.value.toLowerCase().trim();
+      var cat  = filterCat.value;
+      var city = filterCity.value;
+      var list = (MOCK_BUSINESSES || []).filter(function (b) {
+        return (!q    || b.nombre.toLowerCase().includes(q) || b.descripcion.toLowerCase().includes(q) || b.propietario.toLowerCase().includes(q))
+            && (!cat  || b.categoria === cat)
+            && (!city || b.ciudad === city);
+      });
+      bizGrid.innerHTML = '';
+      if (!list.length) {
+        bizGrid.insertAdjacentHTML('afterbegin',
+          '<div class="no-results">'
+          + '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>'
+          + '<div>No se encontraron negocios con esos filtros.</div>'
+          + '</div>');
+        return;
+      }
+      bizGrid.insertAdjacentHTML('afterbegin', list.map(buildBizCard).join(''));
+    } catch (e) { console.error(e); }
+  }
+
+  try {
+    /* Cargar negocios de Supabase y mezclar con MOCK */
+    (async function () {
+      var sb = typeof getSupabase === 'function' ? getSupabase() : null;
+      if (sb) {
+        try {
+          var res = await sb.from('negocios').select('*').order('created_at', { ascending: false }).limit(100);
+          if (res.data && res.data.length && typeof resolveMediaFields === 'function') {
+            await resolveMediaFields(res.data, [{ bucket: 'negocios', field: 'logo_url' }]);
+          }
+          if (res.data && res.data.length) {
+            res.data.forEach(function (n) {
+              if (typeof MOCK_BUSINESSES !== 'undefined') {
+                MOCK_BUSINESSES.unshift({
+                  id: n.id, nombre: n.nombre, categoria: n.categoria,
+                  descripcion: n.descripcion || '', descripcionCorta: (n.descripcion || '').slice(0, 80),
+                  ciudad: n.ciudad || 'España', direccion: n.direccion || '',
+                  telefono: n.telefono || '', email: n.email || '', web: n.web || '',
+                  propietario: n.propietario || 'Comunidad',
+                  kosher: n.kosher || false, cierraShabat: n.cierra_shabat || false,
+                  verificado: n.verificado || false, color: '#1B2E5E', horario: {},
+                  logoImg: n.logo_url || null,
+                  logoImgSigned: n.logo_url_signed || null,
+                  usuario_id: n.usuario_id || null
+                });
+              }
+            });
+          }
+        } catch (err) { /* usa mock */ }
+      }
+      filterAndRender();
+    })();
+    searchEl.addEventListener('input',   function () { try { filterAndRender(); } catch (e) { console.error(e); } });
+    filterCat.addEventListener('change', function () { try { filterAndRender(); } catch (e) { console.error(e); } });
+    filterCity.addEventListener('change',function () { try { filterAndRender(); } catch (e) { console.error(e); } });
+  } catch (e) { console.error(e); }
+
+  /* ─── Business Detail Modal ─── */
+  var modalBiz        = document.getElementById('modal-biz');
+  var modalBizHeader  = document.getElementById('modal-biz-header');
+  var modalBizBody    = document.getElementById('modal-biz-body');
+
+  function openBizModal(id) {
+    try {
+      var b = (MOCK_BUSINESSES || []).find(function (x) { return x.id === id; });
+      if (!b) return;
+      var initials = getInitials(b.nombre);
+      var verif = b.verificado ? '<span class="badge-verificado">\u2713 Miembro verificado</span>' : '';
+
+      var servicesHTML = (b.servicios || []).map(function (s) {
+        return '<span class="modal-service-tag">' + escHtml(s) + '</span>';
+      }).join('');
+
+      var scheduleHTML = Object.keys(b.horario || {}).map(function (k) {
+        var label = DAY_LABELS[k] || k;
+        return '<div class="modal-schedule-item"><span class="modal-schedule-day">' + escHtml(label) + '</span><span class="modal-schedule-hrs">' + escHtml(b.horario[k]) + '</span></div>';
+      }).join('');
+
+      var sociosHTML = '';
+      if (b.buscaSocios && b.queBusca) {
+        sociosHTML = '<div class="modal-socios-banner">'
+          + '<div class="modal-socios-banner-title">Este negocio busca socios</div>'
+          + '<p>' + escHtml(b.queBusca) + '</p>'
+          + '<button class="btn-proponer" data-nombre="' + escHtml(b.nombre) + '">Proponer colaboraci\u00f3n</button>'
+          + '</div>';
+      }
+
+      var logoUrl = b.logoImgSigned && /^https?:\/\//i.test(b.logoImgSigned) ? escHtml(b.logoImgSigned) : '';
+      var logoHeaderHTML = logoUrl
+        ? '<img src="' + logoUrl + '" style="width:80px;height:80px;border-radius:12px;object-fit:contain;background:#f8fafc;border:1px solid #e2e8f0;flex-shrink:0;" alt="' + escHtml(b.nombre) + '">'
+        : '<div class="modal-biz-logo-large" style="background:' + escHtml(b.color) + '">' + escHtml(initials) + '</div>';
+      modalBizHeader.innerHTML = logoHeaderHTML
+        + '<div class="modal-biz-name">' + escHtml(b.nombre) + '</div>'
+        + '<div class="modal-biz-owner">Por ' + escHtml(b.propietario) + (b.a\u00f1oFundacion ? ' \u00b7 Fundado en ' + escHtml(b.a\u00f1oFundacion) : '') + '</div>'
+        + '<div class="biz-badges"><span class="badge-categoria">' + escHtml(b.categoria) + '</span>' + verif + '</div>';
+
+      var telDigits = (b.telefono || '').replace(/\D/g,'');
+      var webUrl = b.web ? escHtml(b.web.replace(/^https?:\/\//i, '')) : '';
+
+      modalBizBody.innerHTML = '<div class="modal-section-label">Descripci\u00f3n</div>'
+        + '<div class="modal-desc-full">' + escHtml(b.descripcion) + '</div>'
+        + (servicesHTML ? '<div class="modal-section-label">Servicios</div><div class="modal-services">' + servicesHTML + '</div>' : '')
+        + (scheduleHTML ? '<div class="modal-section-label">Horario</div><div class="modal-schedule-grid">' + scheduleHTML + '</div>' : '')
+        + '<div class="modal-section-label">Contacto</div>'
+        + (b.telefono ? '<div class="modal-contact-row"><a href="https://wa.me/' + encodeURIComponent(telDigits) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;padding:8px 16px;border-radius:8px;font-weight:600;font-size:.85rem;text-decoration:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.549 4.107 1.51 5.833L.057 23.18a.75.75 0 0 0 .93.899l5.49-1.437A11.935 11.935 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.73 9.73 0 0 1-4.95-1.35l-.355-.211-3.678.963.98-3.593-.231-.369A9.718 9.718 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>WhatsApp ' + escHtml(b.telefono) + '</a></div>' : '<div class="modal-contact-row" style="color:#94a3b8;">Teléfono no disponible</div>')
+        + (b.email ? '<div class="modal-contact-row"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg><a href="mailto:' + encodeURIComponent(b.email) + '">' + escHtml(b.email) + '</a></div>' : '')
+        + (webUrl ? '<div class="modal-contact-row"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253M3 12a8.959 8.959 0 0 0 .284 2.253"/></svg><a href="https://' + webUrl + '" target="_blank" rel="noopener">' + webUrl + '</a></div>' : '')
+        + (b.direccion ? '<div class="modal-section-label">Ubicaci\u00f3n</div><div class="modal-map-placeholder" style="font-size:.9rem;color:var(--color-text);">' + escHtml(b.direccion) + (b.ciudad ? ' · ' + escHtml(b.ciudad) : '') + '</div>' : '')
+        + sociosHTML;
+
+      modalBiz.classList.add('open');
+    } catch (e) { console.error(e); }
+  }
+
+  try {
+    document.getElementById('close-modal-biz').addEventListener('click', function () {
+      try { modalBiz.classList.remove('open'); } catch (e) { console.error(e); }
+    });
+    modalBiz.addEventListener('click', function (e) {
+      try { if (e.target === modalBiz) modalBiz.classList.remove('open'); } catch (e) { console.error(e); }
+    });
+
+    bizGrid.addEventListener('click', function (e) {
+      try {
+        var verBtn = e.target.closest('.btn-ver-mas');
+        if (verBtn) { openBizModal(verBtn.dataset.id); return; }
+        var conBtn = e.target.closest('.btn-contactar');
+        if (conBtn) {
+          var tel = (conBtn.dataset.tel || '').replace(/\D/g, '');
+          if (tel) { window.open('https://wa.me/' + tel, '_blank'); }
+          else { showToast('Contacto no disponible', 'info'); }
+        }
+        var editBtn = e.target.closest('.btn-editar-biz');
+        if (editBtn) { editBiz(editBtn.dataset.id); }
+      } catch (err) { console.error(err); }
+    });
+
+    modalBizBody.addEventListener('click', function (e) {
+      try {
+        var btn = e.target.closest('.btn-proponer');
+        if (btn) { modalBiz.classList.remove('open'); openConectarModal(btn.dataset.nombre); }
+      } catch (err) { console.error(err); }
+    });
+  } catch (e) { console.error(e); }
+
+  /* ══════════════════════════════════
+     TAB 2 — CO-WORK
+  ══════════════════════════════════ */
+  try {
+    var coworkGrid = document.getElementById('cowork-grid');
+
+    function buildCoworkCard(c) {
+      var initials = getInitials(c.nombre);
+      return '<div class="cowork-card">'
+        + '<div class="cowork-card-top">'
+          + '<div class="cowork-avatar" data-color="' + escHtml(c.color) + '">' + escHtml(initials) + '</div>'
+          + '<div class="cowork-name-wrap">'
+            + '<div class="cowork-name">' + escHtml(c.nombre) + '</div>'
+            + '<div class="cowork-prof">' + escHtml(c.profesion) + '</div>'
+          + '</div>'
+        + '</div>'
+        + '<span class="badge-tipo ' + tipoBadgeClass(c.tipo) + '">' + escHtml(c.tipo) + '</span>'
+        + '<div class="cowork-desc">' + escHtml(c.descripcion) + '</div>'
+        + '<div class="cowork-meta"><strong>' + escHtml(c.sector) + '</strong> \u00b7 ' + escHtml(c.experiencia) + ' a\u00f1os de experiencia</div>'
+        + '<button class="btn-conectar" data-nombre="' + escHtml(c.nombre) + '">Conectar</button>'
+      + '</div>';
+    }
+
+    coworkGrid.insertAdjacentHTML('afterbegin', (MOCK_COWORK || []).map(buildCoworkCard).join(''));
+
+    coworkGrid.addEventListener('click', function (e) {
+      try {
+        var btn = e.target.closest('.btn-conectar');
+        if (btn) openConectarModal(btn.dataset.nombre);
+      } catch (err) { console.error(err); }
+    });
+  } catch (e) { console.error(e); }
+
+  /* ─── Conectar Modal ─── */
+  var modalConectar      = document.getElementById('modal-conectar');
+  var conectarTitle      = document.getElementById('conectar-title');
+  var conectarSub        = document.getElementById('conectar-sub');
+  var conectarMsg        = document.getElementById('conectar-msg');
+  var btnEnviarSolicitud = document.getElementById('btn-enviar-solicitud');
+
+  function openConectarModal(nombre) {
+    try {
+      currentConectarNombre = nombre;
+      conectarTitle.textContent = 'Solicitud de conexi\u00f3n';
+      conectarSub.textContent = 'Env\u00eda un mensaje a ' + nombre + '. Pres\u00e9ntate y explica qu\u00e9 te interesa.';
+      conectarMsg.value = '';
+      modalConectar.classList.add('open');
+    } catch (e) { console.error(e); }
+  }
+
+  try {
+    document.getElementById('close-modal-conectar').addEventListener('click', function () {
+      try { modalConectar.classList.remove('open'); } catch (e) { console.error(e); }
+    });
+    modalConectar.addEventListener('click', function (e) {
+      try { if (e.target === modalConectar) modalConectar.classList.remove('open'); } catch (e) { console.error(e); }
+    });
+    btnEnviarSolicitud.addEventListener('click', function () {
+      try {
+        if (!conectarMsg.value.trim()) { showToast('Escribe un mensaje antes de enviar.', 'warning'); return; }
+        modalConectar.classList.remove('open');
+        showToast('Solicitud enviada. ' + currentConectarNombre + ' recibir\u00e1 tu mensaje.', 'success');
+      } catch (e) { console.error(e); }
+    });
+  } catch (e) { console.error(e); }
+
+  /* ══════════════════════════════════
+     TAB 3 — PUBLISH FORM
+  ══════════════════════════════════ */
+
+  /* Editar negocio existente — fuera del try para ser visible en strict mode */
+  function editBiz(id) {
+    var b = (MOCK_BUSINESSES || []).find(function (x) { return String(x.id) === String(id); });
+    if (!b) return;
+    editingBizId    = id;
+    existingLogoUrl = b.logoImg || null;
+
+    document.getElementById('f-nombre').value    = b.nombre || '';
+    document.getElementById('f-cat').value       = b.categoria || '';
+    document.getElementById('f-desc-full').value = b.descripcion || '';
+    document.getElementById('f-ciudad').value    = b.ciudad || '';
+    document.getElementById('f-dir').value       = b.direccion || '';
+    document.getElementById('f-tel').value       = b.telefono || '';
+    document.getElementById('f-email').value     = b.email || '';
+    document.getElementById('f-web').value       = b.web || '';
+
+    clearBizLogo();
+    if (b.logoImg) {
+      var img = document.getElementById('upload-img-biz');
+      img.src = b.logoImgSigned || b.logoImg;
+      document.getElementById('upload-ph-biz').style.display    = 'none';
+      document.getElementById('upload-filled-biz').style.display = 'block';
+    }
+
+    document.querySelector('#publish-form .btn-publish').textContent = 'Guardar cambios';
+    activateTab('tab-publicar');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast('Editando: ' + b.nombre, 'info');
+  }
+
+  try {
+    /* Char counter */
+    var descCortaInput = document.getElementById('f-desc-corta');
+    var charCounter    = document.getElementById('desc-corta-counter');
+    descCortaInput.addEventListener('input', function () {
+      try {
+        var l = descCortaInput.value.length;
+        charCounter.textContent = l + ' / 150';
+        charCounter.classList.toggle('over', l >= 140);
+      } catch (e) { console.error(e); }
+    });
+
+    /* Logo preview */
+    var logoPreview = document.getElementById('logo-preview');
+    document.getElementById('f-nombre').addEventListener('input', function () {
+      try { logoPreview.textContent = getInitials(this.value); } catch (e) { console.error(e); }
+    });
+
+    /* Color picker */
+    var colorCircles = document.querySelectorAll('.color-circle');
+    colorCircles.forEach(function (circle) {
+      circle.addEventListener('click', function () {
+        try {
+          colorCircles.forEach(function (c) { c.classList.remove('selected'); });
+          circle.classList.add('selected');
+          selectedColor = circle.dataset.colorVal;
+          logoPreview.style.background = selectedColor;
+        } catch (e) { console.error(e); }
+      });
+    });
+
+    /* Services */
+    var serviceInput    = document.getElementById('f-servicio-input');
+    var servicesPills   = document.getElementById('services-pills');
+    var servicesLimitEl = document.getElementById('services-limit-msg');
+
+    function renderFormServices() {
+      servicesPills.innerHTML = formServices.map(function (s, i) {
+        return '<div class="service-pill">' + s + '<button type="button" data-idx="' + i + '" aria-label="Eliminar">\u00d7</button></div>';
+      }).join('');
+      servicesLimitEl.style.display = formServices.length >= 10 ? '' : 'none';
+    }
+
+    function addService() {
+      var val = serviceInput.value.trim();
+      if (!val) return;
+      if (formServices.length >= 10) { showToast('M\u00e1ximo 10 servicios.', 'warning'); return; }
+      if (formServices.indexOf(val) !== -1) { showToast('Este servicio ya est\u00e1 a\u00f1adido.', 'warning'); return; }
+      formServices.push(val);
+      serviceInput.value = '';
+      renderFormServices();
+    }
+
+    document.getElementById('btn-add-service').addEventListener('click', function () {
+      try { addService(); } catch (e) { console.error(e); }
+    });
+    serviceInput.addEventListener('keydown', function (e) {
+      try { if (e.key === 'Enter') { e.preventDefault(); addService(); } } catch (err) { console.error(err); }
+    });
+    servicesPills.addEventListener('click', function (e) {
+      try {
+        var btn = e.target.closest('button');
+        if (btn && btn.dataset.idx !== undefined) {
+          formServices.splice(Number(btn.dataset.idx), 1);
+          renderFormServices();
+        }
+      } catch (err) { console.error(err); }
+    });
+
+    /* Schedule rows */
+    var scheduleRowsEl = document.getElementById('schedule-rows');
+    scheduleRowsEl.innerHTML = DAYS.map(function (d) {
+      return '<div class="schedule-row" data-day="' + d.key + '">'
+        + '<input type="checkbox" class="toggle-cb day-cb" id="day-' + d.key + '" data-day="' + d.key + '">'
+        + '<label class="toggle-label" for="day-' + d.key + '"></label>'
+        + '<span class="day-name">' + d.label + '</span>'
+        + '<div class="schedule-times" id="times-' + d.key + '" style="display:none">'
+          + '<input type="time" id="open-' + d.key + '" value="09:00">'
+          + '<span class="schedule-sep">a</span>'
+          + '<input type="time" id="close-' + d.key + '" value="18:00">'
+        + '</div>'
+        + '<span class="schedule-closed" id="closed-' + d.key + '">Cerrado</span>'
+      + '</div>';
+    }).join('');
+
+    scheduleRowsEl.addEventListener('change', function (e) {
+      try {
+        var cb = e.target.closest('.day-cb');
+        if (cb) {
+          var day = cb.dataset.day;
+          document.getElementById('times-'  + day).style.display  = cb.checked ? '' : 'none';
+          document.getElementById('closed-' + day).style.display = cb.checked ? 'none' : '';
+        }
+      } catch (err) { console.error(err); }
+    });
+
+    /* Socios toggle */
+    var toggleSociosEl = document.getElementById('toggle-socios');
+    var sociosSectionEl = document.getElementById('socios-section');
+    toggleSociosEl.addEventListener('change', function () {
+      try { sociosSectionEl.style.display = toggleSociosEl.checked ? '' : 'none'; } catch (e) { console.error(e); }
+    });
+
+    /* Submit — abre modal de pago */
+    var pendingBiz = null;
+    var pendingForm = null;
+
+    document.getElementById('publish-form').addEventListener('submit', async function (e) {
+      try {
+        e.preventDefault();
+        var nombre = document.getElementById('f-nombre').value.trim();
+        var cat    = document.getElementById('f-cat').value;
+        if (!nombre || !cat) { showToast('Completa el nombre y la categor\u00eda.', 'warning'); return; }
+
+        var descCortaVal = descCortaInput.value.trim() || 'Nuevo negocio en la comunidad.';
+        var descFull     = document.getElementById('f-desc-full').value.trim() || descCortaVal;
+
+        pendingBiz = {
+          id: 'biz-new-' + Date.now(),
+          nombre: nombre,
+          categoria: cat,
+          propietario: (typeof getCurrentUser === 'function' && getCurrentUser()) ? getCurrentUser().name : 'T\u00fa',
+          descripcion: descFull,
+          descripcionCorta: descCortaVal,
+          horario: {},
+          ciudad: document.getElementById('f-ciudad').value || 'Madrid',
+          direccion: document.getElementById('f-dir').value.trim() || '',
+          telefono: document.getElementById('f-tel').value.trim() || '',
+          email: document.getElementById('f-email').value.trim() || '',
+          web: document.getElementById('f-web').value.trim() || '',
+          servicios: formServices.slice(),
+          verificado: false,
+          buscaSocios: toggleSociosEl.checked,
+          queBusca: document.getElementById('f-socios-desc').value.trim() || '',
+          a\u00f1oFundacion: parseInt(document.getElementById('f-anio').value) || null,
+          color: selectedColor,
+          logoImg: getBizLogo() || null
+        };
+
+        DAYS.forEach(function (d) {
+          var cb = document.getElementById('day-' + d.key);
+          if (cb && cb.checked) {
+            var o  = (document.getElementById('open-'  + d.key) || {}).value || '09:00';
+            var cl = (document.getElementById('close-' + d.key) || {}).value || '18:00';
+            pendingBiz.horario[d.key] = o + '-' + cl;
+          } else {
+            pendingBiz.horario[d.key] = 'Cerrado';
+          }
+        });
+
+        pendingForm = e.target;
+
+        var submitBtn = document.querySelector('#publish-form .btn-publish');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Preparando…'; }
+
+        /* Subir logo a Supabase Storage si hay imagen */
+        var logoUrl = null;
+        var logoData = getBizLogo();
+        var sbUp = typeof getSupabase === 'function' ? getSupabase() : null;
+        if (logoData && sbUp) {
+          try {
+            var res = await fetch(logoData);
+            var blob = await res.blob();
+            var filename = 'negocio_' + Date.now() + '.jpg';
+            var upRes = await sbUp.storage.from('negocios').upload(filename, blob, { upsert: true, contentType: 'image/jpeg' });
+            if (!upRes.error && upRes.data) {
+              logoUrl = sbUp.storage.from('negocios').getPublicUrl(upRes.data.path).data?.publicUrl || null;
+            }
+          } catch (uploadErr) { console.error('[Logo upload]', uploadErr); }
+        }
+        pendingBiz.logoImg = logoUrl || (editingBizId ? existingLogoUrl : null);
+
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = editingBizId ? 'Guardar cambios' : 'Publicar negocio'; }
+
+        /* If editing an existing listing, check if already subscribed — skip payment */
+        if (editingBizId) {
+          await _saveBizToDb(pendingBiz, editingBizId, null);
+          return;
+        }
+
+        /* Publish directly — no payment required */
+        await _saveBizToDb(pendingBiz, null, null);
+
+      } catch (err) { console.error(err); }
+    });
+
+    async function _saveBizToDb(biz, bizId, stripeCustomerId) {
+      var sbDb = typeof getSupabase === 'function' ? getSupabase() : null;
+      var dbPayload = {
+        nombre: biz.nombre,
+        categoria: biz.categoria,
+        descripcion: biz.descripcion,
+        ciudad: biz.ciudad,
+        direccion: biz.direccion,
+        telefono: biz.telefono,
+        email: biz.email,
+        web: biz.web,
+        logo_url: biz.logoImg || null
+      };
+      if (stripeCustomerId) dbPayload.stripe_customer_id = stripeCustomerId;
+
+      if (sbDb) {
+        var dbOp = bizId
+          ? sbDb.from('negocios').update(dbPayload).eq('id', bizId)
+          : sbDb.from('negocios').insert(Object.assign({}, dbPayload, {
+              propietario: biz.propietario || null,
+              kosher: false, cierra_shabat: false, verificado: false,
+              usuario_id: currentUserId
+            }));
+        var { error: dbErr } = await dbOp;
+        if (dbErr) { showToast('Error al guardar: ' + dbErr.message, 'error'); return; }
+      }
+
+      if (bizId) {
+        var idx = (MOCK_BUSINESSES || []).findIndex(function (x) { return String(x.id) === String(bizId); });
+        if (idx !== -1) Object.assign(MOCK_BUSINESSES[idx], biz);
+      } else {
+        if (typeof MOCK_BUSINESSES !== 'undefined') MOCK_BUSINESSES.unshift(biz);
+      }
+      activateTab('tab-directorio');
+      searchEl.value = ''; filterCat.value = ''; filterCity.value = '';
+      filterAndRender();
+      var first = bizGrid.querySelector('.biz-card');
+      if (first) first.classList.add('new-card');
+      showToast(bizId ? '¡Negocio actualizado!' : '¡Negocio publicado!', 'success');
+      editingBizId = null; existingLogoUrl = null;
+
+      if (pendingForm) {
+        pendingForm.reset();
+        formServices.length = 0;
+        renderFormServices();
+        clearBizLogo();
+        logoPreview.textContent = 'AB';
+        logoPreview.style.background = '#1B5E20';
+        selectedColor = '#1B5E20';
+        colorCircles.forEach(function (c, i) { c.classList.toggle('selected', i === 0); });
+        charCounter.textContent = '0 / 150';
+        charCounter.classList.remove('over');
+        sociosSectionEl.style.display = 'none';
+      }
+      pendingBiz = null; pendingForm = null;
+    }
+
+  } catch (e) { console.error(e); }
+
+  /* ─── Keyboard: Escape closes modals ─── */
+  try {
+    document.addEventListener('keydown', function (e) {
+      try {
+        if (e.key === 'Escape') {
+          modalBiz.classList.remove('open');
+          modalConectar.classList.remove('open');
+        }
+      } catch (err) { console.error(err); }
+    });
+  } catch (e) { console.error(e); }
+
+})();
+</script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
+  </script>
+<div id="pt-ready" hidden></div>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Contacto</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: var(--color-bg); }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+    .page-inner { max-width: 900px; margin: 0 auto; padding: 32px 32px 80px; }
+    @media (max-width: 768px) { .page-inner { padding: 20px 16px 88px; } }
+
+    .page-header { margin-bottom: 32px; }
+    .page-header h1 { font-family: var(--font-brand); font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+    .page-header p { color: var(--color-text-muted); font-size: 0.95rem; }
+    .section-title { font-family: var(--font-brand); font-size: 1.2rem; font-weight: 700; color: var(--color-text); margin-bottom: 16px; margin-top: 40px; }
+    .section-title:first-of-type { margin-top: 0; }
+
+    /* Contacto directo */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .contact-grid { grid-template-columns: 1fr; } }
+    .contact-card { border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); }
+    .contact-card.phone { background: var(--color-primary); color: white; }
+    .contact-card.whatsapp { background: #1a5c38; color: white; }
+    .contact-card.email { background: white; border: 1px solid var(--color-border); color: var(--color-text); }
+    .contact-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .contact-card.phone .contact-icon { background: rgba(201,168,76,0.2); }
+    .contact-card.phone .contact-icon svg { color: var(--color-gold); }
+    .contact-card.whatsapp .contact-icon { background: rgba(255,255,255,0.15); }
+    .contact-card.whatsapp .contact-icon svg { color: #6EE7B7; }
+    .contact-card.email .contact-icon { background: var(--color-gold-light); }
+    .contact-card.email .contact-icon svg { color: var(--color-primary); }
+    .contact-icon svg { width: 24px; height: 24px; }
+    .contact-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; margin-bottom: 4px; }
+    .contact-main { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+    .contact-main a { color: inherit; text-decoration: none; }
+    .contact-main a:hover { text-decoration: underline; }
+    .contact-horario { font-size: 0.78rem; line-height: 1.6; opacity: 0.8; }
+    .btn-wa { display: inline-block; margin-top: 12px; padding: 8px 18px; background: white; color: #1a5c38; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 700; text-decoration: none; cursor: pointer; border: none; transition: opacity var(--transition-fast); }
+    .btn-wa:hover { opacity: 0.9; }
+
+    /* Redes sociales */
+    .redes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    @media (max-width: 700px) { .redes-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 400px) { .redes-grid { grid-template-columns: repeat(2, 1fr); } }
+    .red-card { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px 12px; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow var(--transition-fast); }
+    .red-card:hover { box-shadow: var(--shadow-md); }
+    .red-icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .red-name { font-size: 0.82rem; font-weight: 700; color: var(--color-text); margin-bottom: 4px; }
+    .red-desc { font-size: 0.7rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 10px; }
+    .btn-seguir { padding: 6px 14px; border: 1.5px solid var(--color-primary); border-radius: var(--radius-full); background: transparent; color: var(--color-primary); font-family: var(--font-ui); font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); }
+    .btn-seguir:hover { background: var(--color-primary); color: white; }
+
+    /* Ubicación */
+    .ubicacion-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 640px) { .ubicacion-grid { grid-template-columns: 1fr; } }
+    .ubicacion-info { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); }
+    .ubicacion-name { font-family: var(--font-brand); font-size: 1.15rem; font-weight: 700; color: var(--color-primary); margin-bottom: 4px; }
+    .ubicacion-dir { font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+    .horarios-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .horarios-table td { padding: 6px 0; font-size: 0.82rem; border-bottom: 1px solid var(--color-border-light); }
+    .horarios-table td:last-child { text-align: right; font-weight: 600; color: var(--color-primary); }
+    .horarios-table tr:last-child td { border-bottom: none; }
+    .btn-maps { width: 100%; padding: 10px; border: 1.5px solid var(--color-primary); border-radius: var(--radius-sm); background: transparent; color: var(--color-primary); font-family: var(--font-ui); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-maps:hover { background: var(--color-primary); color: white; }
+    .ubicacion-nota { font-size: 0.78rem; color: var(--color-text-muted); line-height: 1.6; }
+    .mapa-placeholder { background: var(--color-border); border-radius: var(--radius-md); height: 100%; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+    .mapa-placeholder svg { width: 36px; height: 36px; color: var(--color-danger); }
+    .mapa-placeholder span { font-size: 0.82rem; color: var(--color-text-muted); font-weight: 600; text-align: center; padding: 0 16px; }
+
+    /* Equipo */
+    .equipo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 700px) { .equipo-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 420px) { .equipo-grid { grid-template-columns: 1fr; } }
+    .equipo-card { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 20px 16px; text-align: center; box-shadow: var(--shadow-sm); }
+    .equipo-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-brand); font-size: 1rem; font-weight: 700; color: white; margin: 0 auto 12px; }
+    .equipo-avatar[data-color="0"] { background: #1B2E5E; }
+    .equipo-avatar[data-color="1"] { background: #2A6049; }
+    .equipo-avatar[data-color="2"] { background: #7B3F00; }
+    .equipo-avatar[data-color="3"] { background: #1A4A6E; }
+    .equipo-avatar[data-color="4"] { background: #4A1A6E; }
+    .equipo-avatar[data-color="5"] { background: #6E1A1A; }
+    .equipo-name { font-size: 0.9rem; font-weight: 700; color: var(--color-text); margin-bottom: 3px; }
+    .equipo-cargo { font-size: 0.75rem; font-weight: 600; color: var(--color-gold-dark); margin-bottom: 5px; }
+    .equipo-area { font-size: 0.72rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 8px; }
+    .equipo-email { font-size: 0.72rem; color: var(--color-primary); text-decoration: none; }
+    .equipo-email:hover { text-decoration: underline; }
+
+    /* FAQ */
+    .faq-list { display: flex; flex-direction: column; gap: 8px; }
+    .faq-item { background: white; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); }
+    .faq-question { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--color-text); gap: 12px; transition: background var(--transition-fast); user-select: none; }
+    .faq-question:hover { background: var(--color-bg); }
+    .faq-arrow { width: 20px; height: 20px; color: var(--color-text-muted); flex-shrink: 0; transition: transform var(--transition-fast); }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+    .faq-answer { display: none; padding: 0 20px 16px; font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.65; border-top: 1px solid var(--color-border); padding-top: 14px; }
+    .faq-item.open .faq-answer { display: block; }
+
+    /* Newsletter */
+    .newsletter-card { background: var(--color-primary); border-radius: var(--radius-lg); padding: 32px; text-align: center; color: white; }
+    .newsletter-icon { font-size: 2rem; margin-bottom: 12px; }
+    .newsletter-title { font-family: var(--font-brand); font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; }
+    .newsletter-desc { font-size: 0.875rem; opacity: 0.8; margin-bottom: 20px; }
+    .newsletter-form { display: flex; gap: 8px; max-width: 420px; margin: 0 auto; }
+    .newsletter-input { flex: 1; padding: 12px 16px; border: none; border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.875rem; color: var(--color-text); outline: none; }
+    .newsletter-btn { padding: 12px 20px; border: none; border-radius: var(--radius-sm); background: var(--color-gold); color: var(--color-primary-dark); font-family: var(--font-ui); font-size: 0.875rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: opacity var(--transition-fast); }
+    .newsletter-btn:hover { opacity: 0.9; }
+    @media (max-width: 480px) { .newsletter-form { flex-direction: column; } }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="page-inner">
+
+      <div class="page-header">
+        <h1>Contacto e Información</h1>
+        <p>Estamos aquí para ti</p>
+      </div>
+
+      <!-- Contacto directo -->
+      <div class="section-title">Contacto directo</div>
+      <div class="contact-grid">
+        <div class="contact-card phone">
+          <div class="contact-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/></svg></div>
+          <div class="contact-label">Secretaría</div>
+          <div class="contact-main"><a href="tel:{{contact.phoneDigits}}">{{contact.phone}}</a></div>
+          <div class="contact-horario">Lunes-Jueves: 09:00-18:00<br>Viernes: 09:00-14:00</div>
+        </div>
+        <div class="contact-card whatsapp">
+          <div class="contact-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/></svg></div>
+          <div class="contact-label">WhatsApp</div>
+          <div class="contact-main"><a href="https://wa.me/{{contact.whatsappDigits}}">{{contact.whatsapp}}</a></div>
+          <div class="contact-horario">Respuesta en menos de 2 horas en horario de oficina</div>
+          <button class="btn-wa" onclick="showToast('Abriendo WhatsApp...','info')">Abrir WhatsApp</button>
+        </div>
+        <div class="contact-card email">
+          <div class="contact-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg></div>
+          <div class="contact-label">Email</div>
+          <div class="contact-main"><a href="mailto:{{contact.email}}">{{contact.email}}</a></div>
+          <div class="contact-horario" style="color:var(--color-text-muted)">Respondemos en menos de 24h en días laborables</div>
+        </div>
+      </div>
+
+      <!-- Redes sociales -->
+      <div class="section-title">Redes sociales</div>
+      <div class="redes-grid">
+        <div class="red-card">
+          <div class="red-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"/></svg></div>
+          <div class="red-name">Instagram</div>
+          <div class="red-desc">{{social.instagram}}</div>
+          <button class="btn-seguir" onclick="showToast('¡Gracias! Abre la app para seguirnos','success')">Seguir</button>
+        </div>
+        <div class="red-card">
+          <div class="red-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg></div>
+          <div class="red-name">Facebook</div>
+          <div class="red-desc">{{social.facebook}}</div>
+          <button class="btn-seguir" onclick="showToast('¡Gracias! Abre la app para seguirnos','success')">Seguir</button>
+        </div>
+        <div class="red-card">
+          <div class="red-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg></div>
+          <div class="red-name">YouTube</div>
+          <div class="red-desc">Shiurim y eventos grabados</div>
+          <button class="btn-seguir" onclick="showToast('¡Gracias! Abre la app para seguirnos','success')">Seguir</button>
+        </div>
+        <div class="red-card">
+          <div class="red-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:20px;height:20px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/></svg></div>
+          <div class="red-name">Telegram</div>
+          <div class="red-desc">Noticias y avisos urgentes</div>
+          <button class="btn-seguir" onclick="showToast('¡Gracias! Abre la app para seguirnos','success')">Seguir</button>
+        </div>
+        <div class="red-card">
+          <div class="red-icon">𝕏</div>
+          <div class="red-name">Twitter / X</div>
+          <div class="red-desc">Noticias y actualidad judía</div>
+          <button class="btn-seguir" onclick="showToast('¡Gracias! Abre la app para seguirnos','success')">Seguir</button>
+        </div>
+      </div>
+
+      <!-- Ubicación -->
+      <div class="section-title">Ubicación y sinagoga</div>
+      <div class="ubicacion-grid">
+        <div class="ubicacion-info">
+          <div class="ubicacion-name">Sinagoga {{centerName}}</div>
+          <div class="ubicacion-dir">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+            {{contact.address}}
+          </div>
+          <table class="horarios-table">
+            <tr><td>Shajarit (Lun–Vie)</td><td>07:30</td></tr>
+            <tr><td>Shajarit (Domingo/Festivos)</td><td>08:30</td></tr>
+            <tr><td>Shajarit (Shabat)</td><td>09:30 con Kidush</td></tr>
+            <tr><td>Minjá + Arvit</td><td>20:00</td></tr>
+            <tr><td>Kabalat Shabat</td><td>30' antes del ocaso</td></tr>
+          </table>
+          <button class="btn-maps" onclick="showToast('Abriendo Google Maps...','info')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+            Cómo llegar
+          </button>
+          <div class="ubicacion-nota">
+            <strong>{{centerName}}:</strong> {{contact.address}}
+          </div>
+        </div>
+        <div class="mapa-placeholder">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+          <span>{{contact.address}}<br><small style="opacity:0.6">Mapa interactivo en versión completa</small></span>
+        </div>
+      </div>
+
+      <!-- Equipo -->
+      <div class="section-title">Equipo rabínico y directivo</div>
+      <div class="equipo-grid" id="equipoGrid"></div>
+
+      <!-- FAQ -->
+      <div class="section-title">Preguntas frecuentes</div>
+      <div class="faq-list" id="faqList"></div>
+
+      <!-- Newsletter -->
+      <div style="margin-top:40px">
+        <div class="newsletter-card">
+          <div class="newsletter-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:24px;height:24px;display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg></div>
+          <div class="newsletter-title">Boletín semanal</div>
+          <div class="newsletter-desc">Recibe la parashá, zmanim, eventos y noticias de la comunidad cada viernes</div>
+          <div class="newsletter-form">
+            <input type="email" class="newsletter-input" id="newsletterEmail" placeholder="tu@email.com">
+            <button class="newsletter-btn" onclick="suscribirse()">Suscribirme</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <script src="js/auth.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+  <script>
+    const EQUIPO = ((window.COMMUNITY && window.COMMUNITY.team) || []).map(m => ({
+      nombre: m.name, cargo: m.role, area: m.area,
+      email: m.email || (window.COMMUNITY && window.COMMUNITY.contact.email) || '', color: m.color
+    }));
+
+    const FAQ = [
+      { q:'¿Cómo me hago miembro de la comunidad?', a:'Para hacerte miembro, completa el formulario de registro en la plataforma o visítanos en la secretaría. El proceso incluye una breve entrevista con el Rabino y la aprobación de la Junta. El plazo habitual es de 1-2 semanas.' },
+      { q:'¿Cuánto cuesta la membresía anual?', a:'La cuota anual es de €{{membership.family}} para familias, €{{membership.individual}} para individuos y €{{membership.student}} para estudiantes y personas en situación especial. Nadie es excluido por razones económicas — consulta en privado si necesitas un ajuste.' },
+      { q:'¿Los eventos son solo para miembros?', a:'La mayoría de eventos comunitarios están abiertos a todos. Algunos eventos especiales, como las cenas de Shabat privadas, tienen prioridad para miembros pero también aceptan visitantes con reserva previa.' },
+      { q:'¿Tenéis servicio para visitantes y turistas?', a:'Sí. Los visitantes judíos son siempre bienvenidos a nuestros servicios de tefila y a los eventos abiertos. Contacta con secretaría para orientación específica sobre tu visita.' },
+      { q:'¿Cómo puedo hacer una donación?', a:'Puedes donar directamente desde la sección "Donativos" de la plataforma, donde encontrarás nuestras campañas activas. También aceptamos transferencia bancaria y donaciones en efectivo en secretaría.' },
+      { q:'¿Dónde puedo encontrar horarios de Shabat?', a:'Los horarios exactos de Shabat (encendido de velas, Kabalat Shabat, Arvit, Shajarit, Minjá y Havdalá) los encontrarás en la sección "Servicios" de la plataforma, actualizados semanalmente.' },
+      { q:'¿Cómo puedo colaborar como voluntario?', a:'En la sección "Voluntariado" de la plataforma encontrarás todas las oportunidades activas. Si tienes una habilidad específica que ofrecer, también puedes contactar directamente con la secretaría.' }
+    ];
+
+    function renderEquipo() {
+      document.getElementById('equipoGrid').innerHTML = EQUIPO.map(m => `
+        <div class="equipo-card">
+          <div class="equipo-avatar" data-color="${m.color}">${m.nombre.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div class="equipo-name">${m.nombre}</div>
+          <div class="equipo-cargo">${m.cargo}</div>
+          <div class="equipo-area">${m.area}</div>
+          ${m.email ? `<a class="equipo-email" href="mailto:${m.email}">${m.email}</a>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function renderFAQ() {
+      document.getElementById('faqList').innerHTML = FAQ.map((f,i) => `
+        <div class="faq-item" id="faq-${i}">
+          <div class="faq-question" onclick="toggleFAQ(${i})">
+            <span>${f.q}</span>
+            <svg class="faq-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+          </div>
+          <div class="faq-answer">${f.a}</div>
+        </div>
+      `).join('');
+    }
+
+    function toggleFAQ(i) {
+      const item = document.getElementById('faq-' + i);
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    }
+
+    function suscribirse() {
+      const email = document.getElementById('newsletterEmail').value.trim();
+      if (!email || !email.includes('@')) { showToast('Introduce un email válido', 'error'); return; }
+      document.getElementById('newsletterEmail').value = '';
+      showToast('¡Suscripción confirmada! Revisa tu email para confirmar.', 'success');
+    }
+
+    initNav('contacto');
+    renderEquipo();
+    renderFAQ();
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
+  </script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "comunidad-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plantilla de app para comunidades judías: un fichero de configuración por comunidad, una app por configuración.",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "build:all": "node tools/build.mjs --all",
+    "dev": "node tools/serve.mjs",
+    "new": "node tools/new-community.mjs",
+    "schema": "node tools/build.mjs --schema",
+    "check": "node tools/check.mjs"
+  }
+}

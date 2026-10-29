@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Donativos</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="/vendor/cropper-1.5.13.min.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: #FBF5E6; }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+    .don-inner { max-width: 920px; margin: 0 auto; padding: 32px 28px 80px; position: relative; z-index: 1; }
+    @media (max-width: 768px) { .don-inner { padding: 20px 14px 96px; } }
+    .don-heb-bg { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+    .don-heb-bg span { position: absolute; font-family: var(--font-brand); color: #B8820A; user-select: none; white-space: nowrap; }
+
+    /* Hero */
+    .don-hero {
+      border-radius: 0; overflow: hidden; margin-bottom: 36px;
+      position: relative; display: flex; align-items: flex-end;
+    }
+    .don-hero.has-photo { border-radius: 16px; min-height: 300px; }
+    /* Hero photo grid */
+    .don-hero-photos { position: absolute; inset: 0; display: grid; gap: 2px; }
+    .hero-ph-slot { position: relative; overflow: hidden; }
+    .hero-ph-slot img { width:100%; height:100%; object-fit:cover; display:block; }
+    .hero-ph-bg { display: none; }
+    /* Layouts */
+    .don-hero-photos[data-layout="1"] { grid-template-columns: 1fr; }
+    .don-hero-photos[data-layout="2"] { grid-template-columns: 1fr 1fr; }
+    .don-hero-photos[data-layout="3"] { grid-template-columns: 3fr 2fr; grid-template-rows: 1fr 1fr; }
+    .don-hero-photos[data-layout="3"] .hero-ph-slot:first-child { grid-row: 1 / 3; }
+    .don-hero-photos[data-layout="4"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .don-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,25,60,.88) 0%, rgba(10,25,60,.2) 60%, transparent 100%); display: none; }
+    .don-hero.has-photo .don-hero-overlay { display: block; }
+    /* Body */
+    .don-hero-body { position: relative; z-index: 2; padding: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .don-hero.has-photo .don-hero-body { padding: 32px 36px 30px; }
+    /* Title — sin foto: editorial oscuro */
+    .don-hero-sup {
+      font-family: var(--font-brand); font-size: 2.6rem; font-weight: 900;
+      color: #B8820A; letter-spacing: normal; text-transform: none;
+      margin-bottom: 12px; display: block; line-height: 1.1; text-align: center;
+      background: #FBF5E6; position: relative; z-index: 2; padding: 0 8px;
+    }
+    .don-hero-sup::before {
+      content: ''; display: block; width: 32px; height: 3px;
+      background: #C8791A; border-radius: 2px; margin: 0 auto 16px;
+    }
+    .don-hero.has-photo .don-hero-sup { color: #fff; text-align: left; }
+    .don-hero.has-photo .don-hero-sup::before { margin-left: 0; }
+    .don-hero-title { display: none; }
+    .don-hero-text { font-size: .97rem; color: #5A6270; line-height: 2.6; text-align: center; display: inline; border: 1.5px solid #D4A833; border-radius: 6px; padding: 5px 12px; box-decoration-break: clone; -webkit-box-decoration-break: clone; background: #FBF5E6; }
+    .don-hero.has-photo .don-hero-text { color: rgba(255,255,255,.85); font-size: 1.05rem; text-align: left; }
+    /* Cambiar foto btn */
+    .btn-change-photo {
+      position: absolute; top: 12px; right: 12px; z-index: 3;
+      background: rgba(255,255,255,.18); backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,255,255,.3); color: #fff; border-radius: 999px;
+      padding: 6px 14px; font-size: .72rem; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all .15s;
+    }
+    .don-hero:not(.has-photo) .btn-change-photo {
+      background: rgba(0,0,0,.05); border-color: rgba(0,0,0,.12); color: #4A5568;
+    }
+    .btn-change-photo:hover { background: rgba(255,255,255,.28); }
+    .btn-change-photo svg { width: 13px; height: 13px; }
+    @media (max-width: 600px) {
+      .don-hero.has-photo .don-hero-body { padding: 24px 20px 22px; }
+    }
+
+
+    /* Section header */
+    .don-sh { margin-bottom: 20px; background: #FBF5E6; position: relative; z-index: 2; padding: 4px 0; }
+    .don-sh-sup { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #B8620E; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .don-sh-sup::before { content: ''; width: 12px; height: 2px; background: #B8620E; border-radius: 1px; }
+    .don-sh-title { font-family: var(--font-brand); font-size: 1.45rem; font-weight: 800; color: #B8820A; }
+    .don-sh-sub { font-size: .85rem; color: var(--color-text-muted); margin-top: 3px; }
+
+    /* Areas grid - 3 columnas */
+    .areas-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-bottom: 40px; }
+    @media (max-width: 860px) { .areas-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 540px) {
+      .areas-grid {
+        display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 14px;
+        padding: 4px 0 16px; scrollbar-width: none; scroll-snap-type: x mandatory;
+        margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px;
+      }
+      .areas-grid::-webkit-scrollbar { display: none; }
+      .areas-grid .area-card { flex: 0 0 78vw; scroll-snap-align: start; }
+    }
+
+    /* Historial Tzedaka */
+    .tzedaka-block {
+      background: #fff; border-radius: 14px;
+      border-left: 4px solid #C8791A;
+      padding: 20px 22px; margin-bottom: 36px;
+      box-shadow: 0 1px 10px rgba(27,46,94,.07);
+    }
+    .tzedaka-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .tzedaka-title { font-size: .8rem; font-weight: 700; color: #1B2E5E; display: flex; align-items: center; gap: 7px; }
+    .tzedaka-title svg { width: 15px; height: 15px; color: #C8791A; }
+    .tzedaka-total { font-family: var(--font-brand); font-size: 1.1rem; font-weight: 900; color: #C8791A; }
+    .tzedaka-list { display: flex; flex-direction: column; gap: 7px; }
+    .tzedaka-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #F1F5F9; font-size: .8rem; }
+    .tzedaka-row:last-child { border-bottom: none; }
+    .tzedaka-area { color: var(--color-text-muted); }
+    .tzedaka-fecha { font-size: .72rem; color: var(--color-text-light); }
+    .tzedaka-amt { font-weight: 700; color: #1B2E5E; }
+    .tzedaka-rec { font-size: .65rem; background: #FEF7E8; color: #B8620E; padding: 1px 6px; border-radius: 999px; font-weight: 600; }
+    .tzedaka-empty { font-size: .82rem; color: var(--color-text-muted); text-align: center; padding: 8px 0; }
+
+    .area-card {
+      background: #fff; border-radius: 14px;
+      box-shadow: 0 1px 12px rgba(27,46,94,.08);
+      overflow: hidden; display: flex; flex-direction: column;
+      transition: box-shadow .2s, transform .2s; position: relative;
+      cursor: pointer;
+    }
+    .area-card:hover { box-shadow: 0 6px 24px rgba(27,46,94,.13); transform: translateY(-2px); }
+
+    .area-photo { position: relative; }
+    .area-photo img { width: 100%; height: 170px; object-fit: cover; display: block; }
+    .area-photo-ph {
+      width: 100%; height: 170px;
+      display: flex; align-items: center; justify-content: center; font-size: 2rem;
+      opacity: .55;
+    }
+    .area-photo-ph.educativo { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+    .area-photo-ph.religioso { background: linear-gradient(135deg, #EDE9FE, #C4B5FD); }
+    .area-photo-ph.social    { background: linear-gradient(135deg, #E0F2FE, #BAE6FD); }
+    .area-photo-ph.chai      { background: linear-gradient(135deg, #FEF9C3, #FDE68A); }
+    .area-photo-ph.israel    { background: linear-gradient(135deg, #DBEAFE, #93C5FD); }
+
+    /* Boton editar foto — solo admin */
+    .btn-edit-area {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(255,255,255,.95); border: 1.5px solid #E2E8F0;
+      border-radius: 8px; padding: 5px 10px;
+      font-size: .7rem; font-weight: 700; color: #1B2E5E;
+      cursor: pointer; display: flex; align-items: center; gap: 5px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.1); transition: border-color .15s;
+    }
+    .btn-edit-area svg { width: 12px; height: 12px; }
+    .btn-edit-area:hover { border-color: #C8791A; color: #C8791A; }
+
+    .area-card-header { padding: 14px 14px 6px; display: flex; align-items: center; justify-content: space-between; }
+    .area-badge { font-size: .68rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
+    .area-badge.educativo { background: #FEF3DC; color: #A06010; }
+    .area-badge.religioso { background: #FEF3DC; color: #A06010; }
+    .area-badge.social    { background: #FEF3DC; color: #A06010; }
+    .area-badge.chai      { background: #FEF7E8; color: #B8620E; }
+    .area-badge.israel    { background: #DBEAFE; color: #1D4ED8; }
+
+    .area-card-body { padding: 4px 14px 12px; flex: 1; }
+    .area-title { font-size: 1rem; font-weight: 600; color: #B8820A; margin-bottom: 6px; }
+    .area-desc { font-size: .9rem; color: var(--color-text-muted); line-height: 1.65; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .chai-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .chai-pill { padding: 2px 9px; border-radius: 999px; border: 1.5px solid rgba(200,121,26,.25); background: #FEF7E8; font-size: .7rem; font-weight: 700; color: #B8620E; }
+
+    .area-card-footer { padding: 10px 14px 14px; border-top: 1px solid #F1F5F9; display: flex; align-items: center; justify-content: space-between; }
+    .area-meta { font-size: .72rem; color: var(--color-text-muted); }
+
+    .btn-donar {
+      background: #1B2E5E; color: #fff; border: none; border-radius: 999px;
+      padding: 7px 18px; font-size: .8rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 5px;
+      transition: background .15s; font-family: inherit;
+    }
+    .btn-donar:hover { background: #243d7a; }
+    .btn-donar svg { width: 13px; height: 13px; }
+    .btn-donar.chai { background: #C8791A; }
+    .btn-donar.chai:hover { background: #A8650F; }
+
+    /* Chai Club banner */
+    .chai-banner {
+      background: linear-gradient(135deg, #FFFDF5 0%, #FFF8E7 50%, #FEF0CC 100%);
+      border: 1.5px solid #E8D298; border-radius: 16px; padding: 40px 44px;
+      display: grid; grid-template-columns: 2fr 1fr; gap: 32px; align-items: center;
+      box-shadow: 0 4px 24px rgba(180,120,0,.08); overflow: hidden;
+    }
+    .chai-banner-sup { font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #B07010; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .chai-banner-sup::before { content: ''; width: 12px; height: 2px; background: #C8791A; border-radius: 1px; }
+    .chai-banner-title { font-family: var(--font-brand); font-size: 1.6rem; font-weight: 900; color: #8B5500; margin-bottom: 10px; }
+    .chai-banner-title span { color: #C8791A; }
+    .chai-banner-desc { font-size: .875rem; color: #6B4A10; line-height: 1.65; margin-bottom: 20px; }
+    .chai-banner-desc strong { color: #8B5500; }
+    .chai-amounts { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+    .chai-btn-amt {
+      padding: 6px 14px; border-radius: 999px;
+      border: 1.5px solid #D4A020; background: #FFF8E7;
+      font-size: .8rem; font-weight: 700; color: #8B5500;
+      cursor: pointer; transition: all .15s; font-family: inherit;
+    }
+    .chai-btn-amt:hover, .chai-btn-amt.sel { background: #C8791A; border-color: #C8791A; color: #fff; }
+    .chai-otro-input {
+      width: 100%; max-width: 200px; padding: 7px 14px; border-radius: 999px;
+      border: 1.5px solid #D4A020; background: #FFF8E7;
+      font-size: .85rem; font-weight: 700; color: #8B5500; font-family: inherit;
+      outline: none; margin-bottom: 16px; display: block;
+    }
+    .chai-otro-input:focus { border-color: #C8791A; }
+    .chai-otro-input::placeholder { color: #C4A060; font-weight: 400; }
+    .btn-join-chai {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #D4920E, #A86010); color: #fff; border: none; border-radius: 999px;
+      padding: 11px 26px; font-size: .875rem; font-weight: 800;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+      box-shadow: 0 3px 12px rgba(180,100,0,.3);
+    }
+    .btn-join-chai:hover { background: linear-gradient(135deg, #E8A020, #B87020); box-shadow: 0 4px 16px rgba(180,100,0,.4); }
+    .btn-join-chai svg { width: 15px; height: 15px; }
+    .chai-pendant-wrap { margin: -40px -44px -40px 0; align-self: stretch; overflow: hidden; }
+    .chai-pendant-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    @media (max-width: 600px) {
+      .chai-banner { grid-template-columns: 1fr; padding: 28px 22px 0; position: static; }
+      .chai-pendant-wrap { position: static; width: calc(100% + 44px); height: 220px; margin: 24px -22px 0; border-radius: 0 0 14px 14px; overflow: hidden; }
+      .chai-pendant-img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+    }
+
+    /* Modal hero foto */
+    .modal-overlay-hero { position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:350;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto; }
+    .modal-overlay-hero.hidden { display:none; }
+    .modal-hero { background:#1B2E5E;border-radius:20px;width:100%;max-width:500px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);margin:auto; }
+    .modal-hero-hdr { display:flex;justify-content:flex-end;padding:14px 18px 0; }
+    .modal-hero-close { background:rgba(255,255,255,.08);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55); }
+    .modal-hero-close:hover { background:rgba(255,255,255,.14);color:#fff; }
+    .modal-hero-top { padding:4px 26px 16px; }
+    .modal-hero-sup { font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#E8971F;display:flex;align-items:center;gap:6px;margin-bottom:7px; }
+    .modal-hero-sup::before { content:'';width:12px;height:2px;background:#E8971F;border-radius:1px; }
+    .modal-hero-title { font-family:var(--font-brand);font-size:1.25rem;font-weight:900;color:#fff;margin-bottom:3px; }
+    .modal-hero-sub { font-size:.78rem;color:rgba(255,255,255,.45); }
+    .modal-hero-body { padding:0 26px 24px;display:flex;flex-direction:column;gap:16px; }
+    /* Layout selector */
+    .hero-layout-bar { display:grid;grid-template-columns:repeat(4,1fr);gap:7px; }
+    .hero-lo-btn { border:1.5px solid rgba(255,255,255,.13);background:transparent;border-radius:10px;padding:10px 5px 8px;cursor:pointer;color:rgba(255,255,255,.45);font-size:.6rem;font-weight:700;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:7px;transition:all .15s;text-transform:uppercase;letter-spacing:.04em; }
+    .hero-lo-btn.sel { border-color:#E8971F;background:rgba(232,151,31,.1);color:#E8971F; }
+    .hero-lo-icon { width:40px;height:26px;border-radius:3px;overflow:hidden;display:grid;gap:1px;background:rgba(0,0,0,.25); }
+    .hero-lo-icon span { background:rgba(255,255,255,.2);border-radius:1px;display:block; }
+    .hero-lo-btn.sel .hero-lo-icon span { background:rgba(232,151,31,.5); }
+    .lo2 { grid-template-columns:1fr 1fr; }
+    .lo3 { grid-template-columns:3fr 2fr;grid-template-rows:1fr 1fr; }
+    .lo3 span:first-child { grid-row:1/3; }
+    .lo4 { grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr; }
+    /* Slots */
+    .hero-slots-grid { display:grid;gap:7px; }
+    .hero-slots-grid[data-layout="1"] { grid-template-columns:1fr; }
+    .hero-slots-grid[data-layout="2"] { grid-template-columns:1fr 1fr; }
+    .hero-slots-grid[data-layout="3"] { grid-template-columns:3fr 2fr;grid-template-rows:auto auto; }
+    .hero-slots-grid[data-layout="3"] .hero-slot:first-child { grid-row:1/3; }
+    .hero-slots-grid[data-layout="4"] { grid-template-columns:1fr 1fr; }
+    .hero-slot { border:1.5px dashed rgba(255,255,255,.16);border-radius:10px;overflow:hidden;cursor:pointer;position:relative;min-height:80px;display:flex;align-items:center;justify-content:center;transition:border-color .15s;background:rgba(0,0,0,.2); }
+    .hero-slot:hover { border-color:rgba(232,151,31,.5); }
+    .hero-slot img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0; }
+    .hero-slot-ph { display:flex;flex-direction:column;align-items:center;gap:4px;color:rgba(255,255,255,.35);font-size:.67rem;z-index:1; }
+    .hero-slot-ph svg { width:20px;height:20px; }
+    .hero-slot-del { position:absolute;top:5px;right:5px;z-index:5;background:rgba(0,0,0,.55);border:none;border-radius:6px;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px; }
+    /* Actions */
+    .hero-actions { display:flex;gap:8px; }
+    .btn-remove-hero { flex:1;padding:10px;border-radius:10px;border:1.5px solid rgba(255,255,255,.14);background:transparent;color:rgba(255,255,255,.5);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s; }
+    .btn-remove-hero:hover { border-color:rgba(255,255,255,.3);color:#fff; }
+    .btn-save-hero { flex:2;padding:10px;border-radius:10px;border:none;background:#C8791A;color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s; }
+    .btn-save-hero:hover { background:#A8650F; }
+    .btn-save-hero:disabled { opacity:.4;cursor:not-allowed; }
+
+    /* Modal donativo */
+    .modal-overlay-don { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px; }
+    .modal-overlay-don.hidden { display:none; }
+    .modal-don { background:#fff;border-radius:18px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 16px 50px rgba(0,0,0,.18); }
+    .modal-don-hdr { padding:22px 22px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:10px; }
+    .modal-don-tag { font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:3px 9px;border-radius:999px;display:inline-block;margin-bottom:4px; }
+    .modal-don-title { font-family:var(--font-brand);font-size:1.25rem;font-weight:800;color:#1B2E5E; }
+    .modal-don-close { background:none;border:none;cursor:pointer;padding:4px;color:var(--color-text-muted);border-radius:8px; }
+    .modal-don-close:hover { background:#F1F5F9; }
+    .modal-don-body { padding:18px 22px; }
+    .modal-don-img { width:100%;height:auto;max-height:260px;object-fit:contain;background:#f8fafc;border-radius:10px;margin-bottom:14px;display:block; }
+    .modal-don-desc { font-size:.85rem;color:var(--color-text-muted);line-height:1.65;margin-bottom:18px; }
+    .amnt-label { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted);margin-bottom:8px; }
+    .amnt-chips { display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px; }
+    .amnt-chip { padding:7px 18px;border-radius:999px;border:2px solid #E2E8F0;background:#F8FAFC;font-size:.85rem;font-weight:700;color:#1B2E5E;cursor:pointer;transition:all .15s;font-family:inherit; }
+    .amnt-chip:hover { border-color:#C8791A;color:#C8791A; }
+    .amnt-chip.sel { border-color:#C8791A;background:#C8791A;color:#fff; }
+    .amnt-custom { display:flex;align-items:center;gap:8px;border:1.5px solid #E2E8F0;border-radius:10px;padding:9px 13px;margin-bottom:14px;transition:border-color .15s; }
+    .amnt-custom:focus-within { border-color:#C8791A; }
+    .amnt-custom input { flex:1;border:none;outline:none;font-size:.95rem;font-weight:600;color:#1B2E5E;font-family:inherit;background:none; }
+    .rec-row { display:flex;gap:7px;margin-bottom:14px; }
+    .rec-btn { flex:1;padding:8px;border-radius:9px;border:1.5px solid #E2E8F0;background:#F8FAFC;font-size:.8rem;font-weight:600;color:var(--color-text-muted);cursor:pointer;font-family:inherit;transition:all .15s; }
+    .rec-btn.active { border-color:#1B2E5E;background:#1B2E5E;color:#fff; }
+    .ded-group { display:flex;flex-direction:column;gap:4px; }
+    .ded-group label { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-muted); }
+    .ded-group input { border:1.5px solid #E2E8F0;border-radius:8px;padding:8px 12px;font-size:.875rem;font-family:inherit;outline:none;transition:border-color .15s; }
+    .ded-group input:focus { border-color:#C8791A; }
+    .modal-don-ftr { padding:14px 22px;border-top:1px solid #F1F5F9;display:flex;gap:8px;justify-content:flex-end; }
+    .btn-confirm-don { background:#1B2E5E;color:#fff;border:none;border-radius:999px;padding:11px 26px;font-size:.875rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s; }
+    .btn-confirm-don:hover:not(:disabled) { background:#243d7a; }
+    .btn-confirm-don:disabled { opacity:.4;cursor:not-allowed; }
+    .btn-confirm-don.chai-s { background:#C8791A; }
+    .btn-confirm-don.chai-s:hover:not(:disabled) { background:#A8650F; }
+
+    /* Admin edit modal */
+    .modal-overlay-edit { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px; }
+    .modal-overlay-edit.hidden { display:none; }
+    .modal-edit { background:#fff;border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 16px 50px rgba(0,0,0,.2); }
+    .modal-edit-hdr { display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid #F1F5F9; }
+    .modal-edit-hdr h3 { font-size:.9375rem;font-weight:800;color:#1B2E5E; }
+    .modal-edit-close { background:none;border:none;cursor:pointer;padding:4px;color:var(--color-text-muted);border-radius:8px; }
+    .modal-edit-close:hover { background:#F1F5F9; }
+    .modal-edit-body { padding:18px 22px;display:flex;flex-direction:column;gap:13px; }
+    .modal-edit-ftr { padding:14px 22px;border-top:1px solid #F1F5F9;display:flex;gap:8px;justify-content:flex-end; }
+    .fg { display:flex;flex-direction:column;gap:4px; }
+    .fg label { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted); }
+    .fg input,.fg textarea { border:1.5px solid #E2E8F0;border-radius:8px;padding:8px 11px;font-size:.875rem;font-family:inherit;outline:none;transition:border-color .15s; }
+    .fg input:focus,.fg textarea:focus { border-color:#C8791A; }
+    .img-zone { border:2px dashed #E2E8F0;border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .15s;position:relative;min-height:60px;display:flex;align-items:center;justify-content:center; }
+    .img-zone:hover { border-color:#C8791A; }
+    .img-zone-preview { width:100%;height:auto;max-height:200px;object-fit:contain;border-radius:8px;display:none; }
+    .img-zone-ph { color:var(--color-text-muted);font-size:.82rem;padding:18px; }
+    .img-zone-recrop { position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:.7rem;font-weight:600;cursor:pointer;font-family:inherit; }
+
+    /* Crop modal */
+    .modal-overlay-crop { position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px; }
+    .modal-overlay-crop.hidden { display:none; }
+    .modal-crop { background:#111827;border-radius:16px;width:100%;max-width:620px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5); }
+    .crop-hdr { padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08); }
+    .crop-hdr h3 { color:#fff;font-size:.95rem;font-weight:700;margin:0; }
+    .crop-close { background:rgba(255,255,255,.08);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6); }
+    .crop-close:hover { background:rgba(255,255,255,.15);color:#fff; }
+    .crop-canvas { height:320px;background:#000;overflow:hidden; }
+    .crop-canvas img { max-width:100%;display:block; }
+    .crop-toolbar { padding:10px 14px;background:#1f2937;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+    .crop-lbl { font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);flex-shrink:0; }
+    .crop-ratio { display:flex;gap:5px;flex-wrap:wrap; }
+    .crat { padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:transparent;color:rgba(255,255,255,.55);font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s; }
+    .crat.on { background:#C8791A;border-color:#C8791A;color:#fff; }
+    .crop-sep { width:1px;height:20px;background:rgba(255,255,255,.1);flex-shrink:0; }
+    .crop-act-btn { width:30px;height:30px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s; }
+    .crop-act-btn:hover { background:rgba(255,255,255,.1);color:#fff; }
+    .crop-ftr { padding:12px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.08); }
+    .btn-crop-ok { background:#C8791A;color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:.875rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s; }
+    .btn-crop-ok:hover { background:#A8650F; }
+    .btn-crop-cancel { background:transparent;color:rgba(255,255,255,.55);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 16px;font-size:.875rem;cursor:pointer;font-family:inherit;transition:all .15s; }
+    .btn-crop-cancel:hover { color:#fff;border-color:rgba(255,255,255,.35); }
+
+    .hidden { display: none !important; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+<div id="sidebar-placeholder"></div>
+<div class="main-content">
+  <div class="don-heb-bg" aria-hidden="true">
+    <span style="top:1%;  left:1%;   font-size:1.1rem; opacity:.25; transform:rotate(-18deg)">נְתִינָה</span>
+    <span style="top:2%;  left:16%;  font-size:1rem;   opacity:.22; transform:rotate(7deg)">צְדָקָה</span>
+    <span style="top:1%;  left:32%;  font-size:1.2rem; opacity:.24; transform:rotate(-4deg)">חֶסֶד</span>
+    <span style="top:3%;  left:48%;  font-size:1rem;   opacity:.23; transform:rotate(14deg)">עֶזְרָה</span>
+    <span style="top:2%;  left:64%;  font-size:1.1rem; opacity:.25; transform:rotate(-22deg)">תְּמִיכָה</span>
+    <span style="top:1%;  right:5%;  font-size:1rem;   opacity:.22; transform:rotate(10deg)">נְדָבָה</span>
+    <span style="top:7%;  left:5%;   font-size:1.2rem; opacity:.24; transform:rotate(11deg)">נְתִינָה</span>
+    <span style="top:8%;  left:22%;  font-size:1rem;   opacity:.23; transform:rotate(-9deg)">צְדָקָה</span>
+    <span style="top:6%;  left:40%;  font-size:1.1rem; opacity:.25; transform:rotate(20deg)">חֶסֶד</span>
+    <span style="top:8%;  left:58%;  font-size:1rem;   opacity:.22; transform:rotate(-6deg)">עֶזְרָה</span>
+    <span style="top:7%;  left:76%;  font-size:1.2rem; opacity:.24; transform:rotate(16deg)">תְּמִיכָה</span>
+    <span style="top:6%;  right:3%;  font-size:1rem;   opacity:.23; transform:rotate(-15deg)">נְדָבָה</span>
+    <span style="top:13%; left:2%;   font-size:1.1rem; opacity:.25; transform:rotate(-28deg)">נְתִינָה</span>
+    <span style="top:14%; left:18%;  font-size:1rem;   opacity:.22; transform:rotate(5deg)">צְדָקָה</span>
+    <span style="top:12%; left:36%;  font-size:1.2rem; opacity:.24; transform:rotate(-15deg)">חֶסֶד</span>
+    <span style="top:14%; left:54%;  font-size:1rem;   opacity:.23; transform:rotate(25deg)">עֶזְרָה</span>
+    <span style="top:13%; left:72%;  font-size:1.1rem; opacity:.25; transform:rotate(-8deg)">תְּמִיכָה</span>
+    <span style="top:12%; right:4%;  font-size:1rem;   opacity:.22; transform:rotate(18deg)">נְדָבָה</span>
+    <span style="top:19%; left:6%;   font-size:1.2rem; opacity:.24; transform:rotate(16deg)">נְתִינָה</span>
+    <span style="top:20%; left:24%;  font-size:1rem;   opacity:.23; transform:rotate(-12deg)">צְדָקָה</span>
+    <span style="top:18%; left:42%;  font-size:1.1rem; opacity:.25; transform:rotate(6deg)">חֶסֶד</span>
+    <span style="top:20%; left:60%;  font-size:1rem;   opacity:.22; transform:rotate(-30deg)">עֶזְרָה</span>
+    <span style="top:19%; left:78%;  font-size:1.2rem; opacity:.24; transform:rotate(12deg)">תְּמִיכָה</span>
+    <span style="top:18%; right:2%;  font-size:1rem;   opacity:.23; transform:rotate(-7deg)">נְדָבָה</span>
+    <span style="top:25%; left:3%;   font-size:1.1rem; opacity:.25; transform:rotate(9deg)">נְתִינָה</span>
+    <span style="top:26%; left:20%;  font-size:1rem;   opacity:.22; transform:rotate(-5deg)">צְדָקָה</span>
+    <span style="top:24%; left:38%;  font-size:1.2rem; opacity:.24; transform:rotate(22deg)">חֶסֶד</span>
+    <span style="top:26%; left:56%;  font-size:1rem;   opacity:.23; transform:rotate(-18deg)">עֶזְרָה</span>
+    <span style="top:25%; left:74%;  font-size:1.1rem; opacity:.25; transform:rotate(4deg)">תְּמִיכָה</span>
+    <span style="top:24%; right:3%;  font-size:1rem;   opacity:.22; transform:rotate(-13deg)">נְדָבָה</span>
+    <span style="top:31%; left:8%;   font-size:1.2rem; opacity:.24; transform:rotate(8deg)">נְתִינָה</span>
+    <span style="top:32%; left:26%;  font-size:1rem;   opacity:.23; transform:rotate(-25deg)">צְדָקָה</span>
+    <span style="top:30%; left:44%;  font-size:1.1rem; opacity:.25; transform:rotate(15deg)">חֶסֶד</span>
+    <span style="top:32%; left:62%;  font-size:1rem;   opacity:.22; transform:rotate(-10deg)">עֶזְרָה</span>
+    <span style="top:31%; left:80%;  font-size:1.2rem; opacity:.24; transform:rotate(27deg)">תְּמִיכָה</span>
+    <span style="top:30%; right:2%;  font-size:1rem;   opacity:.23; transform:rotate(-5deg)">נְדָבָה</span>
+    <span style="top:37%; left:1%;   font-size:1.1rem; opacity:.25; transform:rotate(-13deg)">נְתִינָה</span>
+    <span style="top:38%; left:19%;  font-size:1rem;   opacity:.22; transform:rotate(18deg)">צְדָקָה</span>
+    <span style="top:36%; left:37%;  font-size:1.2rem; opacity:.24; transform:rotate(-21deg)">חֶסֶד</span>
+    <span style="top:38%; left:55%;  font-size:1rem;   opacity:.23; transform:rotate(11deg)">עֶזְרָה</span>
+    <span style="top:37%; left:73%;  font-size:1.1rem; opacity:.25; transform:rotate(-17deg)">תְּמִיכָה</span>
+    <span style="top:36%; right:3%;  font-size:1rem;   opacity:.22; transform:rotate(6deg)">נְדָבָה</span>
+    <span style="top:43%; left:5%;   font-size:1.2rem; opacity:.24; transform:rotate(23deg)">נְתִינָה</span>
+    <span style="top:44%; left:23%;  font-size:1rem;   opacity:.23; transform:rotate(-8deg)">צְדָקָה</span>
+    <span style="top:42%; left:41%;  font-size:1.1rem; opacity:.25; transform:rotate(14deg)">חֶסֶד</span>
+    <span style="top:44%; left:59%;  font-size:1rem;   opacity:.22; transform:rotate(-26deg)">עֶזְרָה</span>
+    <span style="top:43%; left:77%;  font-size:1.2rem; opacity:.24; transform:rotate(9deg)">תְּמִיכָה</span>
+    <span style="top:42%; right:2%;  font-size:1rem;   opacity:.23; transform:rotate(-20deg)">נְדָבָה</span>
+    <span style="top:49%; left:2%;   font-size:1.1rem; opacity:.25; transform:rotate(5deg)">נְתִינָה</span>
+    <span style="top:50%; left:20%;  font-size:1rem;   opacity:.22; transform:rotate(-16deg)">צְדָקָה</span>
+    <span style="top:48%; left:38%;  font-size:1.2rem; opacity:.24; transform:rotate(21deg)">חֶסֶד</span>
+    <span style="top:50%; left:56%;  font-size:1rem;   opacity:.23; transform:rotate(-6deg)">עֶזְרָה</span>
+    <span style="top:49%; left:74%;  font-size:1.1rem; opacity:.25; transform:rotate(13deg)">תְּמִיכָה</span>
+    <span style="top:48%; right:3%;  font-size:1rem;   opacity:.22; transform:rotate(-24deg)">נְדָבָה</span>
+    <span style="top:55%; left:7%;   font-size:1.2rem; opacity:.24; transform:rotate(7deg)">נְתִינָה</span>
+    <span style="top:56%; left:25%;  font-size:1rem;   opacity:.23; transform:rotate(-19deg)">צְדָקָה</span>
+    <span style="top:54%; left:43%;  font-size:1.1rem; opacity:.25; transform:rotate(28deg)">חֶסֶד</span>
+    <span style="top:56%; left:61%;  font-size:1rem;   opacity:.22; transform:rotate(-11deg)">עֶזְרָה</span>
+    <span style="top:55%; left:79%;  font-size:1.2rem; opacity:.24; transform:rotate(17deg)">תְּמִיכָה</span>
+    <span style="top:54%; right:2%;  font-size:1rem;   opacity:.23; transform:rotate(-7deg)">נְדָבָה</span>
+    <span style="top:61%; left:3%;   font-size:1.1rem; opacity:.25; transform:rotate(-22deg)">נְתִינָה</span>
+    <span style="top:62%; left:21%;  font-size:1rem;   opacity:.22; transform:rotate(12deg)">צְדָקָה</span>
+    <span style="top:60%; left:39%;  font-size:1.2rem; opacity:.24; transform:rotate(-3deg)">חֶסֶד</span>
+    <span style="top:62%; left:57%;  font-size:1rem;   opacity:.23; transform:rotate(24deg)">עֶזְרָה</span>
+    <span style="top:61%; left:75%;  font-size:1.1rem; opacity:.25; transform:rotate(-14deg)">תְּמִיכָה</span>
+    <span style="top:60%; right:3%;  font-size:1rem;   opacity:.22; transform:rotate(8deg)">נְדָבָה</span>
+    <span style="top:67%; left:6%;   font-size:1.2rem; opacity:.24; transform:rotate(19deg)">נְתִינָה</span>
+    <span style="top:68%; left:24%;  font-size:1rem;   opacity:.23; transform:rotate(-9deg)">צְדָקָה</span>
+    <span style="top:66%; left:42%;  font-size:1.1rem; opacity:.25; transform:rotate(15deg)">חֶסֶד</span>
+    <span style="top:68%; left:60%;  font-size:1rem;   opacity:.22; transform:rotate(-29deg)">עֶזְרָה</span>
+    <span style="top:67%; left:78%;  font-size:1.2rem; opacity:.24; transform:rotate(6deg)">תְּמִיכָה</span>
+    <span style="top:66%; right:2%;  font-size:1rem;   opacity:.23; transform:rotate(-18deg)">נְדָבָה</span>
+    <span style="top:73%; left:2%;   font-size:1.1rem; opacity:.25; transform:rotate(-6deg)">נְתִינָה</span>
+    <span style="top:74%; left:20%;  font-size:1rem;   opacity:.22; transform:rotate(22deg)">צְדָקָה</span>
+    <span style="top:72%; left:38%;  font-size:1.2rem; opacity:.24; transform:rotate(-12deg)">חֶסֶד</span>
+    <span style="top:74%; left:56%;  font-size:1rem;   opacity:.23; transform:rotate(10deg)">עֶזְרָה</span>
+    <span style="top:73%; left:74%;  font-size:1.1rem; opacity:.25; transform:rotate(-23deg)">תְּמִיכָה</span>
+    <span style="top:72%; right:3%;  font-size:1rem;   opacity:.22; transform:rotate(16deg)">נְדָבָה</span>
+    <span style="top:79%; left:5%;   font-size:1.2rem; opacity:.24; transform:rotate(4deg)">נְתִינָה</span>
+    <span style="top:80%; left:23%;  font-size:1rem;   opacity:.23; transform:rotate(-27deg)">צְדָקָה</span>
+    <span style="top:78%; left:41%;  font-size:1.1rem; opacity:.25; transform:rotate(13deg)">חֶסֶד</span>
+    <span style="top:80%; left:59%;  font-size:1rem;   opacity:.22; transform:rotate(-5deg)">עֶזְרָה</span>
+    <span style="top:79%; left:77%;  font-size:1.2rem; opacity:.24; transform:rotate(20deg)">תְּמִיכָה</span>
+    <span style="top:78%; right:2%;  font-size:1rem;   opacity:.23; transform:rotate(-11deg)">נְדָבָה</span>
+    <span style="top:85%; left:2%;   font-size:1.1rem; opacity:.25; transform:rotate(-17deg)">נְתִינָה</span>
+    <span style="top:86%; left:20%;  font-size:1rem;   opacity:.22; transform:rotate(9deg)">צְדָקָה</span>
+    <span style="top:84%; left:38%;  font-size:1.2rem; opacity:.24; transform:rotate(-25deg)">חֶסֶד</span>
+    <span style="top:86%; left:56%;  font-size:1rem;   opacity:.23; transform:rotate(17deg)">עֶזְרָה</span>
+    <span style="top:85%; left:74%;  font-size:1.1rem; opacity:.25; transform:rotate(-8deg)">תְּמִיכָה</span>
+    <span style="top:84%; right:3%;  font-size:1rem;   opacity:.22; transform:rotate(26deg)">נְדָבָה</span>
+    <span style="top:91%; left:6%;   font-size:1.2rem; opacity:.24; transform:rotate(11deg)">נְתִינָה</span>
+    <span style="top:92%; left:24%;  font-size:1rem;   opacity:.23; transform:rotate(-14deg)">צְדָקָה</span>
+    <span style="top:90%; left:42%;  font-size:1.1rem; opacity:.25; transform:rotate(21deg)">חֶסֶד</span>
+    <span style="top:92%; left:60%;  font-size:1rem;   opacity:.22; transform:rotate(-6deg)">עֶזְרָה</span>
+    <span style="top:91%; left:78%;  font-size:1.2rem; opacity:.24; transform:rotate(14deg)">תְּמִיכָה</span>
+    <span style="top:90%; right:2%;  font-size:1rem;   opacity:.23; transform:rotate(-22deg)">נְדָבָה</span>
+    <span style="top:97%; left:3%;   font-size:1.1rem; opacity:.25; transform:rotate(-10deg)">נְתִינָה</span>
+    <span style="top:98%; left:22%;  font-size:1rem;   opacity:.22; transform:rotate(18deg)">צְדָקָה</span>
+    <span style="top:96%; left:42%;  font-size:1.2rem; opacity:.24; transform:rotate(-7deg)">חֶסֶד</span>
+    <span style="top:98%; left:62%;  font-size:1rem;   opacity:.23; transform:rotate(23deg)">עֶזְרָה</span>
+    <span style="top:97%; right:5%;  font-size:1.1rem; opacity:.25; transform:rotate(-19deg)">תְּמִיכָה</span>
+  </div>
+  <div class="don-inner">
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <p class="page-header-label">Comunidad</p>
+        <h1 class="page-title">Donativos</h1>
+        <p class="page-subtitle">Apoya la mision de {{name}}</p>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="don-hero" id="don-hero">
+      <div class="don-hero-photos" id="don-hero-photos" data-layout="1">
+        <div class="hero-ph-slot"><div class="hero-ph-bg"></div></div>
+      </div>
+      <div class="don-hero-overlay"></div>
+      <div class="don-hero-body">
+        <span class="don-hero-sup">Sobre Nosotros</span>
+        <p class="don-hero-text">
+          Acompañamos a la kehilá desde los 0 hasta los 120 años, con educación, vida social y actividades para todas las edades.
+          Trabajamos para crear un hogar cálido y unido para todos. Cada paso tuyo puede convertirse en un gran paso para toda la kehilá.
+        </p>
+      </div>
+      <button class="btn-change-photo hidden" id="btn-hero-photo" onclick="openHeroModal()">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"/></svg>
+        Cambiar foto
+      </button>
+      <input type="file" id="hero-file" accept="image/*" style="display:none;">
+    </div>
+
+
+    <!-- SECTION HEADER -->
+    <div class="don-sh">
+      <p class="don-sh-sup">Elige tu area</p>
+      <h2 class="don-sh-title">Donde quieres que llegue tu donativo</h2>
+      <p class="don-sh-sub">Cada area impulsa una parte vital de la comunidad</p>
+    </div>
+
+    <!-- 4 AREAS GRID — HTML ESTATICO -->
+    <div class="areas-grid">
+
+      <!-- Educativo -->
+      <div class="area-card educativo" id="card-educativo" onclick="openModal('educativo')">
+        <div class="area-photo">
+          <img id="img-educativo" src="" alt="Area Educativo" style="display:none;" class="area-photo-img">
+          <div class="area-photo-ph educativo" id="ph-educativo"></div>
+          <button class="btn-edit-area hidden admin-btn" onclick="event.stopPropagation();openEdit('educativo')">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/></svg>
+            Editar
+          </button>
+        </div>
+        <div class="area-card-header">
+        </div>
+        <div class="area-card-body">
+          <p class="area-title" id="title-educativo">Area Educativo</p>
+          <p class="area-desc" id="desc-educativo">Financiamos Talmud Tora, clases de hebreo, campamentos y programas educativos para ninos, jovenes y adultos de la comunidad.</p>
+        </div>
+        <div class="area-card-footer">
+          <span class="area-meta">{{name}}</span>
+          <button class="btn-donar" onclick="event.stopPropagation();openModal('educativo')">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+            Donar
+          </button>
+        </div>
+      </div>
+
+      <!-- Religioso -->
+      <div class="area-card religioso" id="card-religioso" onclick="openModal('religioso')">
+        <div class="area-photo">
+          <img id="img-religioso" src="" alt="Area Religioso" style="display:none;" class="area-photo-img">
+          <div class="area-photo-ph religioso" id="ph-religioso"></div>
+          <button class="btn-edit-area hidden admin-btn" onclick="event.stopPropagation();openEdit('religioso')">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/></svg>
+            Editar
+          </button>
+        </div>
+        <div class="area-card-header">
+        </div>
+        <div class="area-card-body">
+          <p class="area-title" id="title-religioso">Area Religioso</p>
+          <p class="area-desc" id="desc-religioso">Apoya el mantenimiento de la sinagoga, los servicios del Shabat, festividades, sefarim y materiales religiosos de la comunidad.</p>
+        </div>
+        <div class="area-card-footer">
+          <span class="area-meta">{{name}}</span>
+          <button class="btn-donar" onclick="event.stopPropagation();openModal('religioso')">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+            Donar
+          </button>
+        </div>
+      </div>
+
+      <!-- Ayuda Social -->
+      <div class="area-card social" id="card-social" onclick="openModal('social')">
+        <div class="area-photo">
+          <img id="img-social" src="" alt="Ayuda Social" style="display:none;" class="area-photo-img">
+          <div class="area-photo-ph social" id="ph-social"></div>
+          <button class="btn-edit-area hidden admin-btn" onclick="event.stopPropagation();openEdit('social')">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/></svg>
+            Editar
+          </button>
+        </div>
+        <div class="area-card-header">
+        </div>
+        <div class="area-card-body">
+          <p class="area-title" id="title-social">Area Ayuda Social</p>
+          <p class="area-desc" id="desc-social">Apoyamos a familias en situacion de vulnerabilidad con Tzedaka, comida kosher para Shabat, asistencia economica y acompanamiento.</p>
+        </div>
+        <div class="area-card-footer">
+          <span class="area-meta">{{name}}</span>
+          <button class="btn-donar" onclick="event.stopPropagation();openModal('social')">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+            Donar
+          </button>
+        </div>
+      </div>
+
+      <!-- Donativo para Israel -->
+      <div class="area-card israel" id="card-israel" onclick="openModal('israel')">
+        <div class="area-photo">
+          <img id="img-israel" src="img/donativo-israel.jpg" alt="Donativo para Israel" style="display:none;" class="area-photo-img"
+               onload="this.style.display='block';var p=document.getElementById('ph-israel');if(p)p.style.display='none';"
+               onerror="this.style.display='none';">
+          <div class="area-photo-ph israel" id="ph-israel">🇮🇱</div>
+          <button class="btn-edit-area hidden admin-btn" onclick="event.stopPropagation();openEdit('israel')">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/></svg>
+            Editar
+          </button>
+        </div>
+        <div class="area-card-header">
+        </div>
+        <div class="area-card-body">
+          <p class="area-title" id="title-israel">Donativo para Israel</p>
+          <p class="area-desc" id="desc-israel">Haz llegar tu ayuda directamente a Israel: apoyo a familias, soldados y proyectos de Jesed en Eretz Israel a traves de organizaciones aliadas de confianza.</p>
+        </div>
+        <div class="area-card-footer">
+          <span class="area-meta">My Pushka</span>
+          <button class="btn-donar" onclick="event.stopPropagation();openModal('israel')">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+            Donar
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /areas-grid -->
+
+    <!-- CHAI CLUB BANNER -->
+    <div class="chai-banner">
+      <div>
+        <p class="chai-banner-sup">Red de socios</p>
+        <h2 class="chai-banner-title">Chai Club — <span>חי</span></h2>
+        <p class="chai-banner-desc">
+          Unete a la red de socios que apoyan mensualmente a {{name}} con aportaciones en
+          <strong>multiples de 18</strong> — el valor numerico de <strong style="color:#C8791A;">חי</strong>
+          (vida en hebreo). Tu compromiso mensual hace posible la continuidad de todos los proyectos.
+        </p>
+        <div class="chai-amounts">
+          <button class="chai-btn-amt" onclick="pickChaiAmt(this,18)">18 €/mes</button>
+          <button class="chai-btn-amt" onclick="pickChaiAmt(this,36)">36 €/mes</button>
+          <button class="chai-btn-amt" onclick="pickChaiAmt(this,72)">72 €/mes</button>
+          <button class="chai-btn-amt" onclick="pickChaiAmt(this,180)">180 €/mes</button>
+          <button class="chai-btn-amt" id="chai-otro-btn" onclick="pickChaiOtro(this)">Otro</button>
+        </div>
+        <div id="chai-otro-wrap" style="display:none;">
+          <input type="number" id="chai-otro-input" class="chai-otro-input" placeholder="€/mes" min="1" oninput="chaiAmt=parseInt(this.value)||0">
+        </div>
+        <button class="btn-join-chai" onclick="openModal('chai')">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+          Unirme al Chai Club
+        </button>
+      </div>
+    </div>
+
+    <!-- HISTORIAL TZEDAKA -->
+    <div style="height:20px;"></div>
+    <div class="tzedaka-block">
+      <div class="tzedaka-header">
+        <div class="tzedaka-title">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+          Mi historial de Tzedaka
+        </div>
+        <div class="tzedaka-total" id="tzedaka-total">—</div>
+      </div>
+      <div class="tzedaka-list" id="tzedaka-list">
+        <p class="tzedaka-empty">Cargando...</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL HERO FOTO (admin) -->
+<div class="modal-overlay-hero hidden" id="modal-hero">
+  <div class="modal-hero">
+    <div class="modal-hero-hdr">
+      <button class="modal-hero-close" onclick="closeHeroModal()">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-hero-top">
+      <p class="modal-hero-sup">Personalizar banner</p>
+      <h3 class="modal-hero-title">Banner "Sobre Nosotros"</h3>
+      <p class="modal-hero-sub">Elige la disposicion y sube hasta 4 fotos para crear tu collage.</p>
+    </div>
+    <div class="modal-hero-body">
+      <!-- Layout selector -->
+      <div class="hero-layout-bar">
+        <button class="hero-lo-btn sel" data-layout="1" onclick="selectHeroLayout(this,'1')">
+          <div class="hero-lo-icon lo1"><span></span></div>
+          Una foto
+        </button>
+        <button class="hero-lo-btn" data-layout="2" onclick="selectHeroLayout(this,'2')">
+          <div class="hero-lo-icon lo2"><span></span><span></span></div>
+          Duo
+        </button>
+        <button class="hero-lo-btn" data-layout="3" onclick="selectHeroLayout(this,'3')">
+          <div class="hero-lo-icon lo3"><span></span><span></span><span></span></div>
+          Mosaico
+        </button>
+        <button class="hero-lo-btn" data-layout="4" onclick="selectHeroLayout(this,'4')">
+          <div class="hero-lo-icon lo4"><span></span><span></span><span></span><span></span></div>
+          Cuadricula
+        </button>
+      </div>
+      <!-- Slots de fotos (se renderizan dinámicamente) -->
+      <div class="hero-slots-grid" id="hero-slots" data-layout="1"></div>
+      <!-- Hidden file input compartido -->
+      <input type="file" id="hero-file" accept="image/*" style="display:none;">
+      <!-- Acciones -->
+      <div class="hero-actions">
+        <button class="btn-remove-hero" onclick="removeHeroPhoto()">Quitar todo</button>
+        <button class="btn-save-hero" id="btn-save-hero" onclick="saveHeroPhoto()">Guardar banner</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DONATIVO -->
+<div class="modal-overlay-don hidden" id="modal-don">
+  <div class="modal-don">
+    <div class="modal-don-hdr">
+      <div>
+        <span class="modal-don-tag" id="don-tag"></span>
+        <h3 class="modal-don-title" id="don-title">Apoya esta area</h3>
+      </div>
+      <button class="modal-don-close" onclick="closeModal()">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px;height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-don-body" id="modal-don-body">
+      <img class="modal-don-img" id="don-img" src="" alt="">
+      <p class="modal-don-desc" id="don-desc"></p>
+      <p class="amnt-label">Elige cantidad</p>
+      <div class="amnt-chips" id="don-chips"></div>
+      <div class="amnt-custom">
+        <span style="color:var(--color-text-muted);font-size:.85rem;">€</span>
+        <input type="number" id="don-custom" min="1" placeholder="Otra cantidad..." oninput="onCustom()">
+      </div>
+      <p class="amnt-label" style="margin-top:2px;">Frecuencia</p>
+      <div class="rec-row">
+        <button class="rec-btn active" id="btn-unico" onclick="setRec('unico')">Una vez</button>
+        <button class="rec-btn" id="btn-mensual" onclick="setRec('mensual')">Mensual</button>
+      </div>
+      <div class="ded-group hidden" id="ded-group">
+        <label>Dedicatoria (opcional)</label>
+        <input type="text" id="don-ded" placeholder="En memoria de... / En honor a...">
+      </div>
+    </div>
+    <div class="modal-don-ftr">
+      <button class="btn btn-ghost" id="btn-cancel-don" onclick="closeModal()">Cancelar</button>
+      <button class="btn-confirm-don" id="btn-confirm" disabled onclick="confirmDon()">
+        <span id="confirm-lbl">Donar</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR AREA (admin) -->
+<div class="modal-overlay-edit hidden" id="modal-edit">
+  <div class="modal-edit">
+    <div class="modal-edit-hdr">
+      <h3 id="edit-title-hdr">Editar area</h3>
+      <button class="modal-edit-close" onclick="closeEdit()">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px;height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-edit-body">
+      <div class="fg">
+        <label>Titulo</label>
+        <input type="text" id="e-title">
+      </div>
+      <div class="fg">
+        <label>Descripcion corta (tarjeta)</label>
+        <textarea id="e-desc" rows="3"></textarea>
+      </div>
+      <div class="fg">
+        <label>Descripcion larga (modal donativo)</label>
+        <textarea id="e-longdesc" rows="4"></textarea>
+      </div>
+      <div class="fg">
+        <label>Foto del area</label>
+        <div class="img-zone" id="img-zone-edit" onclick="document.getElementById('e-img-file').click()">
+          <img class="img-zone-preview" id="e-preview" alt="">
+          <div class="img-zone-ph" id="e-ph">Toca para subir foto</div>
+          <button class="img-zone-recrop hidden" id="btn-recrop" onclick="event.stopPropagation();reCrop()">✂ Recortar de nuevo</button>
+        </div>
+        <input type="file" id="e-img-file" accept="image/*" style="display:none;">
+      </div>
+    </div>
+    <div class="modal-edit-ftr">
+      <button class="btn btn-ghost" onclick="closeEdit()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save" onclick="saveArea()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECORTE DE FOTO -->
+<div class="modal-overlay-crop hidden" id="modal-crop">
+  <div class="modal-crop">
+    <div class="crop-hdr">
+      <h3>Encuadrar y ajustar foto</h3>
+      <button class="crop-close" onclick="closeCrop()">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="crop-canvas" id="crop-canvas">
+      <img id="crop-img" src="" alt="">
+    </div>
+    <div class="crop-toolbar">
+      <span class="crop-lbl">Proporcion</span>
+      <div class="crop-ratio">
+        <button class="crat on"  onclick="setCropRatio(this,NaN)">Libre</button>
+        <button class="crat"     onclick="setCropRatio(this,1)">1:1</button>
+        <button class="crat"     onclick="setCropRatio(this,4/3)">4:3</button>
+        <button class="crat"     onclick="setCropRatio(this,3/4)">3:4</button>
+        <button class="crat"     onclick="setCropRatio(this,16/9)">16:9</button>
+      </div>
+      <div class="crop-sep"></div>
+      <span class="crop-lbl">Zoom</span>
+      <button class="crop-act-btn" onclick="_cropInst&&_cropInst.zoom(0.15)" title="Acercar">+</button>
+      <button class="crop-act-btn" onclick="_cropInst&&_cropInst.zoom(-0.15)" title="Alejar">−</button>
+      <div class="crop-sep"></div>
+      <button class="crop-act-btn" onclick="_cropInst&&_cropInst.rotate(-90)" title="Girar izq">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+      </button>
+      <button class="crop-act-btn" onclick="_cropInst&&_cropInst.rotate(90)" title="Girar der">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;transform:scaleX(-1)"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+      </button>
+    </div>
+    <div class="crop-ftr">
+      <button class="btn-crop-cancel" onclick="closeCrop()">Cancelar</button>
+      <button class="btn-crop-ok" onclick="applyCrop()">Aplicar recorte</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="/vendor/cropper-1.5.13.min.js"></script>
+<script src="/vendor/supabase.min.js"></script><script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+<script src="js/media.js"></script>
+<script>
+  var DONATION_URL = 'https://app.flowiz.io/bard/es/f/2019/';
+
+  requireAuth();
+  initNav('donativos');
+
+  const sb   = getSupabase();
+  const user = getCurrentUser();
+  const esAdmin = ['admin', 'super_admin'].includes(user?.role);
+
+  /* Config de areas */
+  const AREA_CFG = {
+    educativo: { amounts:[18,36,72,180], longDesc:'Nuestros programas educativos abarcan desde el Talmud Tora para los mas pequenos hasta clases de hebreo e historia judia para adultos. Con tu donativo garantizamos que ningun nino se quede sin educacion judia por motivos economicos.' },
+    religioso:  { amounts:[18,54,108,360], longDesc:'El area religiosa sostiene los servicios diarios y de Shabat, las festividades del ciclo judio, la adquisicion de sefarim y materiales religiosos, y el mantenimiento del espacio sagrado de la comunidad.' },
+    social:    { amounts:[18,36,54,180], longDesc:'{{name}} acompana a las familias mas necesitadas con Tzedaka, distribucion de comida kosher para Shabat y festividades, asistencia economica y acompanamiento personal en momentos dificiles.' },
+    israel:    { amounts:[18,36,100,360], longDesc:'Campana permanente de apoyo a Eretz Israel. Tu donativo se canaliza a traves de organizaciones aliadas de confianza para asistir a familias, soldados, victimas del terror y proyectos de Jesed en Israel durante todo el ano.' },
+    chai:      { amounts:[18,36,72,180], isChai:true, longDesc:'El Chai Club es la red de socios que garantizan la continuidad de {{name}} con aportaciones mensuales en multiples de 18 — el valor numerico de vida (חי) en hebreo. Cada socio es un pilar de la comunidad.' }
+  };
+
+  const TAG_CSS = {
+    educativo:'background:#DCFCE7;color:#15803D;',
+    religioso:'background:#EDE9FE;color:#6D28D9;',
+    social:'background:#E0F2FE;color:#0369A1;',
+    israel:'background:#DBEAFE;color:#1D4ED8;',
+    chai:'background:#FEF7E8;color:#B8620E;'
+  };
+
+  /* Mostrar controles admin */
+  if (esAdmin) {
+    document.querySelectorAll('.admin-btn').forEach(b => b.classList.remove('hidden'));
+  }
+
+  /* Cargar fotos desde Supabase */
+  async function loadPhotos() {
+    if (!sb) return;
+    try {
+      const { data } = await sb.from('don_areas').select('id, imagen_url, titulo, descripcion, desc_larga');
+      if (!data) return;
+      if (typeof resolveMediaFields === 'function') {
+        await resolveMediaFields(data, [{ bucket: 'community media', field: 'imagen_url' }]);
+      }
+      data.forEach(row => {
+        if (row.imagen_url_signed) setAreaPhoto(row.id, row.imagen_url_signed);
+        if (row.titulo)     { const el = document.getElementById('title-' + row.id); if(el) el.textContent = row.titulo; }
+        if (row.descripcion){ const el = document.getElementById('desc-'  + row.id); if(el) el.textContent = row.descripcion; }
+        if (row.desc_larga && AREA_CFG[row.id]) AREA_CFG[row.id].longDesc = row.desc_larga;
+      });
+    } catch(_) {}
+    try {
+      const heroKeys = ['don_hero_layout','don_hero_img','don_hero_img2','don_hero_img3','don_hero_img4'];
+      const { data: cfgRows } = await sb.from('app_config').select('key,value').in('key', heroKeys);
+      if (cfgRows) {
+        const cfg = Object.fromEntries(cfgRows.map(r => [r.key, r.value]));
+        _hLayout = cfg.don_hero_layout || '1';
+        _hUrls = [cfg.don_hero_img||null, cfg.don_hero_img2||null, cfg.don_hero_img3||null, cfg.don_hero_img4||null];
+        // Solo para pintar esta primera carga: _hUrls (sin firmar) es lo que
+        // se vuelve a guardar tal cual si se edita el hero sin cambiar fotos,
+        // así que no se sobrescribe con la versión firmada temporal.
+        const _hUrlsForPaint = typeof resolveMediaUrl === 'function'
+          ? await Promise.all(_hUrls.map(u => u ? resolveMediaUrl('community media', u) : null))
+          : _hUrls;
+        renderHeroOnPage(_hLayout, _hUrlsForPaint);
+      }
+    } catch(_) {}
+  }
+
+  function setAreaPhoto(id, url) {
+    const img = document.getElementById('img-' + id);
+    const ph  = document.getElementById('ph-'  + id);
+    if (img && ph && url) { img.src = url; img.style.display = 'block'; ph.style.display = 'none'; }
+  }
+
+  loadPhotos();
+
+  /* Historial Tzedaka */
+  async function loadTzedaka() {
+    if (!sb || !user) return;
+    try {
+      const { data } = await sb.from('donaciones')
+        .select('campana_nombre, cantidad, recurrente, created_at')
+        .eq('usuario_id', user.userId)
+        .order('created_at', { ascending: false })
+        .limit(8);
+      const list = document.getElementById('tzedaka-list');
+      const totEl = document.getElementById('tzedaka-total');
+      if (!data || data.length === 0) {
+        list.innerHTML = '<p class="tzedaka-empty">Todavia no hay donativos registrados.</p>';
+        totEl.textContent = '0 €';
+        return;
+      }
+      const total = data.reduce((s, d) => s + (parseFloat(d.cantidad) || 0), 0);
+      totEl.textContent = total.toLocaleString('es-ES', { style:'currency', currency:'EUR', minimumFractionDigits:0 });
+      list.innerHTML = data.map(d => {
+        const fecha = d.created_at ? new Date(d.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' }) : '';
+        const rec = d.recurrente ? '<span class="tzedaka-rec">Mensual</span>' : '';
+        return `<div class="tzedaka-row">
+          <div>
+            <div class="tzedaka-area">${d.campana_nombre || 'Donativo'}</div>
+            <div class="tzedaka-fecha">${fecha}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            ${rec}
+            <span class="tzedaka-amt">${parseFloat(d.cantidad).toLocaleString('es-ES', { style:'currency', currency:'EUR', minimumFractionDigits:0 })}</span>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(_) {
+      document.getElementById('tzedaka-list').innerHTML = '<p class="tzedaka-empty">No se pudo cargar el historial.</p>';
+    }
+  }
+
+  loadTzedaka();
+
+  /* ── Hero collage modal ─────────────────────────── */
+  let _hLayout  = '1';                      // layout activo
+  let _hUrls    = [null,null,null,null];    // URLs guardadas en Supabase
+  let _hFiles   = [null,null,null,null];    // archivos nuevos pendientes
+  let _hPrev    = [null,null,null,null];    // data-URLs para preview
+  let _hSlotIdx = 0;                        // slot que activó el file-input
+
+  const SLOT_COUNTS = {'1':1,'2':2,'3':3,'4':4};
+
+  function openHeroModal() {
+    // Activar el botón del layout actual en el modal
+    document.querySelectorAll('.hero-lo-btn').forEach(b => {
+      b.classList.toggle('sel', b.dataset.layout === _hLayout);
+    });
+    _hFiles = [null,null,null,null];
+    _hPrev  = _hUrls.map(u => u); // copia de URLs actuales
+    document.getElementById('hero-file').value = '';
+    renderHeroSlots();
+    document.getElementById('modal-hero').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeHeroModal() {
+    document.getElementById('modal-hero').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  function selectHeroLayout(btn, layout) {
+    document.querySelectorAll('.hero-lo-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    _hLayout = layout;
+    renderHeroSlots();
+  }
+
+  function renderHeroSlots() {
+    const count = SLOT_COUNTS[_hLayout];
+    const grid  = document.getElementById('hero-slots');
+    grid.setAttribute('data-layout', _hLayout);
+    let html = '';
+    for (let i = 0; i < count; i++) {
+      const src = _hPrev[i] || _hUrls[i];
+      const imgHtml = src
+        ? `<img src="${src}" alt="Foto ${i+1}">
+           <button class="hero-slot-del" onclick="clearHeroSlot(event,${i})">✕</button>`
+        : `<div class="hero-slot-ph">
+             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+             Foto ${i+1}
+           </div>`;
+      html += `<div class="hero-slot" onclick="pickHeroSlot(${i})">${imgHtml}</div>`;
+    }
+    grid.innerHTML = html;
+  }
+
+  function pickHeroSlot(idx) {
+    _hSlotIdx = idx;
+    document.getElementById('hero-file').click();
+  }
+
+  function clearHeroSlot(e, idx) {
+    e.stopPropagation();
+    _hFiles[idx] = null; _hPrev[idx] = null; _hUrls[idx] = null;
+    renderHeroSlots();
+  }
+
+  document.getElementById('hero-file').addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    _hFiles[_hSlotIdx] = file;
+    const reader = new FileReader();
+    reader.onload = ev => { _hPrev[_hSlotIdx] = ev.target.result; renderHeroSlots(); };
+    reader.readAsDataURL(file);
+    this.value = '';
+  });
+
+  function renderHeroOnPage(layout, urls) {
+    const container = document.getElementById('don-hero-photos');
+    container.setAttribute('data-layout', layout);
+    const count = SLOT_COUNTS[layout] || 1;
+    let html = '';
+    for (let i = 0; i < count; i++) {
+      html += `<div class="hero-ph-slot">${
+        urls[i]
+          ? `<img src="${urls[i]}" alt="">`
+          : `<div class="hero-ph-bg"></div>`
+      }</div>`;
+    }
+    container.innerHTML = html;
+    const hasPhoto = urls.slice(0, count).some(u => !!u);
+    document.getElementById('don-hero').classList.toggle('has-photo', hasPhoto);
+  }
+
+  async function saveHeroPhoto() {
+    const btn = document.getElementById('btn-save-hero');
+    btn.textContent = 'Guardando...'; btn.disabled = true;
+    const count = SLOT_COUNTS[_hLayout];
+    const finalUrls = [..._hUrls];
+    // Subir archivos nuevos
+    for (let i = 0; i < count; i++) {
+      if (_hFiles[i] && typeof uploadMedia === 'function') {
+        const url = await uploadMedia(_hFiles[i], 'donativos');
+        if (url) finalUrls[i] = url;
+      }
+    }
+    // Limpiar slots que sobraron si el layout nuevo tiene menos fotos
+    for (let i = count; i < 4; i++) finalUrls[i] = null;
+    // Guardar en Supabase
+    if (sb) {
+      const keys = ['don_hero_img','don_hero_img2','don_hero_img3','don_hero_img4'];
+      const rows = [
+        { key:'don_hero_layout', value:_hLayout, updated_at:new Date().toISOString() },
+        ...keys.map((k,i) => ({ key:k, value:finalUrls[i]||null, updated_at:new Date().toISOString() }))
+      ];
+      await sb.from('app_config').upsert(rows, { onConflict:'key' });
+    }
+    _hUrls = finalUrls;
+    _hLayout = _hLayout; // ya actualizado
+    renderHeroOnPage(_hLayout, _hUrls);
+    showToast('Banner actualizado', 'success');
+    closeHeroModal();
+    btn.textContent = 'Guardar banner'; btn.disabled = false;
+  }
+
+  async function removeHeroPhoto() {
+    _hUrls = [null,null,null,null]; _hLayout = '1';
+    if (sb) {
+      const rows = ['don_hero_layout','don_hero_img','don_hero_img2','don_hero_img3','don_hero_img4']
+        .map(k => ({ key:k, value:null, updated_at:new Date().toISOString() }));
+      await sb.from('app_config').upsert(rows, { onConflict:'key' });
+    }
+    renderHeroOnPage('1', [null,null,null,null]);
+    showToast('Banner restaurado al fondo degradado', 'success');
+    closeHeroModal();
+  }
+
+  document.getElementById('modal-hero').addEventListener('click', e => { if(e.target.id==='modal-hero') closeHeroModal(); });
+
+  /* Modal donativo */
+  let curId = null, selAmt = 0, rec = 'unico', chaiAmt = 0;
+
+  function openModal(id) {
+    curId = id;
+    if (typeof trackEvent === 'function') trackEvent('donacion_inicio', { area: String(id) });
+    const cfg = AREA_CFG[id];
+    const tagEl = document.getElementById('don-tag');
+    const badgeEl = document.querySelector('#card-' + id + ' .area-badge');
+    const badgeLabels = { educativo:'Educacion', religioso:'Religioso', social:'Social', israel:'Israel', chai:'Socios' };
+    tagEl.textContent = badgeEl ? badgeEl.textContent : (badgeLabels[id] || id);
+    tagEl.style.cssText = TAG_CSS[id] || '';
+    const titleEl = document.getElementById('title-' + id);
+    const defaultTitles = { educativo:'Area Educativo', religioso:'Area Religioso', social:'Area Ayuda Social', israel:'Donativo para Israel', chai:'Chai Club' };
+    document.getElementById('don-title').textContent = titleEl ? titleEl.textContent : (defaultTitles[id] || id);
+    document.getElementById('don-desc').textContent  = cfg.longDesc;
+    const img = document.getElementById('don-img');
+    const imgEl = document.getElementById('img-' + id);
+    if (imgEl && imgEl.style.display !== 'none' && imgEl.src) { img.src = imgEl.src; img.style.display = 'block'; } else { img.style.display = 'none'; }
+    const chips = document.getElementById('don-chips');
+    chips.innerHTML = cfg.amounts.map(n => '<button class="amnt-chip" data-n="' + n + '" onclick="pickAmt(this,' + n + ')">' + n + '€' + (cfg.isChai ? '/mes' : '') + '</button>').join('');
+    if (cfg.isChai && chaiAmt) { const pre = chips.querySelector('[data-n="' + chaiAmt + '"]'); if(pre){pre.classList.add('sel'); selAmt=chaiAmt;} } else { selAmt=0; }
+    rec = cfg.isChai ? 'mensual' : 'unico';
+    document.getElementById('btn-unico').classList.toggle('active', rec==='unico');
+    document.getElementById('btn-mensual').classList.toggle('active', rec==='mensual');
+    const btn = document.getElementById('btn-confirm');
+    cfg.isChai ? btn.classList.add('chai-s') : btn.classList.remove('chai-s');
+    if (cfg.isChai && chaiAmt && !chips.querySelector('[data-n="' + chaiAmt + '"]')) {
+      document.getElementById('don-custom').value = chaiAmt; selAmt = chaiAmt;
+      document.getElementById('ded-group').classList.remove('hidden');
+    } else { document.getElementById('don-custom').value = ''; document.getElementById('ded-group').classList.add('hidden'); }
+    updBtn();
+    document.getElementById('modal-don').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modal-don').classList.add('hidden');
+    document.body.style.overflow = '';
+    curId = null; selAmt = 0;
+  }
+
+  function pickAmt(btn, n) {
+    document.querySelectorAll('.amnt-chip').forEach(c => c.classList.remove('sel'));
+    btn.classList.add('sel'); selAmt = n;
+    document.getElementById('don-custom').value = '';
+    document.getElementById('ded-group').classList.remove('hidden');
+    updBtn();
+  }
+
+  function onCustom() {
+    const v = parseFloat(document.getElementById('don-custom').value);
+    selAmt = v > 0 ? v : 0;
+    document.querySelectorAll('.amnt-chip').forEach(c => c.classList.remove('sel'));
+    if (v > 0) document.getElementById('ded-group').classList.remove('hidden');
+    updBtn();
+  }
+
+  function setRec(type) {
+    rec = type;
+    document.getElementById('btn-unico').classList.toggle('active', type==='unico');
+    document.getElementById('btn-mensual').classList.toggle('active', type==='mensual');
+    updBtn();
+  }
+
+  function updBtn() {
+    const btn = document.getElementById('btn-confirm');
+    btn.disabled = !(selAmt > 0);
+    document.getElementById('confirm-lbl').textContent = selAmt > 0 ? 'Donar ' + selAmt + '€' + (rec==='mensual'?'/mes':'') : 'Donar';
+  }
+
+  function confirmDon() {
+    if (!selAmt) return;
+    // La donación se completa en la web externa (DONATION_URL): aquí solo
+    // podemos medir la intención, no el pago.
+    if (typeof trackEvent === 'function') trackEvent('donacion_click', { area: String(curId), importe: Number(selAmt) || null });
+    closeModal();
+    if (window.Capacitor && Capacitor.isNativePlatform()) {
+      window.open(DONATION_URL, '_system');
+    } else if (/PWAShell/.test(navigator.userAgent)) {
+      // Native WKWebView: anchor click → linkActivated nav type →
+      // decidePolicyFor cancels + opens SFSafariViewController externally
+      const a = document.createElement('a');
+      a.href = DONATION_URL;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      window.open(DONATION_URL, '_blank', 'noopener');
+    }
+  }
+
+  function pickChaiAmt(btn, n) {
+    document.querySelectorAll('.chai-btn-amt').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel'); chaiAmt = n;
+    document.getElementById('chai-otro-wrap').style.display = 'none';
+  }
+  function pickChaiOtro(btn) {
+    document.querySelectorAll('.chai-btn-amt').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    const wrap = document.getElementById('chai-otro-wrap');
+    wrap.style.display = 'block';
+    const inp = document.getElementById('chai-otro-input');
+    inp.focus();
+    chaiAmt = parseInt(inp.value) || 0;
+  }
+
+  document.getElementById('modal-don').addEventListener('click', e => { if(e.target.id==='modal-don') closeModal(); });
+
+  /* ── Cropper ──────────────────────────────────── */
+  let _cropInst    = null;   // instancia Cropper.js
+  let _cropBlob    = null;   // blob resultante del recorte
+  let _cropSrcData = null;   // data-URL original para re-recortar
+
+  function openCrop(dataUrl) {
+    _cropSrcData = dataUrl;
+    const img = document.getElementById('crop-img');
+    if (_cropInst) { _cropInst.destroy(); _cropInst = null; }
+    img.src = dataUrl;
+    document.getElementById('modal-crop').classList.remove('hidden');
+    img.onload = () => {
+      _cropInst = new Cropper(img, {
+        viewMode: 1, dragMode: 'move', autoCropArea: 0.95,
+        responsive: true, restore: false, guides: true,
+        center: true, highlight: true,
+        cropBoxMovable: true, cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+      });
+      // activar "Libre" por defecto
+      document.querySelectorAll('.crat').forEach(b => b.classList.remove('on'));
+      document.querySelector('.crat').classList.add('on');
+    };
+  }
+
+  function reCrop() { if (_cropSrcData) openCrop(_cropSrcData); }
+
+  function closeCrop() {
+    document.getElementById('modal-crop').classList.add('hidden');
+    if (_cropInst) { _cropInst.destroy(); _cropInst = null; }
+  }
+
+  function setCropRatio(btn, ratio) {
+    document.querySelectorAll('.crat').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    if (_cropInst) _cropInst.setAspectRatio(isNaN(ratio) ? NaN : ratio);
+  }
+
+  function applyCrop() {
+    if (!_cropInst) return;
+    const canvas = _cropInst.getCroppedCanvas({ maxWidth:1400, maxHeight:1400, imageSmoothingQuality:'high' });
+    canvas.toBlob(blob => {
+      _cropBlob = blob;
+      const url = URL.createObjectURL(blob);
+      const prev = document.getElementById('e-preview');
+      const ph   = document.getElementById('e-ph');
+      prev.src = url; prev.style.display = 'block'; ph.style.display = 'none';
+      document.getElementById('btn-recrop').classList.remove('hidden');
+      closeCrop();
+    }, 'image/jpeg', 0.92);
+  }
+
+  /* Admin edit */
+  let editId = null;
+
+  function openEdit(id) {
+    editId = id; _cropBlob = null; _cropSrcData = null;
+    document.getElementById('edit-title-hdr').textContent = 'Editar — ' + document.getElementById('title-' + id).textContent;
+    document.getElementById('e-title').value    = document.getElementById('title-' + id).textContent;
+    document.getElementById('e-desc').value     = document.getElementById('desc-'  + id).textContent;
+    document.getElementById('e-longdesc').value = AREA_CFG[id].longDesc;
+    document.getElementById('e-img-file').value = '';
+    document.getElementById('btn-recrop').classList.add('hidden');
+    const prev = document.getElementById('e-preview');
+    const ph   = document.getElementById('e-ph');
+    const imgEl = document.getElementById('img-' + id);
+    const showing = imgEl.style.display !== 'none' && imgEl.src && !imgEl.src.endsWith('/');
+    if (showing) { prev.src = imgEl.src; prev.style.display='block'; ph.style.display='none'; }
+    else { prev.src=''; prev.style.display='none'; ph.style.display='block'; }
+    document.getElementById('modal-edit').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEdit() {
+    document.getElementById('modal-edit').classList.add('hidden');
+    document.body.style.overflow = '';
+    editId = null; _cropBlob = null;
+  }
+
+  document.getElementById('modal-edit').addEventListener('click', e => { if(e.target.id==='modal-edit') closeEdit(); });
+
+  document.getElementById('e-img-file').addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => openCrop(ev.target.result);
+    reader.readAsDataURL(file);
+    this.value = '';
+  });
+
+  async function saveArea() {
+    if (!editId) return;
+    const btn = document.getElementById('btn-save');
+    btn.textContent = 'Guardando...'; btn.disabled = true;
+    const newTitle    = document.getElementById('e-title').value.trim();
+    const newDesc     = document.getElementById('e-desc').value.trim();
+    const newLongDesc = document.getElementById('e-longdesc').value.trim();
+    if (newTitle) { document.getElementById('title-' + editId).textContent = newTitle; }
+    if (newDesc)  { document.getElementById('desc-'  + editId).textContent = newDesc; }
+    if (newLongDesc) AREA_CFG[editId].longDesc = newLongDesc;
+    let imgUrl = null;
+    if (_cropBlob && typeof uploadMedia === 'function') {
+      const file = new File([_cropBlob], 'area-photo.jpg', { type:'image/jpeg' });
+      imgUrl = await uploadMedia(file, 'donativos');
+      console.log('[saveArea] upload result:', imgUrl);
+      if (imgUrl) setAreaPhoto(editId, imgUrl);
+      else { showToast('Error subiendo foto al Storage — ver consola', 'error'); btn.textContent = 'Guardar'; btn.disabled = false; return; }
+    }
+    if (sb) {
+      const payload = { id:editId, titulo:newTitle||null, descripcion:newDesc||null, desc_larga:newLongDesc||null, updated_at:new Date().toISOString() };
+      if (imgUrl) payload.imagen_url = imgUrl;
+      const { error: dbErr } = await sb.from('don_areas').upsert(payload, { onConflict:'id' });
+      if (dbErr) { console.error('[saveArea] DB error:', dbErr); showToast('Error guardando en BD: ' + dbErr.message, 'error'); btn.textContent = 'Guardar'; btn.disabled = false; return; }
+      closeEdit();
+      btn.textContent = 'Guardar'; btn.disabled = false;
+      showToast('Area actualizada para todos los usuarios', 'success');
+    } else {
+      closeEdit();
+      btn.textContent = 'Guardar'; btn.disabled = false;
+      showToast('Sin conexion a Supabase — cambios no guardados', 'error');
+    }
+  }
+
+  document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeEdit();closeHeroModal();closeCrop();} });
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(()=>{});
+  }
+</script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

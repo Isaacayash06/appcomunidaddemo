@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Inicio</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    /* ─── Loader inicial: oculta el dashboard hasta que TODAS las
+       secciones (eventos, banner, horarios, shabat) tienen datos, para que
+       no aparezcan por partes en el orden en que responde cada consulta ─── */
+    #pt-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--color-bg, #FAF5EE);
+      transition: opacity 0.2s ease;
+    }
+    #pt-overlay .pt-spinner {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 3px solid rgba(27,46,94,0.15);
+      border-top-color: var(--color-primary, #1B2E5E);
+      animation: pt-spin 0.8s linear infinite;
+    }
+    @keyframes pt-spin { to { transform: rotate(360deg); } }
+    body.page-ready #pt-overlay { opacity: 0; pointer-events: none; }
+    body:not(.page-ready) .main-content { visibility: hidden; }
+
+    /* ─── Layout principal ─── */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      background: var(--color-bg);
+    }
+
+    @media (max-width: 768px) {
+      .main-content { margin-left: 0; }
+      .accesos-rapidos-section { display: none; }
+    }
+
+    .home-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 32px 40px;
+    }
+
+    @media (max-width: 768px) {
+      /* padding-top 60px: el botón hamburguesa es fixed, top:12/left:12,
+         40x40px (hb-btn en nav.js) — sin este espacio el saludo "¡Boker
+         tov!" queda debajo del botón. */
+      .home-inner { padding: 60px 16px 88px; }
+    }
+    @media (max-width: 480px) {
+      .home-inner { padding: 60px 14px 88px; }
+    }
+
+    /* ─── 1. Header personalizado ─── */
+    .home-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .home-greeting-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-gold-dark);
+      margin-bottom: 4px;
+    }
+
+    .home-greeting {
+      font-family: var(--font-brand);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.15;
+      margin-bottom: 4px;
+    }
+
+    .home-greeting .name-accent {
+      color: var(--color-primary);
+    }
+
+    .home-date {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .home-date .dot {
+      width: 3px;
+      height: 3px;
+      background: var(--color-gold);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Tarjeta de horarios */
+    .tefila-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin: 0 0 6px;
+    }
+
+    .tefila-card {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 20px;
+      background: var(--color-white);
+      color: var(--color-text);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
+      padding: 13px 20px;
+      flex-shrink: 0;
+    }
+
+    .tefila-card-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+    }
+
+    #horarios-rows {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 18px;
+    }
+
+    #horarios-semana, #horarios-shabat {
+      display: flex;
+      align-items: center;
+      gap: 6px 18px;
+    }
+
+    .tefila-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .tefila-row + .tefila-row {
+      padding-left: 18px;
+      border-left: 1px solid var(--color-border);
+    }
+
+    #horarios-shabat {
+      padding-left: 18px;
+      border-left: 1px solid var(--color-border);
+    }
+
+    .tefila-name {
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+    }
+
+    .tefila-time {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-gold-dark, var(--color-gold));
+      font-family: var(--font-brand);
+    }
+
+    .tefila-shabat-icon {
+      width: 13px;
+      height: 13px;
+      color: var(--color-gold-dark, var(--color-gold));
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 600px) {
+      .home-header { flex-direction: column; }
+      .tefila-card { width: 100%; }
+      .home-greeting { font-size: 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .home-header { gap: 8px; margin-bottom: 10px; }
+      .home-greeting { font-size: 1.3rem; }
+      .home-greeting-label { margin-bottom: 2px; font-size: 0.7rem; }
+      .tefila-card { padding: 11px 14px; gap: 5px 12px; }
+      .tefila-card-label { display: none; }
+      #horarios-rows, #horarios-semana, #horarios-shabat { gap: 5px 12px; }
+      .tefila-row + .tefila-row, #horarios-shabat { padding-left: 12px; }
+    }
+    /* Móvil: la tarjeta no puede pasar del ancho de pantalla; los horarios
+       bajan de línea y los de Shabat van en su propio bloque debajo. */
+    @media (max-width: 600px) {
+      .tefila-card { max-width: 100%; min-width: 0; box-sizing: border-box; }
+      #horarios-rows { width: 100%; min-width: 0; }
+      #horarios-semana, #horarios-shabat { flex-wrap: wrap; min-width: 0; gap: 6px 16px; }
+      .tefila-row + .tefila-row { padding-left: 0; border-left: none; }
+      #horarios-shabat {
+        width: 100%;
+        padding: 8px 0 0;
+        border-left: none;
+        border-top: 1px solid var(--color-border);
+      }
+    }
+
+    /* ─── 2. Banner carousel ─── */
+    .banner-carousel {
+      position: relative;
+      height: 200px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 14px;
+      background: #1a1a2e;
+    }
+    @media (max-width: 768px) { .banner-carousel { height: 210px; } }
+    @media (max-width: 480px) { .banner-carousel { height: 200px; border-radius: var(--radius-sm); margin-bottom: 10px; } }
+
+    .banner-slides {
+      display: flex;
+      height: 100%;
+      transition: transform 0.5s ease;
+    }
+
+    .banner-slide {
+      flex: 0 0 100%;
+      height: 100%;
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Cada slide es un grupo de hasta 3 fotos en fila (nunca una sola foto). */
+    .banner-photo-cell {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      cursor: pointer;
+      background: #1a1a2e;
+    }
+    .banner-photo-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    /* ── Carga de fotos sin huecos: placeholder animado + aparición suave ──
+       markImagesLoading() marca cada <img data-fade> y su contenedor
+       [data-skel]; al cargar se quita el placeholder y la foto aparece con
+       fundido. Si falla, se oculta la imagen rota y queda el placeholder. */
+    @keyframes img-skel { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+    [data-skel] {
+      background: linear-gradient(100deg, #1f1f35 30%, #2c2c48 50%, #1f1f35 70%);
+      background-size: 200% 100%;
+      animation: img-skel 1.4s ease-in-out infinite;
+    }
+    [data-skel].is-loaded { animation: none; background: #1a1a2e; }
+    img[data-fade] { opacity: 0; transition: opacity .35s ease; }
+    img[data-fade].is-loaded { opacity: 1; }
+    img[data-fade].is-error { visibility: hidden; }
+    @media (prefers-reduced-motion: reduce) {
+      [data-skel] { animation: none; }
+      img[data-fade] { transition: none; }
+    }
+
+    /* ── Banner imagen adaptativa (cualquier ratio) ── */
+    .banner-img-wrap { position: absolute; inset: 0; overflow: hidden; }
+    /* Capa trasera: imagen difuminada que rellena todo el espacio */
+    .banner-img-blur {
+      position: absolute;
+      inset: -25%;
+      width: 150%;
+      height: 150%;
+      object-fit: cover;
+      object-position: center;
+      filter: blur(22px) brightness(0.5) saturate(1.3);
+      pointer-events: none;
+      display: block;
+    }
+    /* Imagen principal encima */
+    .banner-img-main {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+    /* Si es retrato/cuadrada: contener sin recortar, el blur rellena los bordes */
+    .banner-img-main.is-portrait {
+      object-fit: contain;
+      object-position: center center;
+    }
+
+    .banner-slide-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* Overlay: gradiente abajo para legibilidad */
+    .banner-slide-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0) 100%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: 14px 16px;
+    }
+
+    .banner-slide-text {
+      color: #fff;
+      text-align: left;
+    }
+
+    .banner-slide-cat {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.35);
+      backdrop-filter: blur(6px);
+      border-radius: 4px;
+      padding: 2px 7px;
+      color: rgba(255,255,255,0.95);
+      position: absolute;
+      top: 10px;
+      left: 12px;
+    }
+
+    .banner-slide-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.25;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+    }
+
+    .banner-slide-subtitle {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.85);
+      margin-top: 3px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    @media (max-width: 480px) {
+      .banner-slide-title { font-size: 0.95rem; }
+      .banner-slide-subtitle { display: none; }
+    }
+
+    .banner-dots {
+      position: absolute;
+      bottom: 10px;
+      right: 14px;
+      display: flex;
+      gap: 5px;
+    }
+
+    .banner-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.45);
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: background 0.25s, width 0.25s;
+    }
+
+    .banner-dot.active {
+      background: #fff;
+      width: 14px;
+      border-radius: 3px;
+    }
+
+    .banner-btn-prev,
+    .banner-btn-next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.25);
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+      backdrop-filter: blur(4px);
+      transition: background 0.2s;
+    }
+    .banner-btn-prev:hover, .banner-btn-next:hover { background: rgba(0,0,0,0.45); }
+    .banner-btn-prev { left: 8px; }
+    .banner-btn-next { right: 8px; }
+
+    .banner-admin-btn {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.7rem;
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+    }
+    .banner-admin-btn:hover { background: rgba(255,255,255,0.28); }
+
+    .community-photos-title {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      z-index: 2;
+      margin: 0;
+      padding: 30px 56px 10px 14px;
+      background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%);
+      font-family: var(--font-brand);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 0.8rem;
+      letter-spacing: 0.01em;
+      color: rgba(255,255,255,0.92);
+      pointer-events: none;
+    }
+    @media (max-width: 480px) { .community-photos-title { font-size: 0.72rem; padding: 24px 50px 8px 12px; } }
+
+    /* ─── Sección genérica ─── */
+    .home-section {
+      margin-bottom: 28px;
+    }
+
+    .home-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 480px) {
+      .home-section { margin-bottom: 20px; }
+      .home-section-header { margin-bottom: 8px; }
+      .home-section-title { font-size: 0.95rem; }
+    }
+
+    .home-section-title {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--color-text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .home-section-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--color-gold);
+    }
+
+    .home-section-link {
+      font-size: 0.875rem;
+      color: var(--color-primary);
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color var(--transition-fast);
+      text-decoration: none;
+      border: none;
+      background: none;
+      padding: 0;
+    }
+    .home-section-link:hover { color: var(--color-gold-dark); }
+
+    /* ─── 3. Grid módulos ─── */
+    .modules-grid-home {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .modules-grid-home .module-card {
+      min-height: 68px;
+      padding: 10px 8px;
+      gap: 5px;
+    }
+    .modules-grid-home .module-icon { width: 22px; height: 22px; }
+    .modules-grid-home .module-label { font-size: 0.68rem; }
+    @media (max-width: 480px) {
+      .modules-grid-home { gap: 6px; }
+      .modules-grid-home .module-card { min-height: 60px; padding: 8px 6px; gap: 4px; }
+      .modules-grid-home .module-icon { width: 20px; height: 20px; }
+      .modules-grid-home .module-label { font-size: 0.64rem; }
+    }
+
+    /* ─── 4. Eventos cards (scroll horizontal) ─── */
+    .eventos-scroll {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .eventos-scroll::-webkit-scrollbar { display: none; }
+
+    .evento-home-card {
+      flex: 0 0 200px;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .evento-home-thumb {
+      position: relative;
+      aspect-ratio: 3 / 4;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid var(--color-border);
+      transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .evento-home-card:hover .evento-home-thumb {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .evento-home-flyer-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .evento-home-flyer-fallback .evento-home-day {
+      font-family: var(--font-brand);
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--color-white);
+      line-height: 1;
+    }
+
+    .evento-home-flyer-fallback .evento-home-month {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .evento-home-status {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      backdrop-filter: blur(4px);
+    }
+
+    .evento-home-status.inscrito { background: rgba(6,95,70,0.9); color: #fff; }
+    .evento-home-status.lleno { background: rgba(153,27,27,0.9); color: #fff; }
+
+    .evento-home-title {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text);
+      line-height: 1.35;
+    }
+
+    /* ─── 5b. Carteles y avisos (scroll horizontal) ─── */
+    .cartel-scroll {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .cartel-scroll::-webkit-scrollbar { display: none; }
+
+    .cartel-home-card {
+      flex: 0 0 200px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+
+    .cartel-home-thumb {
+      position: relative;
+      aspect-ratio: 3 / 4;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--color-border);
+      transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .cartel-home-card:hover .cartel-home-thumb {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .cartel-home-zoom-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .cartel-home-zoom-badge svg { width: 14px; height: 14px; }
+
+    .cartel-home-title {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text);
+      line-height: 1.35;
+    }
+
+    .cartel-home-cta {
+      margin-top: 2px;
+      font-size: 0.72rem;
+      color: var(--color-text-muted);
+    }
+
+    /* ─── 6. Card Shabat ─── */
+    .shabat-card {
+      background: #252245;
+      border-radius: var(--radius-md);
+      padding: 24px 28px 22px;
+      color: var(--color-white);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* Warm candlelight glow */
+    .shabat-card::before {
+      content: '';
+      position: absolute;
+      right: 0; top: 0;
+      width: 55%; height: 100%;
+      background: radial-gradient(ellipse at 88% 40%, rgba(210,155,55,0.13) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Hebrew watermark */
+    .shabat-card::after {
+      content: 'שבת';
+      position: absolute;
+      right: 18px; bottom: -8px;
+      font-size: 6.5rem; font-weight: 700;
+      color: rgba(255,255,255,0.035);
+      pointer-events: none; user-select: none;
+      line-height: 1; letter-spacing: -2px;
+    }
+
+    .shabat-banner-right {
+      position: absolute;
+      right: 0; top: 0;
+      width: 48%; height: 100%;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .shabat-banner-right::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0;
+      width: 55%; height: 100%;
+      background: linear-gradient(to right, #252245, rgba(37,34,69,0.6) 50%, transparent);
+      z-index: 2; pointer-events: none;
+    }
+    .shabat-dove-deco {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: contain; object-position: center right;
+      mix-blend-mode: screen;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+    .shabat-banner-photo {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center;
+      display: block;
+    }
+    .shabat-banner-empty {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    @media (max-width: 600px) {
+      .shabat-banner-right { width: 100%; height: 100%; }
+      .shabat-banner-right::before {
+        display: block;
+        width: 100%;
+        background: linear-gradient(to bottom,
+          rgba(37,34,69,0.6) 0%,
+          rgba(37,34,69,0.3) 50%,
+          rgba(37,34,69,0.15) 100%);
+      }
+      .shabat-dove-deco { opacity: 0.93; object-position: center; }
+      .shabat-banner-photo { opacity: 0.45; }
+    }
+
+    .shabat-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .shabat-label {
+      font-size: 0.82rem;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      color: var(--color-gold);
+      opacity: 0.8;
+      margin-bottom: 6px;
+    }
+
+    .shabat-parasha {
+      font-family: var(--font-brand);
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-white);
+      line-height: 1.15;
+    }
+
+    .shabat-parasha-he {
+      display: block;
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.38);
+      margin-top: 5px;
+      font-style: italic;
+      letter-spacing: 0.03em;
+    }
+
+    .shabat-cal-link {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color 0.2s;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+    .shabat-cal-link:hover { color: rgba(255,255,255,0.8); }
+    .shabat-cal-link svg { width: 13px; height: 13px; }
+
+    .shabat-horarios {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+      padding-top: 4px;
+    }
+
+    .shabat-horario-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .shabat-horario-label {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.38);
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .shabat-horario-label svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    .shabat-horario-time {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--color-gold);
+      font-family: var(--font-brand);
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+
+    .shabat-horario-day {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.35);
+      font-weight: 400;
+    }
+
+    .shabat-divider { display: none; }
+
+    @media (max-width: 600px) {
+      .shabat-card { padding: 20px 18px 18px; }
+      .shabat-card-top { flex-direction: column; gap: 10px; }
+      .shabat-horarios { gap: 20px; }
+      .shabat-horario-time { font-size: 1.3rem; }
+      .shabat-label { opacity: 1; text-shadow: 0 1px 6px rgba(0,0,0,0.8); }
+      .shabat-parasha { color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.8); }
+      .shabat-parasha-he { color: rgba(255,255,255,0.82); text-shadow: 0 1px 6px rgba(0,0,0,0.8); }
+      .shabat-cal-link { color: rgba(255,255,255,0.82); text-shadow: 0 1px 5px rgba(0,0,0,0.8); }
+      .shabat-horario-label { color: rgba(255,255,255,0.82); text-shadow: 0 1px 5px rgba(0,0,0,0.8); }
+      .shabat-horario-time { text-shadow: 0 1px 8px rgba(0,0,0,0.85); }
+      .shabat-horario-day { color: rgba(255,255,255,0.78); text-shadow: 0 1px 5px rgba(0,0,0,0.8); }
+    }
+
+    /* ─── Dropdown perfil ─── */
+    .user-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--color-white);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border);
+      min-width: 200px;
+      z-index: 200;
+      overflow: hidden;
+      animation: dropIn 0.18s ease;
+    }
+
+    .user-dropdown.hidden { display: none; }
+
+    @keyframes dropIn {
+      from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ─── Colores de fondo evento ─── */
+    .ev-bg-0, .ev-bg-1, .ev-bg-2, .ev-bg-3, .ev-bg-4, .ev-bg-5 {
+      background: var(--color-primary);
+    }
+    .don-chip { padding: 7px 18px; border: 2px solid var(--color-border); border-radius: 999px; background: var(--color-bg); color: var(--color-text); font-size: .9rem; font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .don-chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .don-chip.selected { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
+    .don-chip-otro { font-weight: 500; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+
+  <!-- Loader: se oculta cuando todas las secciones han cargado, ver revealHome() -->
+  <div id="pt-overlay"><div class="pt-spinner"></div></div>
+
+  <!-- Sidebar placeholder -->
+  <div id="sidebar-placeholder"></div>
+
+  <!-- Contenido principal -->
+  <div class="main-content">
+    <div class="home-inner">
+
+      <!-- ══════════════════════════════════
+           1. HEADER PERSONALIZADO
+      ══════════════════════════════════ -->
+      <div class="home-header">
+        <div>
+          <p class="home-greeting-label">שלום</p>
+          <h1 class="home-greeting">
+            ¡Shalom, <span class="name-accent" id="greeting-name">Amigo</span>!
+          </h1>
+          <p class="home-date" id="home-date-display">
+            Cargando fecha...
+          </p>
+        </div>
+
+        <div>
+          <p class="tefila-title">Horarios de nuestra Kehila</p>
+          <div class="tefila-card" id="tefila-horarios-card">
+            <p class="tefila-card-label" data-i18n="home_sinagoga">Hoy en la sinagoga</p>
+            <div id="horarios-rows">
+              <div id="horarios-semana">
+                <div class="tefila-row"><span class="tefila-name">Shajarit</span><span class="tefila-time">07:30</span></div>
+                <div class="tefila-row"><span class="tefila-name">Minjá</span><span class="tefila-time">19:30</span></div>
+              </div>
+              <div id="horarios-shabat" onclick="document.getElementById('shabat-card-section').scrollIntoView({behavior:'smooth',block:'start'})" style="cursor:pointer;" title="Ver horarios de Shabbat">
+                <div class="tefila-row"><span class="tefila-name">Encendido de velas</span><span class="tefila-time">19:42</span></div>
+                <svg class="tefila-shabat-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25 12 15.75 4.5 8.25"/></svg>
+              </div>
+            </div>
+            <button id="btn-edit-horarios" onclick="abrirEditHorarios()" style="display:none;align-items:center;gap:5px;background:rgba(27,46,94,0.08);border:1px solid rgba(27,46,94,0.15);cursor:pointer;padding:5px 10px;border-radius:999px;color:var(--color-text-muted,#1b2e5e);font-size:0.72rem;font-weight:600;font-family:inherit;transition:background 0.15s;flex-shrink:0;margin-left:auto;" title="Editar horarios de tefilá" onmouseover="this.style.background='rgba(27,46,94,0.15)'" onmouseout="this.style.background='rgba(27,46,94,0.08)'">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+              Editar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           2. ACCESOS RÁPIDOS
+      ══════════════════════════════════ -->
+      <div class="home-section accesos-rapidos-section">
+        <div class="home-section-header">
+          <h2 class="home-section-title">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/>
+            </svg>
+            <span data-i18n="home_quick">Accesos rápidos</span>
+          </h2>
+        </div>
+
+        <div class="modules-grid-home">
+
+          <a href="calendario.html" class="module-card">
+            <svg class="module-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+            </svg>
+            <span class="module-label" data-i18n="nav_calendario">Calendario Hebreo</span>
+          </a>
+
+          <a href="mikve.html" class="module-card">
+            <svg class="module-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75c-4.5 6-6.75 10.125-6.75 12.75a6.75 6.75 0 0 0 13.5 0c0-2.625-2.25-6.75-6.75-12.75Z"/>
+            </svg>
+            <span class="module-label" data-i18n="nav_mikve">Mikve</span>
+          </a>
+
+          <a href="eventos.html" class="module-card">
+            <svg class="module-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+            </svg>
+            <span class="module-label" data-i18n="nav_eventos">Eventos</span>
+          </a>
+
+          <a href="donativos.html" class="module-card">
+            <svg class="module-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+            </svg>
+            <span class="module-label" data-i18n="nav_donativos">Donativos</span>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           3. FOTOS DE LA COMUNIDAD (carrusel del mes)
+      ══════════════════════════════════ -->
+      <div class="home-section" id="community-photos-section" style="display:none;">
+        <div class="banner-carousel" id="banner-carousel">
+          <div class="banner-slides" id="banner-slides-track"></div>
+          <h3 class="community-photos-title" id="community-photos-title"></h3>
+          <div class="banner-dots" id="banner-dots"></div>
+          <button class="banner-btn-prev" id="banner-prev" aria-label="Anterior">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+          </button>
+          <button class="banner-btn-next" id="banner-next" aria-label="Siguiente">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+          </button>
+          <a class="banner-admin-btn" id="banner-admin-btn" href="admin.html" style="text-decoration:none;">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+            <span data-i18n="home_banner_manage">Gestionar</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           4. EVENTOS PRÓXIMOS
+      ══════════════════════════════════ -->
+      <div class="home-section">
+        <div class="home-section-header">
+          <h2 class="home-section-title">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5"/>
+            </svg>
+            <span data-i18n="home_eventos">Próximos eventos</span>
+          </h2>
+          <a href="eventos.html" class="home-section-link">
+            <span data-i18n="ver_todo">Ver todos</span>
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="eventos-scroll" id="eventos-container">
+          <!-- Generado por JS -->
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           3b. CARTELES Y AVISOS (banners tipo "informativo")
+      ══════════════════════════════════ -->
+      <div class="home-section" id="carteles-section" style="display:none;">
+        <div class="home-section-header">
+          <h2 class="home-section-title">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15M4.5 9h15M4.5 15h15M3.75 4.5h16.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H3.75a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75Z"/>
+            </svg>
+            <span>Carteles y avisos</span>
+          </h2>
+        </div>
+
+        <div class="cartel-scroll" id="carteles-container">
+          <!-- Generado por JS -->
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           6. SHABAT DE ESTA SEMANA
+      ══════════════════════════════════ -->
+      <div class="home-section" id="shabat-card-section">
+        <h2 class="home-section-title" style="margin-bottom:14px;">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
+          Horarios Shabbat
+        </h2>
+        <div class="shabat-card">
+          <!-- Zona derecha: foto del banner (se gestiona desde Ajustes en admin) -->
+          <div class="shabat-banner-right" id="shabat-banner-right">
+            <img class="shabat-banner-photo" id="shabat-banner-photo" src="" alt="" style="display:none;">
+          </div>
+          <div class="shabat-card-top" style="position:relative;z-index:2;">
+            <div>
+              <p class="shabat-label">Shabat esta semana</p>
+              <p class="shabat-parasha" id="shabat-parasha">
+                &nbsp;
+                <span class="shabat-parasha-he" id="shabat-parasha-he"></span>
+              </p>
+            </div>
+            <button class="shabat-cal-link" onclick="window.location.href='calendario.html'">
+              Ver calendario
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+            </button>
+          </div>
+
+          <div class="shabat-horarios" style="position:relative;z-index:2;">
+            <div class="shabat-horario-item">
+              <span class="shabat-horario-label"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="2.8"/><line x1="8.8" y1="2" x2="9.6" y2="3.5"/><line x1="15.2" y1="2" x2="14.4" y2="3.5"/><line x1="6.8" y1="4.5" x2="8.2" y2="5.2"/><line x1="17.2" y1="4.5" x2="15.8" y2="5.2"/><path d="M12 4.5 C10.5 7 11.5 9 12 9.5 C12.5 9 13.5 7 12 4.5Z" fill="#C9A84C" stroke="none"/><line x1="12" y1="9.5" x2="12" y2="10.5"/><rect x="9.5" y="10.5" width="5" height="9" rx="0.5"/><rect x="8" y="19.5" width="8" height="1.5" rx="0.4"/></svg>Encendido de velas</span>
+              <span class="shabat-horario-time" id="shabat-velas-time">—</span>
+              <span class="shabat-horario-day" id="shabat-velas-day">cargando…</span>
+            </div>
+            <div class="shabat-horario-item">
+              <span class="shabat-horario-label"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 C10.5 5 11 7 12 7.5 C13 7 13.5 5 12 3Z" fill="#C9A84C" stroke="none"/><path d="M8 8.5 h8 l-1.5 7 H9.5 Z"/><line x1="11" y1="15.5" x2="11" y2="18"/><line x1="13" y1="15.5" x2="13" y2="18"/><path d="M9.5 18 h5"/><path d="M7.5 20 h9"/></svg>Havdalá</span>
+              <span class="shabat-horario-time" id="shabat-havdala-time">—</span>
+              <span class="shabat-horario-day" id="shabat-havdala-day">cargando…</span>
+            </div>
+            <div class="shabat-horario-item">
+              <span class="shabat-horario-label"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C8.13 2 5 5.13 5 9 C5 14.25 12 22 12 22 C12 22 19 14.25 19 9 C19 5.13 15.87 2 12 2Z"/><circle cx="12" cy="9" r="2.5"/></svg>Ciudad</span>
+              <span class="shabat-horario-time" id="shabat-ciudad-name" style="font-size:1.2rem;letter-spacing:0;">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Lightbox: ver cartel informativo a tamaño completo (soporta varias páginas con scroll) -->
+  <div id="cartel-lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1100;flex-direction:column;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this) closeCartelLightbox()">
+    <button onclick="closeCartelLightbox()" aria-label="Cerrar" style="position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1;">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+    </button>
+    <div id="cartel-lightbox-scroll" style="max-width:100%;max-height:85vh;overflow-y:auto;overflow-x:hidden;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;gap:2px;scrollbar-width:thin;"></div>
+    <p id="cartel-lightbox-hint" style="display:none;color:rgba(255,255,255,.6);font-size:.75rem;margin-top:8px;">↓ Desliza para ver más</p>
+    <a id="cartel-lightbox-link" href="#" target="_blank" rel="noopener" style="display:none;margin-top:16px;background:#fff;color:#1b2e5e;padding:10px 22px;border-radius:999px;font-weight:600;font-size:.85rem;text-decoration:none;">Más información →</a>
+  </div>
+
+  <script src="/vendor/supabase.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/media.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+  <script>
+    /* ─── Init ─── */
+    // Identidad cacheada: pinta la UI al instante (nombre, saludo). NO es
+    // prueba de autenticación — requireAuth() (async) confirma la sesión
+    // real en paralelo y redirige si no la hay; loadHomeData() por su parte
+    // espera una sesión real confirmada antes de pedir datos de inscripciones.
+    const user = getCurrentUser();
+    requireAuth();
+    initNav('home');
+
+    /* ─── Saludo personalizado ─── */
+    if (user) {
+      const firstName = user.name.split(' ')[0];
+      document.getElementById('greeting-name').textContent = firstName;
+    }
+
+    /* ─── Fecha ─── */
+    (function renderDate() {
+      const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+      const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      const hoy = new Date();
+      const diaNombre = dias[hoy.getDay()];
+      const dia = hoy.getDate();
+      const mes = meses[hoy.getMonth()];
+      const año = hoy.getFullYear();
+
+      let fechaHebrea = '';
+      try {
+        const parts = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).formatToParts(hoy);
+        const hDia = parts.find(p => p.type === 'day')?.value || '';
+        const hMesRaw = parts.find(p => p.type === 'month')?.value || '';
+        const hMes = hMesRaw.charAt(0).toUpperCase() + hMesRaw.slice(1).toLowerCase();
+        const hAño = parts.find(p => p.type === 'year')?.value || '';
+        fechaHebrea = `${hDia} ${hMes} ${hAño}`;
+      } catch (e) { /* Intl sin soporte de calendario hebreo: se omite */ }
+
+      const el = document.getElementById('home-date-display');
+      el.innerHTML = `${diaNombre}, ${dia} de ${mes} de ${año}` + (fechaHebrea ? ` <span class="dot"></span> ${fechaHebrea}` : '');
+    })();
+
+    /* ─── Renderizar eventos ─── */
+    const bgClasses = ['ev-bg-0','ev-bg-1','ev-bg-2','ev-bg-3','ev-bg-4','ev-bg-5'];
+    const mesesCortos = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+    function renderEventos() {
+      const container = document.getElementById('eventos-container');
+      const eventos = MOCK_EVENTOS.filter(ev => !eventoPasado(ev)).slice(0, 4);
+
+      container.innerHTML = eventos.map((ev, i) => {
+        const fecha = new Date(ev.fecha + 'T00:00:00');
+        const dia = fecha.getDate();
+        const mes = mesesCortos[fecha.getMonth()];
+        const lleno = !!ev.aforo && (ev.aforo - ev.inscritos) <= 0;
+        const inscrito = homeInscrito.has(String(ev.id));
+
+        return `
+          <div class="evento-home-card" onclick="homeCardClick('${ev.id}')">
+            <div class="evento-home-thumb ${ev.imagen_url_signed ? '' : bgClasses[i % bgClasses.length]}" ${ev.imagen_url_signed ? `style="background-image:url('${ev.imagen_url_signed}')"` : ''}>
+              ${!ev.imagen_url_signed ? `
+                <div class="evento-home-flyer-fallback">
+                  <span class="evento-home-day">${dia}</span>
+                  <span class="evento-home-month">${mes}</span>
+                </div>` : ''}
+              ${inscrito ? `<span class="evento-home-status inscrito">Inscrito</span>`
+                : lleno ? `<span class="evento-home-status lleno">Completo</span>` : ''}
+            </div>
+            <p class="evento-home-title">${ev.titulo}</p>
+          </div>`;
+      }).join('');
+    }
+
+    /**
+     * Maneja el click sobre una tarjeta de evento en el home: siempre lleva
+     * a eventos.html (a esa tarjeta en concreto) en vez de inscribir al
+     * instante, para que el usuario vea los detalles antes de apuntarse.
+     */
+    function homeCardClick(id) {
+      window.location.href = 'eventos.html?evento=' + encodeURIComponent(id);
+    }
+
+    /* ─── Init renders — carga desde Supabase ─── */
+    const homeInscrito = new Set();
+
+    // Las imágenes de eventos/carteles/fotos vienen de un bucket privado
+    // como URL firmada (ver js/media.js), que caduca a la hora. Las
+    // instantáneas de localStorage de abajo (para pintar al instante sin
+    // esperar a Supabase) se descartan si son más viejas que esto, porque
+    // pintar una URL firmada ya caducada muestra icono de imagen rota /
+    // hueco en blanco unos segundos hasta que responde loadBanner()/
+    // loadHomeData() — declarado aquí arriba porque hace falta ya en el
+    // IIFE de justo debajo.
+    // Las URLs firmadas que entrega media.js valen al menos
+    // MEDIA_URL_MIN_VALIDITY_MS (3 días) desde que se entregan; se deja 2 h
+    // de colchón. Antes eran 55 min (URLs de 1 h): al abrir "al día
+    // siguiente" la instantánea se descartaba y el banner salía vacío.
+    const HOME_SNAP_MAX_AGE_MS = (typeof MEDIA_URL_MIN_VALIDITY_MS === 'number'
+      ? MEDIA_URL_MIN_VALIDITY_MS : 60 * 60 * 1000) - 2 * 60 * 60 * 1000;
+
+    // Instantánea de los últimos eventos en localStorage: permite pintar las
+    // tarjetas del home AL INSTANTE en la siguiente visita, sin esperar a la
+    // consulta de Supabase. Luego se refresca con datos reales y se reescribe.
+    const HOME_SNAP_KEY = 'kehila_snap_home_eventos_v2';
+    const HOME_SNAP_KEY_SAVED_AT_EV = 'kehila_snap_home_eventos_v2_saved_at';
+
+    // Fecha de hoy en local (no UTC) como 'YYYY-MM-DD', para comparar contra
+    // la columna fecha de eventos sin desfases de zona horaria.
+    function hoyStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    (function paintEventosFromSnapshot() {
+      const savedAt = Number(localStorage.getItem(HOME_SNAP_KEY_SAVED_AT_EV)) || 0;
+      if (Date.now() - savedAt > HOME_SNAP_MAX_AGE_MS) return; // probablemente con imagen_url_signed caducada
+      try {
+        const raw = localStorage.getItem(HOME_SNAP_KEY);
+        if (!raw) return;
+        const snap = JSON.parse(raw);
+        if (Array.isArray(snap) && snap.length) {
+          const hoy = hoyStr();
+          MOCK_EVENTOS.length = 0;
+          snap.filter(ev => ev.fecha >= hoy).forEach(ev => MOCK_EVENTOS.push(ev));
+          renderEventos();
+        }
+      } catch (e) { /* instantánea corrupta: se ignora */ }
+    })();
+
+    // _v2: las instantáneas guardadas antes de las URLs de 7 días traen URLs de
+    // 1 h ya caducadas; con el nuevo HOME_SNAP_MAX_AGE_MS se pintarían rotas.
+    const HOME_SNAP_KEY_PHOTOS = 'kehila_snap_home_photos_v2';
+    const HOME_SNAP_KEY_CARTELES = 'kehila_snap_home_carteles_v2';
+    const HOME_SNAP_KEY_SAVED_AT = 'kehila_snap_home_banner_v2_saved_at';
+
+    async function loadHomeData() {
+      const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+      if (sb) {
+        try {
+          // inscripciones no tiene GRANT de SELECT para anon: sin sesión real
+          // esa consulta devuelve 42501, así que solo se pide con sesión
+          // confirmada (no basta con la identidad cacheada en localStorage).
+          const session = typeof getValidSession === 'function' ? await getValidSession() : null;
+
+          const queries = [
+            sb.from('eventos').select('id,titulo,descripcion,fecha,hora,lugar,aforo,categoria,imagen_url,mensaje_inscripcion').gte('fecha', hoyStr()).order('fecha', { ascending: true }).limit(8),
+          ];
+          if (session) {
+            queries.push(sb.from('inscripciones').select('evento_id'));
+            queries.push(sb.from('inscripciones').select('evento_id').eq('usuario_id', session.user.id));
+          }
+
+          const [evRes, allInsRes, insRes] = await Promise.all(queries);
+
+          const conteosMap = {};
+          if (allInsRes?.data) allInsRes.data.forEach(r => { conteosMap[r.evento_id] = (conteosMap[r.evento_id] || 0) + 1; });
+
+          if (evRes.data && evRes.data.length && typeof resolveMediaFields === 'function') {
+            await resolveMediaFields(evRes.data, [{ bucket: 'community media', field: 'imagen_url' }]);
+          }
+          if (evRes.data && evRes.data.length) {
+            MOCK_EVENTOS.length = 0;
+            evRes.data.forEach(ev => { ev.inscritos = conteosMap[String(ev.id)] || 0; MOCK_EVENTOS.push(ev); });
+            try {
+              localStorage.setItem(HOME_SNAP_KEY, JSON.stringify(MOCK_EVENTOS.slice(0, 4)));
+              localStorage.setItem(HOME_SNAP_KEY_SAVED_AT_EV, String(Date.now()));
+            } catch (e) {}
+          }
+          if (insRes?.data) insRes.data.forEach(r => homeInscrito.add(r.evento_id));
+        } catch(e) { /* usa mock/instantánea como fallback */ }
+      }
+      renderEventos();
+    }
+
+    // El banner es lo primero que se ve (above the fold): se carga en paralelo
+    // con los eventos, no encadenado detrás — antes esperaba a que terminara
+    // loadHomeData() (~1s por la consulta de eventos) para siquiera empezar.
+    // Todas las secciones se acumulan en __homeReady y el dashboard entero
+    // se revela de golpe (revealHome, definido más abajo) cuando todas
+    // terminan, en vez de ir apareciendo por partes según responde cada una.
+    window.__homeReady = [];
+    window.__homeReady.push(loadHomeData());
+    window.__homeReady.push(loadBanner());
+
+    document.addEventListener('langchange', () => {
+      renderEventos();
+    });
+
+    /* ══════════════════════════════════════
+       FOTOS DE LA COMUNIDAD (carrusel del mes hebreo anterior)
+       Gestionadas desde admin.html → "Fotos de la comunidad".
+    ══════════════════════════════════════ */
+    let cPhotoGroups = [];
+    let cPhotoCurrent = 0;
+    let cPhotoTimer = null;
+
+    function prevHebrewMonthLabel() {
+      // Pese al nombre (se mantiene para no tocar la única llamada de
+      // abajo), muestra el mes hebreo ACTUAL, no el anterior: las fotos que
+      // sube el admin son del mes en curso (p.ej. Rosh Hashaná recién
+      // pasado en Tishrei), así que calcularlo como "mes gregoriano
+      // anterior" desfasaba la etiqueta (se quedaba en Elul con Tishrei ya
+      // bien empezado).
+      try {
+        let label = new Intl.DateTimeFormat('en-u-ca-hebrew', { month: 'long' }).format(new Date());
+        label = label.charAt(0).toUpperCase() + label.slice(1).toLowerCase();
+        // El navegador da "Tishri"; se prefiere la transliteración "Tishrei".
+        if (label === 'Tishri') label = 'Tishrei';
+        return label;
+      } catch(e) { return ''; }
+    }
+
+    function openImageLightbox(url) {
+      const scrollEl = document.getElementById('cartel-lightbox-scroll');
+      const safeUrl = /^https?:\/\//i.test(url) ? escHtml(url) : '';
+      scrollEl.innerHTML = `<img src="${safeUrl}" alt="" style="display:block;width:auto;max-width:100%;max-height:85vh;object-fit:contain;">`;
+      scrollEl.scrollTop = 0;
+      document.getElementById('cartel-lightbox-hint').style.display = 'none';
+      document.getElementById('cartel-lightbox-link').style.display = 'none';
+      document.getElementById('cartel-lightbox').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Cada slide muestra un grupo de hasta 3 fotos en fila (nunca una foto sola).
+    /** Placeholder + fundido para las <img data-fade> de `root` (ver CSS). */
+    function markImagesLoading(root) {
+      root.querySelectorAll('img[data-fade]').forEach((img) => {
+        const box = img.closest('[data-skel]');
+        const done = (ok) => {
+          img.classList.add(ok ? 'is-loaded' : 'is-error');
+          if (ok && box) box.classList.add('is-loaded');
+        };
+        if (img.complete && img.getAttribute('src')) { done(img.naturalWidth > 0); return; }
+        img.addEventListener('load', () => done(true), { once: true });
+        img.addEventListener('error', () => done(false), { once: true });
+      });
+    }
+
+    function buildPhotoSlide(urls, eager) {
+      const slide = document.createElement('div');
+      slide.className = 'banner-slide';
+      slide.innerHTML = urls.map(url => `
+        <div class="banner-photo-cell" data-skel>
+          <img src="${/^https?:\/\//i.test(url) ? escHtml(url) : ''}" alt="" data-fade loading="${eager ? 'eager' : 'lazy'}"${eager ? ' fetchpriority="high"' : ''}>
+        </div>`).join('');
+      markImagesLoading(slide);
+      slide.querySelectorAll('.banner-photo-cell').forEach((cell, i) => {
+        cell.addEventListener('click', () => openImageLightbox(urls[i]));
+      });
+      return slide;
+    }
+
+    function cPhotoGoTo(idx) {
+      cPhotoCurrent = (idx + cPhotoGroups.length) % cPhotoGroups.length;
+      document.getElementById('banner-slides-track').style.transform = `translateX(-${cPhotoCurrent * 100}%)`;
+      document.querySelectorAll('.banner-dot').forEach((d, i) => d.classList.toggle('active', i === cPhotoCurrent));
+    }
+
+    function startCPhotoTimer() {
+      clearInterval(cPhotoTimer);
+      if (cPhotoGroups.length > 1) cPhotoTimer = setInterval(() => cPhotoGoTo(cPhotoCurrent + 1), 4500);
+    }
+
+    // renderCommunityPhotos/renderCarteles se llaman dos veces por visita
+    // (instantánea + datos reales). Si no cambió nada, no se reconstruye el
+    // DOM: así las fotos ya pintadas no desaparecen y vuelven con fundido.
+    let _lastPhotosKey = null, _lastCartelesKey = null;
+
+    function renderCommunityPhotos(urls) {
+      const key = JSON.stringify(urls);
+      if (key === _lastPhotosKey) return;
+      _lastPhotosKey = key;
+      cPhotoGroups = [];
+      for (let i = 0; i < urls.length; i += 3) cPhotoGroups.push(urls.slice(i, i + 3));
+
+      const section = document.getElementById('community-photos-section');
+      const track = document.getElementById('banner-slides-track');
+      const dots = document.getElementById('banner-dots');
+      track.innerHTML = '';
+      dots.innerHTML = '';
+
+      if (!urls.length) { section.style.display = 'none'; return; }
+      section.style.display = '';
+
+      document.getElementById('community-photos-title').textContent =
+        `Momentos inolvidables de nuestra comunidad en ${prevHebrewMonthLabel()}`;
+
+      cPhotoGroups.forEach((group, i) => {
+        // El primer grupo se pide ya y con prioridad; el resto se precarga
+        // en cuanto termina (abajo) para que el carrusel nunca muestre huecos
+        // al avanzar (con loading=lazy no empezaban a bajar hasta verse).
+        track.appendChild(buildPhotoSlide(group, i === 0));
+        const dot = document.createElement('button');
+        dot.className = 'banner-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Grupo ' + (i + 1));
+        dot.addEventListener('click', () => { cPhotoGoTo(i); startCPhotoTimer(); });
+        dots.appendChild(dot);
+      });
+
+      // onclick (no addEventListener): esta función se llama dos veces por
+      // visita (instantánea + datos reales) y cada llamada añadía otro
+      // listener → las flechas saltaban de 2 en 2.
+      document.getElementById('banner-prev').onclick = () => { cPhotoGoTo(cPhotoCurrent - 1); startCPhotoTimer(); };
+      document.getElementById('banner-next').onclick = () => { cPhotoGoTo(cPhotoCurrent + 1); startCPhotoTimer(); };
+
+      cPhotoGoTo(0);
+      startCPhotoTimer();
+
+      const first = [...track.querySelectorAll('.banner-slide:first-child img')];
+      Promise.all(first.map(img => img.complete ? null : new Promise(r => {
+        img.addEventListener('load', r, { once: true }); img.addEventListener('error', r, { once: true });
+      }))).then(() => track.querySelectorAll('img[loading="lazy"]').forEach(img => { img.loading = 'eager'; }));
+    }
+
+    /**
+     * Renderiza los banners tipo "informativo" (carteles/calendarios ya diseñados)
+     * como tarjetas verticales independientes del carrusel principal, ya que su
+     * formato de póster no encaja en la caja panorámica del carrusel.
+     */
+    let cartelSlidesData = [];
+    const ZOOM_ICON = '<svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m-3-3h6"/></svg>';
+
+    // Misma idea que paintEventosFromSnapshot() más arriba, pero para el
+    // banner de fotos de la comunidad y los carteles/avisos — antes solo
+    // "Próximos eventos" tenía esta copia instantánea, así que era la única
+    // sección que se pintaba sin esperar a la red; el resto siempre salía en
+    // blanco unos segundos. Se pintan aquí con lo último visto, y loadBanner()
+    // las sustituye por datos frescos en cuanto responde Supabase. Colocado
+    // DESPUÉS de declarar cPhotoGroups/cPhotoCurrent/cartelSlidesData (arriba):
+    // renderCarteles()/renderCommunityPhotos() los usan, y son "let" — llamar
+    // a estas funciones antes de que se ejecuten esas líneas sería el mismo
+    // fallo (ReferenceError por acceder a la variable antes de inicializarla)
+    // que rompía Mikve al navegar por el router SPA.
+    (function paintBannerFromSnapshot() {
+      const savedAt = Number(localStorage.getItem(HOME_SNAP_KEY_SAVED_AT)) || 0;
+      if (Date.now() - savedAt > HOME_SNAP_MAX_AGE_MS) return; // probablemente caducada: dejar que loadBanner() la resuelva
+      try {
+        const rawPhotos = localStorage.getItem(HOME_SNAP_KEY_PHOTOS);
+        if (rawPhotos) {
+          const urls = JSON.parse(rawPhotos);
+          if (Array.isArray(urls) && urls.length) renderCommunityPhotos(urls);
+        }
+      } catch (e) { /* instantánea corrupta: se ignora */ }
+      try {
+        const rawCarteles = localStorage.getItem(HOME_SNAP_KEY_CARTELES);
+        if (rawCarteles) {
+          const slides = JSON.parse(rawCarteles);
+          if (Array.isArray(slides) && slides.length) renderCarteles(slides);
+        }
+      } catch (e) { /* instantánea corrupta: se ignora */ }
+    })();
+
+    function renderCarteles(slides) {
+      const key = JSON.stringify(slides);
+      if (key === _lastCartelesKey) return;
+      _lastCartelesKey = key;
+      const section = document.getElementById('carteles-section');
+      const container = document.getElementById('carteles-container');
+      if (!slides.length) { section.style.display = 'none'; container.innerHTML = ''; return; }
+      section.style.display = '';
+      cartelSlidesData = slides;
+      container.innerHTML = slides.map((s, i) => `
+          <div class="cartel-home-card" onclick="openCartelLightbox(${i})">
+            <div class="cartel-home-thumb">
+              <div class="banner-img-wrap" data-skel>
+                <img class="banner-img-blur" src="${s.imagen_url_signed}" aria-hidden="true" data-fade loading="${i === 0 ? 'eager' : 'lazy'}">
+                <img class="banner-img-main is-portrait" src="${s.imagen_url_signed}" alt="${s.titulo || ''}" data-fade loading="${i === 0 ? 'eager' : 'lazy'}">
+              </div>
+              <div class="cartel-home-zoom-badge">${ZOOM_ICON}</div>
+            </div>
+            ${s.titulo ? `<p class="cartel-home-title">${s.titulo}</p>` : ''}
+            <p class="cartel-home-cta">Toca para ver completo</p>
+          </div>`
+      ).join('');
+      markImagesLoading(container);
+    }
+
+    function openCartelLightbox(i) {
+      const s = cartelSlidesData[i];
+      if (!s) return;
+
+      // Varias páginas (ej. flyer de 2 caras) van en slots; si no, una sola imagen.
+      const pages = (s.slots && s.slots.length ? s.slots.map(sl => sl.url) : [s.imagen_url_signed]).filter(Boolean);
+      const scrollEl = document.getElementById('cartel-lightbox-scroll');
+      scrollEl.innerHTML = pages.map(url =>
+        `<img src="${url}" alt="${s.titulo || ''}" style="display:block;width:auto;max-width:100%;max-height:85vh;object-fit:contain;">`
+      ).join('');
+      scrollEl.scrollTop = 0;
+      document.getElementById('cartel-lightbox-hint').style.display = pages.length > 1 ? '' : 'none';
+
+      const linkEl = document.getElementById('cartel-lightbox-link');
+      if (s.href) { linkEl.href = s.href; linkEl.style.display = ''; }
+      else { linkEl.style.display = 'none'; }
+      document.getElementById('cartel-lightbox').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCartelLightbox() {
+      document.getElementById('cartel-lightbox').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('cartel-lightbox').style.display === 'flex') closeCartelLightbox();
+    });
+
+    async function loadBanner() {
+      const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+      if (user && user.role === 'admin') {
+        const btn = document.getElementById('banner-admin-btn');
+        if (btn) btn.style.display = 'flex';
+      }
+      if (!sb) { renderCommunityPhotos([]); renderCarteles([]); return; }
+      try {
+        const [{ data: photos }, { data: carteles }] = await Promise.all([
+          sb.from('banner_slides').select('imagen_url, orden').eq('tipo', 'fotos_comunidad').eq('activo', true).order('orden'),
+          sb.from('banner_slides').select('*').eq('tipo', 'informativo').eq('activo', true).order('orden'),
+        ]);
+        if (typeof resolveMediaFields === 'function') {
+          // Todo a la vez (fotos, carteles y páginas de carteles): media.js
+          // lo agrupa en una sola petición de enlaces firmados.
+          await Promise.all([
+            resolveMediaFields(photos || [], [{ bucket: 'community media', field: 'imagen_url' }]),
+            resolveMediaFields(carteles || [], [{ bucket: 'community media', field: 'imagen_url' }]),
+            // 'slots' es un array de {url, ...} (varias páginas por cartel), no una URL suelta.
+            ...(carteles || []).flatMap((c) => Array.isArray(c.slots)
+              ? c.slots.filter(sl => sl && sl.url).map(async (sl) => { sl.url = await resolveMediaUrl('community media', sl.url); })
+              : [])
+          ]);
+        }
+        const photoUrls = (photos || []).map(p => p.imagen_url_signed).filter(Boolean);
+        renderCommunityPhotos(photoUrls);
+        renderCarteles(carteles || []);
+        // Instantánea para la próxima visita — igual que MOCK_EVENTOS más
+        // arriba. Las URLs son firmadas y caducan a la hora, así que se
+        // guarda también HOME_SNAP_KEY_SAVED_AT: paintBannerFromSnapshot()
+        // (arriba) no pinta esta instantánea si ya es demasiado vieja, para
+        // no mostrar el icono de imagen rota mientras loadBanner() responde.
+        try {
+          localStorage.setItem(HOME_SNAP_KEY_PHOTOS, JSON.stringify(photoUrls));
+          localStorage.setItem(HOME_SNAP_KEY_CARTELES, JSON.stringify(carteles || []));
+          localStorage.setItem(HOME_SNAP_KEY_SAVED_AT, String(Date.now()));
+        } catch (e) { /* localStorage lleno o no disponible: sin instantánea, sin romper nada */ }
+      } catch(e) {
+        renderCommunityPhotos([]);
+        renderCarteles([]);
+      }
+    }
+
+    /* ─── Cerrar dropdowns al click fuera ─── */
+    document.addEventListener('click', function (e) {
+      document.querySelectorAll('.dropdown-menu:not(.hidden)').forEach(menu => {
+        if (!menu.closest('.dropdown').contains(e.target)) {
+          menu.classList.add('hidden');
+        }
+      });
+    });
+
+    /* ══════════════════════════════════════
+       HORARIOS DE TEFILA — dinámicos
+    ══════════════════════════════════════ */
+    const HORARIOS_DEFAULT = [
+      { nombre: 'Shajarit',       hora: '07:30', tipo: 'semana' },
+      { nombre: 'Minjá',          hora: '19:30', tipo: 'semana' },
+      { nombre: 'Encendido de velas', hora: '—',     tipo: 'shabat' }
+    ];
+
+    // Hora real de HebCal — se fija cuando llega la API
+    let _hebcalCandleTime = null;
+
+    function applyCandleSync() {
+      if (!_hebcalCandleTime) return;
+      document.querySelectorAll('#horarios-shabat .tefila-row').forEach(row => {
+        const n = (row.querySelector('.tefila-name')?.textContent || '').toLowerCase();
+        if (n.includes('entrada') || n.includes('velas') || n.includes('encendido')) {
+          row.querySelector('.tefila-time').textContent = _hebcalCandleTime;
+        }
+      });
+    }
+
+    function renderHorarios(items) {
+      const semana = items.filter(it => it.tipo !== 'shabat');
+      const shabat  = items.filter(it => it.tipo === 'shabat');
+      const rowsHTML = arr => arr.map(it =>
+        `<div class="tefila-row"><span class="tefila-name">${it.nombre}</span><span class="tefila-time">${it.hora}</span></div>`
+      ).join('');
+      const container = document.getElementById('horarios-rows');
+      if (!container) return;
+      const shabatIcon = '<svg class="tefila-shabat-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25 12 15.75 4.5 8.25"/></svg>';
+      container.innerHTML =
+        `<div id="horarios-semana">${rowsHTML(semana)}</div>
+         <div id="horarios-shabat" onclick="document.getElementById('shabat-card-section').scrollIntoView({behavior:'smooth',block:'start'})" style="cursor:pointer;" title="Ver horarios de Shabbat">${rowsHTML(shabat)}${shabatIcon}</div>`;
+      applyCandleSync();
+    }
+
+    async function loadHorarios() {
+      // Mostrar botón de edición a admin y super_admin
+      if (user && ['admin', 'super_admin'].includes(user.role)) {
+        const btn = document.getElementById('btn-edit-horarios');
+        if (btn) btn.style.display = 'flex';
+      }
+
+      const sb = getSupabase();
+      if (!sb) return; // usa los valores por defecto del HTML
+
+      try {
+        const { data, error } = await sb
+          .from('horarios')
+          .select('items')
+          .eq('id', 'sinagoga')
+          .single();
+
+        if (!error && data?.items?.length) {
+          // Retrocompatibilidad: si no tiene 'tipo', inferirlo por nombre
+          const items = data.items.map(it => {
+            if (it.tipo) return it;
+            const n = (it.nombre || '').toLowerCase();
+            const tipo = (n.includes('shabat') || n.includes('shabbat') || n.includes('havdal') || n.includes('havdalá')) ? 'shabat' : 'semana';
+            return { ...it, tipo };
+          });
+          renderHorarios(items);
+        }
+      } catch (e) {
+        console.warn('horarios: usando valores por defecto');
+      }
+    }
+
+    async function guardarHorarios(items) {
+      const sb = getSupabase();
+      if (!sb) { showToast('Sin conexión a internet', 'error'); return false; }
+
+      const { error } = await sb
+        .from('horarios')
+        .upsert({ id: 'sinagoga', items, updated_by: user?.name || 'admin' },
+                 { onConflict: 'id' });
+
+      if (error) { showToast('Error al guardar: ' + error.message, 'error'); return false; }
+      return true;
+    }
+
+    function abrirEditHorarios() {
+      // Leer filas actuales del DOM
+      const readSection = (sectionId, tipo) =>
+        Array.from(document.querySelectorAll(`#${sectionId} .tefila-row`)).map(row => ({
+          nombre: row.querySelector('.tefila-name')?.textContent || '',
+          hora:   row.querySelector('.tefila-time')?.textContent || '',
+          tipo
+        }));
+      const currentSemana = readSection('horarios-semana', 'semana');
+      const currentShabat  = readSection('horarios-shabat',  'shabat');
+
+      const makeRow = (it, tipo) => `
+        <div class="hedit-row" data-tipo="${tipo}" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <input value="${it.nombre}" placeholder="Nombre (ej: Shajarit)" style="flex:1;border:1.5px solid #ddd;border-radius:8px;padding:8px 10px;font-size:0.88rem;font-family:inherit;outline:none;">
+          <input value="${it.hora}" placeholder="Hora" style="width:80px;border:1.5px solid #ddd;border-radius:8px;padding:8px 10px;font-size:0.88rem;font-family:inherit;outline:none;text-align:center;">
+          <button onclick="this.closest('.hedit-row').remove()" style="background:none;border:none;cursor:pointer;color:#aaa;padding:4px;border-radius:6px;font-size:1.1rem;" title="Eliminar">✕</button>
+        </div>`;
+
+      const addRowBtn = (listId, tipo, label) => `
+        <button onclick="
+          const list = document.getElementById('${listId}');
+          list.insertAdjacentHTML('beforeend', \`<div class='hedit-row' data-tipo='${tipo}' style='display:flex;align-items:center;gap:8px;margin-bottom:8px;'><input placeholder='Nombre' style='flex:1;border:1.5px solid #ddd;border-radius:8px;padding:8px 10px;font-size:0.88rem;font-family:inherit;outline:none;'><input placeholder='Hora' style='width:80px;border:1.5px solid #ddd;border-radius:8px;padding:8px 10px;font-size:0.88rem;font-family:inherit;outline:none;text-align:center;'><button onclick='this.closest(&quot;.hedit-row&quot;).remove()' style='background:none;border:none;cursor:pointer;color:#aaa;padding:4px;border-radius:6px;font-size:1.1rem;'>✕</button></div>\`);
+        " style="width:100%;margin-top:4px;padding:8px;border:1.5px dashed #ccc;border-radius:8px;background:none;cursor:pointer;font-size:0.82rem;color:#888;" onmouseover="this.style.borderColor='#1b2e5e'" onmouseout="this.style.borderColor='#ccc'">
+          + ${label}
+        </button>`;
+
+      const overlay = document.createElement('div');
+      overlay.id = 'horarios-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px;';
+      overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid #eee;">
+            <h3 style="font-size:1.05rem;font-weight:700;">✏️ Editar horarios de tefila</h3>
+            <button onclick="document.getElementById('horarios-overlay').remove()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:#888;">✕</button>
+          </div>
+          <div style="padding:20px 24px;">
+            <p style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#888;margin-bottom:8px;">Días de semana</p>
+            <div id="hedit-semana">${currentSemana.map(it => makeRow(it, 'semana')).join('')}</div>
+            ${addRowBtn('hedit-semana','semana','Añadir horario semanal')}
+            <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+            <p style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#888;margin-bottom:8px;">Shabbat</p>
+            <div id="hedit-shabat">${currentShabat.map(it => makeRow(it, 'shabat')).join('')}</div>
+            ${addRowBtn('hedit-shabat','shabat','Añadir horario Shabbat')}
+          </div>
+          <div style="padding:16px 24px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="document.getElementById('horarios-overlay').remove()" class="btn btn-ghost">Cancelar</button>
+            <button id="btn-save-horarios" class="btn btn-primary">Guardar para todos</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      document.getElementById('btn-save-horarios').addEventListener('click', async () => {
+        const readList = (listId, tipo) =>
+          Array.from(document.querySelectorAll(`#${listId} .hedit-row`)).map(row => {
+            const inputs = row.querySelectorAll('input');
+            return { nombre: inputs[0]?.value.trim(), hora: inputs[1]?.value.trim(), tipo };
+          }).filter(it => it.nombre && it.hora);
+
+        const items = [...readList('hedit-semana','semana'), ...readList('hedit-shabat','shabat')];
+        if (!items.length) { showToast('Añade al menos un horario', 'warning'); return; }
+
+        const btn = document.getElementById('btn-save-horarios');
+        btn.textContent = 'Guardando...';
+        btn.disabled = true;
+
+        const ok = await guardarHorarios(items);
+        if (ok) {
+          renderHorarios(items);
+          document.getElementById('horarios-overlay').remove();
+          showToast('Horarios actualizados para toda la comunidad ✓', 'success');
+        } else {
+          btn.textContent = 'Guardar para todos';
+          btn.disabled = false;
+        }
+      });
+    }
+
+    // Cargar horarios al inicio
+    window.__homeReady.push(loadHorarios());
+
+    /* ══════════════════════════════════════════
+       SHABAT CARD — Datos reales via HebCal API
+       Usa la misma ciudad guardada en calendario
+    ══════════════════════════════════════════ */
+    const SHABAT_CITIES = {
+      "madrid":      { name:"Madrid",          lat:40.4168,  lon:-3.7038,   tz:"Europe/Madrid",                    b:18, m:42 },
+      "barcelona":   { name:"Barcelona · Les Corts",  lat:41.38879, lon:2.15899,    tz:"Europe/Madrid",                    b:18, m:42 },
+      "valencia":    { name:"Valencia",         lat:39.4699,  lon:-0.3763,   tz:"Europe/Madrid",                    b:18, m:42 },
+      "bilbao":      { name:"Bilbao",           lat:43.2630,  lon:-2.9350,   tz:"Europe/Madrid",                    b:18, m:42 },
+      "sevilla":     { name:"Sevilla",          lat:37.3891,  lon:-5.9845,   tz:"Europe/Madrid",                    b:18, m:42 },
+      "malaga":      { name:"Málaga",           lat:36.7213,  lon:-4.4214,   tz:"Europe/Madrid",                    b:18, m:42 },
+      "palma":       { name:"Palma",            lat:39.5696,  lon:2.6502,    tz:"Europe/Madrid",                    b:18, m:42 },
+      "zaragoza":    { name:"Zaragoza",         lat:41.6561,  lon:-0.8773,   tz:"Europe/Madrid",                    b:18, m:42 },
+      "jerusalem":   { name:"Jerusalén",        lat:31.7683,  lon:35.2137,   tz:"Asia/Jerusalem",                   b:40, m:50 },
+      "telaviv":     { name:"Tel Aviv",         lat:32.0853,  lon:34.7818,   tz:"Asia/Jerusalem",                   b:18, m:42 },
+      "haifa":       { name:"Haifa",            lat:32.8193,  lon:34.9877,   tz:"Asia/Jerusalem",                   b:18, m:42 },
+      "beersheva":   { name:"Beer Sheva",       lat:31.2520,  lon:34.7915,   tz:"Asia/Jerusalem",                   b:18, m:42 },
+      "london":      { name:"Londres",          lat:51.5074,  lon:-0.1278,   tz:"Europe/London",                    b:18, m:42 },
+      "paris":       { name:"París",            lat:48.8566,  lon:2.3522,    tz:"Europe/Paris",                     b:18, m:42 },
+      "berlin":      { name:"Berlín",           lat:52.5200,  lon:13.4050,   tz:"Europe/Berlin",                    b:18, m:42 },
+      "amsterdam":   { name:"Ámsterdam",        lat:52.3676,  lon:4.9041,    tz:"Europe/Amsterdam",                 b:18, m:42 },
+      "zurich":      { name:"Zúrich",           lat:47.3769,  lon:8.5417,    tz:"Europe/Zurich",                    b:18, m:42 },
+      "rome":        { name:"Roma",             lat:41.9028,  lon:12.4964,   tz:"Europe/Rome",                      b:18, m:42 },
+      "lisbon":      { name:"Lisboa",           lat:38.7223,  lon:-9.1393,   tz:"Europe/Lisbon",                    b:18, m:42 },
+      "brussels":    { name:"Bruselas",         lat:50.8503,  lon:4.3517,    tz:"Europe/Brussels",                  b:18, m:42 },
+      "vienna":      { name:"Viena",            lat:48.2082,  lon:16.3738,   tz:"Europe/Vienna",                    b:18, m:42 },
+      "geneva":      { name:"Ginebra",          lat:46.2044,  lon:6.1432,    tz:"Europe/Zurich",                    b:18, m:42 },
+      "newyork":     { name:"Nueva York",       lat:40.7128,  lon:-74.0060,  tz:"America/New_York",                 b:18, m:42 },
+      "losangeles":  { name:"Los Ángeles",      lat:34.0522,  lon:-118.2437, tz:"America/Los_Angeles",              b:18, m:42 },
+      "miami":       { name:"Miami",            lat:25.7617,  lon:-80.1918,  tz:"America/New_York",                 b:18, m:42 },
+      "chicago":     { name:"Chicago",          lat:41.8781,  lon:-87.6298,  tz:"America/Chicago",                  b:18, m:42 },
+      "toronto":     { name:"Toronto",          lat:43.6532,  lon:-79.3832,  tz:"America/Toronto",                  b:18, m:42 },
+      "montreal":    { name:"Montreal",         lat:45.5017,  lon:-73.5673,  tz:"America/Toronto",                  b:18, m:42 },
+      "mexico":      { name:"Ciudad de México", lat:19.4326,  lon:-99.1332,  tz:"America/Mexico_City",              b:18, m:42 },
+      "buenosaires": { name:"Buenos Aires",     lat:-34.6037, lon:-58.3816,  tz:"America/Argentina/Buenos_Aires",   b:18, m:42 },
+      "montevideo":  { name:"Montevideo",       lat:-34.9011, lon:-56.1645,  tz:"America/Montevideo",               b:18, m:42 },
+      "saopaulo":    { name:"São Paulo",        lat:-23.5505, lon:-46.6333,  tz:"America/Sao_Paulo",                b:18, m:42 },
+      "bogota":      { name:"Bogotá",           lat:4.7110,   lon:-74.0721,  tz:"America/Bogota",                   b:18, m:42 },
+      "johannesburg":{ name:"Johannesburgo",    lat:-26.2041, lon:28.0473,   tz:"Africa/Johannesburg",              b:18, m:42 },
+      "melbourne":   { name:"Melbourne",        lat:-37.8136, lon:144.9631,  tz:"Australia/Melbourne",              b:18, m:42 },
+      "sydney":      { name:"Sídney",           lat:-33.8688, lon:151.2093,  tz:"Australia/Sydney",                 b:18, m:42 },
+    };
+
+    const SHABAT_PARASHA = {
+      "Bereshit":"Bereshit","Noach":"Noaj","Lech-Lecha":"Lej Lejá","Vayera":"Vayerá",
+      "Chayei Sara":"Jayé Sara","Toldot":"Toldot","Vayetzei":"Vayetsé","Vayishlach":"Vayishláj",
+      "Vayeshev":"Vayeshev","Miketz":"Mikets","Vayigash":"Vayigash","Vayechi":"Vayejí",
+      "Shemot":"Shemot","Vaera":"Vaerá","Bo":"Bo","Beshalach":"Besháláj","Yitro":"Yitró",
+      "Mishpatim":"Mishpatim","Terumah":"Terumá","Tetzaveh":"Tetsavé","Ki Tisa":"Ki Tisá",
+      "Vayakhel":"Vaiakel","Pekudei":"Pekudé","Vayakhel-Pekudei":"Vaiakel-Pekudé",
+      "Vayikra":"Vaikrá","Tzav":"Tsav","Shmini":"Shminí","Tazria":"Tazria","Metzora":"Metsora",
+      "Tazria-Metzora":"Tazria-Metsora","Achrei Mot":"Ajaré Mot","Kedoshim":"Kedoshim",
+      "Achrei Mot-Kedoshim":"Ajaré-Kedoshim","Emor":"Emor","Behar":"Behar",
+      "Bechukotai":"Bejukotai","Behar-Bechukotai":"Behar-Bejukotai","Bamidbar":"Bamidbar",
+      "Nasso":"Nasó","Beha'alotcha":"Behaalotjá","Sh'lach":"Shlaj Lejá","Korach":"Koraj",
+      "Chukat":"Jukat","Balak":"Balak","Chukat-Balak":"Jukat-Balak","Pinchas":"Pinjás",
+      "Matot":"Matot","Masei":"Masé","Matot-Masei":"Matot-Masé","Devarim":"Devarim",
+      "Vaetchanan":"Vaetjanán","Eikev":"Ekev","Re'eh":"Reé","Shoftim":"Shoftim",
+      "Ki Teitzei":"Ki Tetsé","Ki Tavo":"Ki Tavó","Nitzavim":"Nitsavim","Vayeilech":"Vayelej",
+      "Nitzavim-Vayeilech":"Nitsavim-Vayelej","Ha'azinu":"Haaziní","Vezot Haberakhah":"Vezot Habrajá"
+    };
+
+    async function loadShabatCard() {
+      try {
+        const cityKey = localStorage.getItem('kehila_city') || '{{location.cityKey}}';
+        const city = SHABAT_CITIES[cityKey] || SHABAT_CITIES['{{location.cityKey}}'];
+
+        const today = new Date();
+        const year  = today.getFullYear();
+        const month = today.getMonth() + 1;
+
+        // Pedir mes actual y el siguiente para cubrir fin de mes
+        const fetchMonth = async (m, y) => {
+          const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=off&nx=off&year=${y}&month=${m}&ss=on&mf=off&c=on&geo=pos&latitude=${city.lat}&longitude=${city.lon}&tzid=${encodeURIComponent(city.tz)}&m=${city.m}&b=${city.b}&s=on&lg=s`;
+          const r = await fetch(url);
+          return (await r.json()).items || [];
+        };
+
+        const nextMonth = month === 12 ? 1 : month + 1;
+        const nextYear  = month === 12 ? year + 1 : year;
+        const [items1, items2] = await Promise.all([
+          fetchMonth(month, year),
+          fetchMonth(nextMonth, nextYear)
+        ]);
+        const items = [...items1, ...items2];
+
+        // Buscar el próximo encendido de velas (desde hoy)
+        const todayStr = today.toISOString().slice(0, 10);
+        let candles = null, havdala = null, parasha = null;
+
+        for (const item of items) {
+          const dateStr = item.date.slice(0, 10);
+          if (dateStr < todayStr) continue;
+          if (!candles  && item.category === 'candles')  candles  = item;
+          if (!havdala  && item.category === 'havdalah') havdala  = item;
+          if (!parasha  && item.category === 'parashat') parasha  = item;
+          if (candles && havdala && parasha) break;
+        }
+
+        const fmtTime = iso => new Date(iso).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', timeZone: city.tz });
+        const fmtDay  = iso => {
+          const d = new Date(iso);
+          const dias  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+          const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+          return `${dias[d.getDay()]} ${d.getDate()} ${meses[d.getMonth()]}`;
+        };
+
+        // Parasha — si el próximo sábado es Yom Tov, HebCal no da parashá ese
+        // día (la siguiente sería otra semana): mostrar la fiesta en su lugar.
+        const nextSat = new Date(today);
+        nextSat.setDate(today.getDate() + ((6 - today.getDay() + 7) % 7));
+        const satStr = `${nextSat.getFullYear()}-${String(nextSat.getMonth()+1).padStart(2,'0')}-${String(nextSat.getDate()).padStart(2,'0')}`;
+        const parashaIsThisShabbat = parasha && parasha.date.slice(0, 10) === satStr;
+        const yomTov = parashaIsThisShabbat ? null
+          : items.find(i => i.category === 'holiday' && i.date.slice(0, 10) === satStr);
+
+        if (yomTov) {
+          const name = yomTov.title.replace(/\s+(I{1,3}|IV|V?I{0,3}|[IVX]+|\d+)$/,'').trim();
+          document.getElementById('shabat-parasha').childNodes[0].textContent = name + ' ';
+          document.getElementById('shabat-parasha-he').textContent = yomTov.hebrew || '';
+        } else if (parasha) {
+          const raw = parasha.title.replace(/^Parashat\s+/,'').replace(/^Parasha\s+/,'');
+          const es  = SHABAT_PARASHA[raw] || raw;
+          const he  = parasha.hebrew || '';
+          document.getElementById('shabat-parasha').childNodes[0].textContent = 'Parashat ' + es + ' ';
+          document.getElementById('shabat-parasha-he').textContent = he;
+        }
+
+        // Encendido
+        if (candles) {
+          _hebcalCandleTime = fmtTime(candles.date);
+          document.getElementById('shabat-velas-time').textContent = _hebcalCandleTime;
+          document.getElementById('shabat-velas-day').textContent  = fmtDay(candles.date);
+          applyCandleSync();
+        }
+
+        // Havdalá
+        if (havdala) {
+          document.getElementById('shabat-havdala-time').textContent = fmtTime(havdala.date);
+          document.getElementById('shabat-havdala-day').textContent  = fmtDay(havdala.date);
+        }
+
+        // Ciudad
+        const lat = city.lat;
+        const coords = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}`;
+        document.getElementById('shabat-ciudad-name').textContent   = city.name;
+        document.getElementById('shabat-ciudad-coords').textContent = coords;
+
+      } catch(e) {
+        console.warn('Shabat card: error cargando datos', e);
+      }
+    }
+
+    // ── Cargar foto banner Shabat (sólo lectura; se gestiona desde Ajustes) ──
+    window.__homeReady.push((async function() {
+      const sb = typeof getSupabase === 'function' ? getSupabase() : null; if (!sb) return;
+      try {
+        const { data } = await sb.from('servicios_config').select('image_url').eq('id', 'shabat_banner').single();
+        if (data?.image_url) {
+          const img = document.getElementById('shabat-banner-photo');
+          img.src = data.image_url; img.style.display = 'block';
+        }
+      } catch(e) {}
+    })());
+
+    window.__homeReady.push(loadShabatCard());
+
+    // Revela el dashboard entero de golpe cuando todas las secciones están
+    // listas, en vez de ir mostrándolas por partes según van respondiendo.
+    // Timeout de seguridad: si algo se cuelga (red lenta, error), no deja al
+    // usuario mirando el loader para siempre — se revela igual a los 4s.
+    function revealHome() {
+      document.body.classList.add('page-ready');
+    }
+    // Al volver atrás (botón "atrás" del teléfono o el de la app) no tiene
+    // sentido volver a bloquear la pantalla esperando a Supabase: los datos
+    // ya se vieron hace un instante. Se revela al momento y las secciones
+    // se actualizan solas en cuanto llega cada respuesta.
+    // performance.getEntriesByType('navigation') no es fiable dentro del
+    // WebView de la app (Android/iOS), así que se usa sessionStorage como
+    // señal principal: si ya se visitó home en esta sesión, es una vuelta
+    // atrás (o una recarga) y no una entrada fresca tras el login.
+    let isBackForward = false;
+    try {
+      isBackForward = sessionStorage.getItem('kehila_home_visited') === '1';
+      sessionStorage.setItem('kehila_home_visited', '1');
+    } catch (_) {}
+    if (!isBackForward) {
+      const nav = performance.getEntriesByType('navigation')[0];
+      isBackForward = nav && nav.type === 'back_forward';
+    }
+    if (isBackForward) {
+      revealHome();
+    } else {
+      Promise.race([
+        Promise.all(window.__homeReady).catch(() => {}),
+        new Promise((resolve) => setTimeout(resolve, 4000)),
+      ]).then(revealHome);
+    }
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
+  </script>
+  <script src="js/push.js"></script>
+  <script>
+    // Inicializar push tras cargar la página y confirmar sesión activa
+    document.addEventListener('DOMContentLoaded', function() {
+      const u = getCurrentUser();
+      if (u && u.status === 'active') {
+        // Pequeño delay para no bloquear el render inicial
+        setTimeout(initPush, 1500);
+      }
+    });
+  </script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

@@ -1,0 +1,90 @@
+# CLAUDE.md — comunidad-demo
+
+Plantilla de app para comunidades judías. Nació de la app de Jabad Barcelona ("Kehilá"), desnudada
+de su marca y datos, y convertida en una plantilla configurable. **Este repo no contiene datos de
+ninguna comunidad real**: `npm run check` lo vigila.
+
+## Cómo funciona
+
+```
+community/<slug>.json  ──┐
+community/_defaults.json ┼─►  tools/build.mjs  ──►  dist/<slug>/   (web estática lista para servir)
+src/  (páginas con tokens {{…}}) ─┘
+```
+
+- `src/` es la app: HTML/CSS/JS vanilla con **tokens** `{{name}}`, `{{contact.email}}`, `{{location.cityKey}}`…
+- El build mezcla `_defaults.json` + `<slug>.json`, valida, sustituye los tokens, aplica el tema y copia a `dist/`.
+- Un token que no existe en la configuración **rompe el build** (no se publica a medias).
+- `src/js/community.js` expone `window.COMMUNITY` en el navegador: la parte pública de la configuración
+  (nunca claves ni datos legales) y `COMMUNITY.enabled('mikve')`.
+
+### Tema
+Los colores de marca están escritos como hex en el código original. El build cambia cada uno por el
+equivalente de `theme.primary/accent/background` (mapa en `colorMap()` de `tools/build.mjs`, con
+variantes oscuras, claras y `rgba`). Si añades un color de marca nuevo al código, añádelo al mapa
+o, mejor, usa `var(--color-primary)` / `var(--color-gold)`.
+
+### Módulos
+`modules.<nombre>: false` en la comunidad:
+1. el build no copia las páginas de ese módulo (mapa `MODULES` en `tools/build.mjs`);
+2. `sw.js` y `js/router.js` se podan de esas páginas;
+3. `js/nav.js` quita el item del menú, de la barra inferior y de las pestañas (`navModuleOn`);
+4. `js/community.js` oculta con CSS cualquier enlace suelto a esas páginas.
+
+Para **añadir un módulo**: página en `src/`, entrada en `MODULES` (build) y en `PAGE_MODULE`
+(`community.js`), id en `NAV_ID_MODULE` (`nav.js`) y clave en `_defaults.json` → `modules`.
+
+### Escapado de tokens
+Se hace según el contexto: HTML normal → entidades; dentro de `<script>` y `.js` → string JS;
+dentro de `onclick="…"` → JS y luego HTML; `.json` → JSON. Un nombre con `'`, `"` o `&` no rompe nada
+(probado). Los valores deben ser simples (texto, número, booleano), no listas ni objetos:
+para listas (p. ej. `team`) la página lee `window.COMMUNITY`.
+
+## Reglas del repo
+
+1. **Nada de comunidades reales en `src/`, `tools/` ni `community/`**: ni nombres, ni correos, ni teléfonos,
+   ni fotos de personas, ni claves. Los datos reales van en la configuración de esa comunidad, fuera de
+   este repo si es sensible.
+2. Los ejemplos usan dominios `example.com` y teléfonos `+34 600 000 0xx`.
+3. Ejecutar `npm run check` antes de cada commit.
+4. Las imágenes del login/home son placeholders SVG generados (`img/placeholder.svg`, `logo.svg`, `avatar.svg`
+   e iconos PNG salen del build con los colores de la comunidad). No añadir fotos reales aquí.
+5. Los `kehila_*` de `localStorage` son nombres técnicos internos del producto; no son marca de comunidad.
+
+## Estructura
+
+```
+community/   _defaults.json (todo lo configurable + valores neutros), <slug>.json, community.schema.json
+src/         la app (páginas, css/, js/, vendor/, siddur/)
+tools/       build.mjs · serve.mjs · new-community.mjs · check.mjs · build_siddur.py
+supabase/    backend de referencia (esquema + funciones edge). Ver supabase/README.md
+dist/        salida del build (no se versiona)
+```
+
+El sidur (`src/siddur.html`, `src/siddur/*`) es **generado** desde un proyecto externo con
+`python tools/build_siddur.py <ruta-al-proyecto-del-sidur>`; no editar a mano.
+
+## Seguridad heredada (sigue pendiente)
+
+Viene de la app original y no se ha tocado en las fases 0–2:
+- Cabeceras HTTP (CSP, X-Frame-Options) sin configurar en el hosting.
+- Datos personales en `localStorage` sin cifrar (`kehila_user`, etc.).
+- Sin tokens CSRF; el service worker cachea algunas respuestas autenticadas.
+- RGPD: los datos religiosos son categoría especial (art. 9). Cada comunidad necesita sus propios
+  textos legales (`legal.*`) revisados por un abogado: los de ejemplo **no sirven en producción**.
+
+## Hoja de ruta
+
+| Fase | Estado |
+|---|---|
+| 0. Copia limpia, sin historial ni secretos | ✅ |
+| 1. Desnudar Jabad (páginas específicas, marca, fotos, datos personales) | ✅ |
+| 2. Configuración por comunidad + build + módulos + tema + iconos | ✅ |
+| 3. Nueva base Next.js (App Router + TypeScript), portar módulos uno a uno | pendiente |
+| 4. Capa de datos con adaptadores `mock` / `supabase` + modo demo (sin backend, panel para activar secciones en vivo) | pendiente |
+| 5. Despliegue por comunidad (enlace de demo para enviar) | pendiente |
+| 6. Móvil con Capacitor empaquetando la app (iOS/Android por comunidad) | pendiente |
+| 7. Backend por comunidad: parametrizar funciones edge (`supabase/README.md`), decidir un Supabase por comunidad o uno compartido | pendiente |
+
+Limitación actual: sin la fase 4, las pantallas que requieren sesión necesitan un Supabase real
+configurado en `integrations`. La configuración (`community/*.json`) está pensada para reutilizarse tal cual en Next.js.

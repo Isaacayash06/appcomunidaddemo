@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>Noticia — {{name}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: #f5f3ef; }
+    @media (max-width: 768px) { .main-content { margin-left: 0; padding-bottom: 80px; } }
+
+    /* ── Back bar ── */
+    .article-back-bar {
+      background: #fff;
+      border-bottom: 1px solid #e2e0da;
+      padding: 0 32px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    @media (max-width: 768px) { .article-back-bar { padding: 0 16px; } }
+
+    .article-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .article-back-btn:hover { color: var(--color-primary); }
+    .article-back-btn svg { width: 16px; height: 16px; }
+
+    /* ── Article wrapper ── */
+    .article-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 32px 80px;
+    }
+    @media (max-width: 768px) { .article-wrap { padding: 28px 16px 60px; } }
+
+    /* ── Newspaper masthead ── */
+    .np-masthead-line {
+      border-top: 4px solid #1a202c;
+      border-bottom: 1px solid #1a202c;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      margin-bottom: 32px;
+      gap: 10px;
+    }
+    .np-masthead-pub {
+      font-family: 'Frank Ruhl Libre', Georgia, serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1a202c;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .np-masthead-date {
+      font-size: 0.7rem;
+      color: #718096;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: right;
+    }
+
+    /* ── Category ── */
+    .np-category {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .np-category::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: #C9A84C;
+    }
+
+    /* ── Headline ── */
+    .np-headline {
+      font-family: 'Frank Ruhl Libre', Georgia, 'Times New Roman', serif;
+      font-size: 2.6rem;
+      font-weight: 900;
+      line-height: 1.1;
+      color: #1a202c;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 640px) { .np-headline { font-size: 1.85rem; } }
+
+    /* ── Excerpt / standfirst ── */
+    .np-standfirst {
+      font-size: 1.05rem;
+      font-weight: 400;
+      color: #4a5568;
+      line-height: 1.65;
+      border-left: 3px solid #C9A84C;
+      padding-left: 16px;
+      margin-bottom: 24px;
+      font-style: italic;
+    }
+
+    /* ── Divider ── */
+    .np-divider {
+      border: none;
+      border-top: 1px solid #c8c3b8;
+      margin: 20px 0;
+    }
+    .np-divider.thick { border-top-width: 2px; border-color: #1a202c; }
+
+    /* ── Byline ── */
+    .np-byline {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .np-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #1a202c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .np-avatar span { color: #fff; font-size: 13px; font-weight: 700; }
+    .np-byline-info {}
+    .np-byline-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #1a202c;
+    }
+    .np-byline-date { font-size: 0.78rem; color: #718096; margin-top: 1px; }
+
+    /* ── Hero image ── */
+    .np-hero {
+      width: 100%;
+      max-height: 440px;
+      object-fit: cover;
+      display: block;
+      border-radius: 2px;
+      margin-bottom: 28px;
+    }
+    .np-hero-placeholder {
+      width: 100%;
+      height: 280px;
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      border-radius: 2px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .np-hero-placeholder svg { width: 48px; height: 48px; color: rgba(255,255,255,0.25); }
+
+    /* ── Body text ── */
+    .np-body {
+      columns: 1;
+    }
+    .np-p {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.0625rem;
+      line-height: 1.82;
+      color: #2d3748;
+      margin-bottom: 1.25em;
+      text-align: justify;
+      hyphens: auto;
+    }
+    .np-p:first-child::first-letter {
+      font-family: 'Frank Ruhl Libre', Georgia, serif;
+      font-size: 4.2em;
+      font-weight: 900;
+      float: left;
+      line-height: 0.72;
+      margin: 0.06em 0.12em 0 0;
+      color: #1a202c;
+    }
+
+    /* ── Footer ornament ── */
+    .np-rule-end {
+      border: none;
+      border-top: 1px solid #c8c3b8;
+      margin: 32px 0 20px;
+      text-align: center;
+      overflow: visible;
+    }
+    .np-rule-end::after {
+      content: '✦';
+      font-size: 12px;
+      color: #C9A84C;
+      background: #f5f3ef;
+      padding: 0 12px;
+      position: relative;
+      top: -10px;
+    }
+
+    /* ── Share / nav row ── */
+    .np-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Loading / error ── */
+    .np-loading {
+      text-align: center;
+      padding: 80px 0;
+      color: #718096;
+      font-size: 1rem;
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div id="sidebar-placeholder"></div>
+
+  <div class="main-content">
+
+    <!-- Back bar -->
+    <div class="article-back-bar">
+      <button class="article-back-btn" onclick="history.back()">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+        </svg>
+        Volver
+      </button>
+    </div>
+
+    <!-- Article -->
+    <div class="article-wrap" id="article-wrap">
+      <div class="np-loading" id="np-loading">
+        <svg style="width:32px;height:32px;animation:spin 1s linear infinite;color:#C9A84C" fill="none" viewBox="0 0 24 24">
+          <circle style="opacity:.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path style="opacity:.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        <p style="margin-top:12px">Cargando noticia…</p>
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    </div>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/vendor/supabase.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/media.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+  <script>
+    requireAuth();
+    initNav('noticias');
+
+    function formatFechaLarga(str) {
+      try {
+        const d = new Date((str || '').includes('T') ? str : str + 'T12:00:00');
+        return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      } catch(e) { return str || ''; }
+    }
+
+    async function loadArticle() {
+      const id = new URLSearchParams(window.location.search).get('id');
+      if (!id) { window.location.href = 'noticias.html'; return; }
+
+      const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+      let noticia = null;
+
+      if (sb) {
+        try {
+          const { data } = await sb.from('noticias').select('*').eq('id', id).maybeSingle();
+          if (data && typeof resolveMediaFields === 'function') {
+            await resolveMediaFields([data], [{ bucket: 'community media', field: 'imagen_url' }]);
+          }
+          noticia = data;
+        } catch(e) { /* fallback to mock */ }
+      }
+
+      // Fallback: look in MOCK_NOTICIAS_V2
+      if (!noticia && typeof MOCK_NOTICIAS_V2 !== 'undefined') {
+        noticia = MOCK_NOTICIAS_V2.find(n => String(n?.id) === String(id));
+      }
+
+      const wrap = document.getElementById('article-wrap');
+
+      if (!noticia) {
+        wrap.innerHTML = `
+          <div style="text-align:center;padding:80px 0;color:#718096;">
+            <p style="font-size:1.1rem;margin-bottom:16px;">Noticia no encontrada.</p>
+            <a href="noticias.html" class="btn btn-primary btn-sm">Ver todas las noticias</a>
+          </div>`;
+        return;
+      }
+
+      // Update page title
+      document.title = `${noticia.titulo} — {{name}}`;
+
+      const fecha = noticia.created_at || noticia.fecha || '';
+      const authorInitial = (noticia.autor?.[0] ?? 'R').toUpperCase();
+
+      const parrafos = (noticia.contenido ?? noticia.resumen ?? '')
+        .split(/\n\n+/).filter(p => p.trim());
+      const bodyHTML = parrafos.length
+        ? parrafos.map((p, i) =>
+            `<p class="np-p">${escHtml(p.trim())}</p>`
+          ).join('')
+        : `<p class="np-p">${escHtml(noticia.resumen || '')}</p>`;
+
+      const heroHTML = noticia.imagen_url_signed
+        ? `<img src="${noticia.imagen_url_signed}" class="np-hero" alt="${escHtml(noticia.titulo)}">`
+        : `<div class="np-hero-placeholder">
+             <svg fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+           </div>`;
+
+      wrap.innerHTML = `
+        <!-- Masthead -->
+        <div class="np-masthead-line">
+          <span class="np-masthead-pub">{{name}}</span>
+          <span class="np-masthead-date">${formatFechaLarga(fecha)}</span>
+        </div>
+
+        <!-- Category -->
+        <div class="np-category">${escHtml(noticia.categoria || 'Comunidad')}</div>
+
+        <!-- Headline -->
+        <h1 class="np-headline">${escHtml(noticia.titulo)}</h1>
+
+        <!-- Standfirst / excerpt -->
+        ${noticia.resumen ? `<p class="np-standfirst">${escHtml(noticia.resumen)}</p>` : ''}
+
+        <hr class="np-divider thick">
+
+        <!-- Byline -->
+        <div class="np-byline">
+          <div class="np-avatar"><span>${escHtml(authorInitial)}</span></div>
+          <div class="np-byline-info">
+            <div class="np-byline-name">${escHtml(noticia.autor || 'Redacción')}</div>
+            <div class="np-byline-date">${formatFechaLarga(fecha)}</div>
+          </div>
+        </div>
+
+        <!-- Hero image -->
+        ${heroHTML}
+
+        <!-- Body -->
+        <div class="np-body">${bodyHTML}</div>
+
+        <hr class="np-rule-end">
+
+        <!-- Actions -->
+        <div class="np-actions">
+          <a href="noticias.html" class="btn btn-secondary btn-sm">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+            Todas las noticias
+          </a>
+          <button class="btn btn-secondary btn-sm" onclick="copyLink()">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.935-2.185 2.25 2.25 0 0 0-3.935 2.185Z"/></svg>
+            Compartir
+          </button>
+        </div>`;
+    }
+
+    function copyLink() {
+      navigator.clipboard?.writeText(location.href)
+        .then(() => showToast('Enlace copiado', 'success'))
+        .catch(() => showToast('No se pudo copiar', 'error'));
+    }
+
+    loadArticle();
+  </script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

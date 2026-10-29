@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>Eliminar cuenta y datos — {{name}}</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body { background: var(--color-bg); }
+    .priv-wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+    .priv-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+    .priv-logo img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+    .priv-logo-name { font-size: 1.1rem; font-weight: 700; color: var(--color-primary); }
+    .priv-hero { background: var(--color-primary); color: #fff; border-radius: var(--radius-lg); padding: 32px 36px; margin-bottom: 36px; }
+    .priv-hero h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; font-family: var(--font-brand); }
+    .priv-hero p { font-size: 0.9rem; opacity: 0.85; line-height: 1.6; }
+    .priv-updated { font-size: 0.8rem; opacity: 0.65; margin-top: 8px; }
+    .priv-section { background: var(--color-white); border-radius: var(--radius-lg); padding: 28px 32px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .priv-section h2 { font-size: 1.15rem; font-weight: 800; color: var(--color-primary); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .priv-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--color-primary); color: #fff; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+    .priv-section p, .priv-section li { font-size: 0.9rem; line-height: 1.7; color: var(--color-text); }
+    .priv-section ol, .priv-section ul { margin: 10px 0 4px 20px; }
+    .priv-section li { margin-bottom: 6px; }
+    .priv-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin-top: 12px; }
+    .priv-table th { text-align: left; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--color-text-muted); padding: 8px 12px; border-bottom: 2px solid var(--color-border); background: var(--color-bg); }
+    .priv-table td { padding: 10px 12px; border-bottom: 1px solid var(--color-border-light); color: var(--color-text); vertical-align: top; }
+    .priv-table tr:last-child td { border-bottom: none; }
+    .priv-highlight { background: #EFF6FF; border-left: 4px solid var(--color-primary); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 14px 18px; margin: 12px 0; font-size: 0.875rem; color: #1e40af; line-height: 1.6; }
+    .priv-contact-card { background: var(--color-bg); border-radius: var(--radius-sm); padding: 18px 20px; margin-top: 12px; font-size: 0.875rem; line-height: 1.8; }
+    .priv-contact-card strong { color: var(--color-primary); display: block; margin-bottom: 4px; }
+    .priv-footer { text-align: center; font-size: 0.8rem; color: var(--color-text-muted); margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+    @media (max-width: 600px) { .priv-section { padding: 20px 18px; } .priv-hero { padding: 24px 20px; } .priv-hero h1 { font-size: 1.3rem; } }
+  </style>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+
+<div class="priv-wrap">
+
+  <div class="priv-logo">
+    <img src="img/icon-192.png" alt="{{appName}}">
+    <span class="priv-logo-name">{{appName}} — {{name}}</span>
+  </div>
+
+  <div class="priv-hero">
+    <h1>Eliminar tu cuenta y tus datos</h1>
+    <p>Esta página explica cómo solicitar la eliminación de tu cuenta en la app <strong>{{appName}}</strong>, gestionada por <strong>{{name}}</strong>, y qué ocurre con tus datos personales.</p>
+    <p class="priv-updated">Última actualización: julio de 2026</p>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">1</span> Cómo eliminar tu cuenta desde la app</h2>
+    <p>La forma más rápida de eliminar tu cuenta es directamente dentro de la aplicación:</p>
+    <ol>
+      <li>Abre la app <strong>{{appName}}</strong> e inicia sesión.</li>
+      <li>Ve a tu <strong>Perfil</strong>.</li>
+      <li>Baja hasta la sección <strong>«Zona de peligro»</strong>.</li>
+      <li>Pulsa <strong>«Solicitar eliminación de cuenta»</strong> y confirma.</li>
+    </ol>
+    <p>Tu cuenta y tus datos personales se eliminarán de forma permanente en el plazo indicado más abajo.</p>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">2</span> Cómo solicitarla por correo</h2>
+    <p>Si no puedes acceder a la app, también puedes pedir la eliminación por email. Escríbenos <strong>desde la dirección de correo con la que te registraste</strong> (para poder verificar tu identidad) a:</p>
+    <div class="priv-contact-card">
+      <strong>Correo electrónico</strong>
+      <a href="mailto:{{contact.email}}?subject=Solicitud%20de%20eliminaci%C3%B3n%20de%20cuenta" style="color:var(--color-primary);">{{contact.email}}</a>
+      <strong style="margin-top:10px;">Asunto sugerido</strong>
+      «Solicitud de eliminación de cuenta»
+    </div>
+    <p style="margin-top:12px;">Atenderemos tu solicitud y eliminaremos tus datos en el mismo plazo que la opción dentro de la app.</p>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">3</span> Qué datos se eliminan</h2>
+    <p>Al procesar tu solicitud eliminamos de forma permanente todos los datos personales asociados a tu cuenta, entre ellos:</p>
+    <table class="priv-table">
+      <thead><tr><th>Categoría</th><th>Ejemplos</th></tr></thead>
+      <tbody>
+        <tr><td>Datos de perfil</td><td>Nombre, apellidos, email, teléfono, dirección, fecha de nacimiento, nacionalidad</td></tr>
+        <tr><td>Documentos de identidad</td><td>Fotografía del DNI / pasaporte aportada en el registro</td></tr>
+        <tr><td>Foto de perfil y contenido</td><td>Imágenes subidas, anuncios del marketplace, consultas al rabino y demás contenido creado por ti</td></tr>
+        <tr><td>Datos de cuenta</td><td>Credenciales de acceso y registros de sesión</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">4</span> Qué datos se conservan y durante cuánto tiempo</h2>
+    <p>Por obligaciones legales, ciertos datos deben conservarse durante un periodo limitado incluso después de eliminar tu cuenta:</p>
+    <table class="priv-table">
+      <thead><tr><th>Dato conservado</th><th>Motivo</th><th>Periodo de retención</th></tr></thead>
+      <tbody>
+        <tr><td>Registros de donativos y pagos (importe, fecha, referencia)</td><td>Obligaciones fiscales y contables (normativa española)</td><td>Hasta 6 años</td></tr>
+        <tr><td>Datos estadísticos anonimizados</td><td>No permiten identificarte; se conservan de forma agregada</td><td>Indefinido (anónimo)</td></tr>
+      </tbody>
+    </table>
+    <div class="priv-highlight">
+      El resto de tus datos personales se elimina de forma permanente en un plazo máximo de <strong>30 días</strong> desde tu solicitud.
+    </div>
+  </div>
+
+  <div class="priv-section">
+    <h2><span class="priv-num">5</span> Responsable del tratamiento</h2>
+    <div class="priv-contact-card">
+      <strong>Identidad</strong>
+      {{name}} ({{centerName}})
+      <strong style="margin-top:10px;">Dirección</strong>
+      {{contact.address}}
+      <strong style="margin-top:10px;">Correo electrónico</strong>
+      <a href="mailto:{{contact.email}}" style="color:var(--color-primary);">{{contact.email}}</a>
+    </div>
+    <p style="margin-top:12px;">Para más información sobre el tratamiento de tus datos, consulta nuestra <a href="privacidad.html" style="color:var(--color-primary);">Política de Privacidad</a>.</p>
+  </div>
+
+  <div class="priv-footer">
+    {{appName}} — {{name}} · {{contact.address}}
+  </div>
+
+</div>
+
+<div id="pt-ready" hidden></div>
+</body>
+</html>

@@ -1,0 +1,118 @@
+{
+  "slug": "",
+  "name": "",
+  "shortName": "",
+  "appName": "",
+  "tagline": "Tu comunidad judía, en una sola app",
+  "taglineEn": "Your Jewish community, in one app",
+  "centerName": "Centro Comunitario",
+  "city": "",
+  "country": "España",
+  "domain": "",
+
+  "labels": {
+    "services": "Servicios de la comunidad",
+    "servicesEn": "Community services",
+    "business": "Negocios",
+    "businessEn": "Business"
+  },
+
+  "mikve": {
+    "name": "Mikve"
+  },
+
+  "rabbi": {
+    "name": "HaRav Daniel Cohen",
+    "fullName": "HaRav Daniel Cohen ben Yosef",
+    "short": "Rav Cohen",
+    "surname": "Cohen",
+    "bio": "El Rav Daniel Cohen lidera la comunidad desde hace más de veinte años. Combina orientación espiritual, acompañamiento personal y dedicación a las familias en todas las etapas de la vida.",
+    "bioEn": "Rabbi Daniel Cohen has led the community for over twenty years. He combines spiritual guidance, personal support and dedication to families at every stage of life."
+  },
+
+  "team": [
+    { "name": "HaRav Daniel Cohen", "role": "Rabino", "area": "Halajá y orientación espiritual", "email": "", "color": "0" },
+    { "name": "David Levi", "role": "Presidente", "area": "Dirección y representación institucional", "email": "", "color": "1" },
+    { "name": "Sara Azulay", "role": "Coordinadora de Eventos", "area": "Organización de eventos y Shabat comunitario", "email": "", "color": "2" },
+    { "name": "Ruth Benarroch", "role": "Responsable de Educación", "area": "Educación infantil y juvenil", "email": "", "color": "3" }
+  ],
+
+  "contact": {
+    "email": "",
+    "privacyEmail": "",
+    "donationsEmail": "",
+    "phone": "+34 600 000 000",
+    "whatsapp": "+34 600 000 001",
+    "street": "Calle de Ejemplo, 1",
+    "address": "Calle de Ejemplo, 1 — 28000 Madrid, España"
+  },
+
+  "social": {
+    "instagram": "@comunidad_demo",
+    "facebook": "Comunidad Demo"
+  },
+
+  "stats": {
+    "members": "+500",
+    "founded": "2010"
+  },
+
+  "membership": {
+    "family": "300",
+    "individual": "200",
+    "student": "100"
+  },
+
+  "legal": {
+    "entityName": "Asociación de ejemplo",
+    "entityType": "Asociación religiosa sin ánimo de lucro",
+    "taxId": "G-00000000 (ejemplo)"
+  },
+
+  "location": {
+    "cityKey": "madrid",
+    "lat": 40.4168,
+    "lon": -3.7038,
+    "timezone": "Europe/Madrid"
+  },
+
+  "theme": {
+    "primary": "#1B2E5E",
+    "accent": "#C9A84C",
+    "background": "#FAF5EE"
+  },
+
+  "app": {
+    "scheme": "comunidad",
+    "androidPackage": "com.example.comunidad",
+    "iosBundleId": "com.example.comunidad"
+  },
+
+  "stores": {
+    "appStore": "https://apps.apple.com/app/id0000000000",
+    "playStore": "https://play.google.com/store/apps/details?id=com.example.comunidad"
+  },
+
+  "integrations": {
+    "supabaseUrl": "https://tu-proyecto.supabase.co",
+    "supabaseAnonKey": "tu-anon-key",
+    "supabaseProxy": false,
+    "stripePublishableKey": "pk_test_placeholder"
+  },
+
+  "modules": {
+    "calendario": true,
+    "eventos": true,
+    "noticias": true,
+    "shiurim": true,
+    "rav": true,
+    "citas": true,
+    "siddur": true,
+    "donativos": true,
+    "mikve": true,
+    "business": true,
+    "servicios": true,
+    "galeria": true,
+    "voluntariado": true
+  }
+}

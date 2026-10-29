@@ -1,0 +1,62 @@
+{
+  "$schema": "./community.schema.json",
+  "slug": "mediterranea",
+  "name": "Kehilá Mediterránea",
+  "shortName": "Mediterránea",
+  "appName": "Mediterránea",
+  "tagline": "Una comunidad cercana, a orillas del Mediterráneo",
+  "taglineEn": "A close-knit community by the Mediterranean",
+  "centerName": "Casa Comunitaria",
+  "city": "Valencia",
+  "domain": "mediterranea.example.com",
+  "labels": {
+    "services": "Servicios",
+    "servicesEn": "Services",
+    "business": "Directorio",
+    "businessEn": "Directory"
+  },
+  "rabbi": {
+    "name": "HaRav Yaakov Mizrahi",
+    "fullName": "HaRav Yaakov Mizrahi ben Avraham",
+    "short": "Rav Mizrahi",
+    "surname": "Mizrahi",
+    "bio": "El Rav Yaakov Mizrahi acompaña a la comunidad de Valencia con cercanía y vocación de servicio, tendiendo puentes entre generaciones.",
+    "bioEn": "Rabbi Yaakov Mizrahi serves the Valencia community with warmth and dedication, building bridges between generations."
+  },
+  "team": [
+    { "name": "HaRav Yaakov Mizrahi", "role": "Rabino", "area": "Halajá y orientación espiritual", "email": "", "color": "0" },
+    { "name": "Miriam Peretz", "role": "Presidenta", "area": "Dirección y representación institucional", "email": "", "color": "1" },
+    { "name": "Jonatan Amar", "role": "Responsable de Juventud", "area": "Programas para jóvenes y familias", "email": "", "color": "2" }
+  ],
+  "contact": {
+    "email": "hola@mediterranea.example.com",
+    "privacyEmail": "privacidad@mediterranea.example.com",
+    "donationsEmail": "donativos@mediterranea.example.com",
+    "phone": "+34 600 000 010",
+    "whatsapp": "+34 600 000 011",
+    "street": "Calle del Mar, 10",
+    "address": "Calle del Mar, 10 — 46001 Valencia, España"
+  },
+  "social": { "instagram": "@kehila_mediterranea", "facebook": "Kehilá Mediterránea" },
+  "stats": { "members": "+150" },
+  "membership": { "family": "240", "individual": "160", "student": "60" },
+  "legal": {
+    "entityName": "Asociación Kehilá Mediterránea (ejemplo)",
+    "entityType": "Asociación religiosa sin ánimo de lucro",
+    "taxId": "G-00000001 (ejemplo)"
+  },
+  "location": { "cityKey": "valencia", "lat": 39.4699, "lon": -0.3763, "timezone": "Europe/Madrid" },
+  "theme": { "primary": "#0F5257", "accent": "#E07A5F", "background": "#F6F4EF" },
+  "app": {
+    "scheme": "mediterranea",
+    "androidPackage": "com.example.mediterranea",
+    "iosBundleId": "com.example.mediterranea"
+  },
+  "modules": {
+    "mikve": false,
+    "business": false,
+    "galeria": false,
+    "voluntariado": false,
+    "donativos": true
+  }
+}

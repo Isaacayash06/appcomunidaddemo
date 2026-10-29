@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — {{labels.services}}</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: var(--color-bg); }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } }
+    .servicios-inner { max-width: 1100px; margin: 0 auto; padding: 68px 40px 80px; }
+    @media (max-width: 768px) { .servicios-inner { padding: 72px 0 96px; } }
+
+    .page-header { margin-bottom: 28px; }
+    @media (max-width: 700px) { .page-header { padding: 0 16px; } }
+    .page-header-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-gold-dark); margin-bottom: 6px; }
+    .page-title { font-family: var(--font-brand); font-size: 2rem; font-weight: 700; color: var(--color-primary); line-height: 1.15; }
+    .page-subtitle { font-size: 0.95rem; color: var(--color-text-muted); margin-top: 6px; }
+
+    /* ── Grid ── */
+    .sv-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 22px; }
+    .sv-grid .sv-card:nth-child(1) { grid-column: 1 / 3; }
+    .sv-grid .sv-card:nth-child(2) { grid-column: 3 / 5; }
+    .sv-grid .sv-card:nth-child(3) { grid-column: 5 / 7; }
+    .sv-grid .sv-card:nth-child(4) { grid-column: 1 / 4; }
+    .sv-grid .sv-card:nth-child(5) { grid-column: 4 / 7; }
+
+    @media (max-width: 700px) {
+      .sv-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+        padding: 0;
+      }
+      .sv-grid .sv-card { grid-column: auto !important; }
+    }
+
+    /* ── Cards ── */
+    .sv-card {
+      background: #fff; border-radius: 18px; overflow: hidden; cursor: pointer;
+      border: 1px solid rgba(27,46,94,0.09);
+      box-shadow: 0 4px 24px rgba(27,46,94,0.10);
+      transition: box-shadow .2s, transform .2s; display: flex; flex-direction: column;
+    }
+    .sv-card:hover { box-shadow: 0 16px 48px rgba(27,46,94,0.18); transform: translateY(-5px); }
+
+    .sv-card-img {
+      height: 230px; background-size: cover; background-position: center;
+      flex-shrink: 0; position: relative;
+    }
+    .sv-card-img::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 3px; background: linear-gradient(90deg, #b8902e, #e8c96a, #b8902e);
+    }
+    @media (max-width: 700px) { .sv-card-img { height: 180px; } }
+
+    .sv-card-body { padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .sv-name { font-family: var(--font-brand, Georgia, serif); font-weight: 700; font-size: 1.2rem; color: #1B2E5E; line-height: 1.2; }
+    .sv-subtitle { font-size: 0.85rem; color: #64748b; line-height: 1.5; flex: 1; margin-top: 3px; }
+    .sv-cta { margin-top: 16px; font-size: 0.78rem; font-weight: 700; color: #b8902e; display: flex; align-items: center; gap: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+    /* Admin edit overlay */
+    .sv-admin-edit {
+      position: absolute; top: 10px; right: 10px; width: 38px; height: 38px; border-radius: 50%;
+      background: #fff; border: 2px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .15s, border-color .15s; z-index: 10;
+    }
+    .sv-admin-edit:hover { background: #1B2E5E; border-color: #1B2E5E; }
+    .sv-admin-edit:hover svg { stroke: #fff; }
+    .sv-admin-edit svg { width: 16px; height: 16px; stroke: #1B2E5E; transition: stroke .15s; }
+    .sv-admin-edit input[type=file] { display: none; }
+
+    /* ── Back button ── */
+    .form-back-btn {
+      display: inline-flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer;
+      font-size: 0.875rem; font-weight: 600; color: var(--color-text-muted);
+      padding: 0 0 24px; transition: color .15s; font-family: var(--font-ui);
+    }
+    .form-back-btn:hover { color: var(--color-primary); }
+
+    .form-wrap { max-width: 680px; }
+
+    /* ── Service banner ── */
+    .svc-banner {
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+      position: relative; overflow: hidden;
+      /* gradient fallback when no image */
+      background-size: cover; background-position: center;
+    }
+    /* When using a real <img> inside the banner */
+    .svc-banner img {
+      /* Banner muy apaisado (≈5:1 en escritorio): centrado cortaba las
+         cabezas en fotos de personas. Se encuadra hacia arriba (20%) y se
+         da más alto en pantallas anchas para que se vean caras y no solo
+         cuerpos (a 1360 px de ancho se ve del 7% al 39% de la foto). */
+      width: 100%; height: clamp(240px, 30vw, 460px); display: block; object-fit: cover; object-position: center 10%;
+    }
+    @media (max-width: 700px) { .svc-banner img { height: 240px; } }
+    /* Gradient overlay for text on photos */
+    .svc-banner-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.04) 50%, rgba(0,0,0,0.65) 100%);
+      pointer-events: none;
+    }
+    /* Gradient-only banner (no photo) needs a fixed height */
+    .svc-banner.gradient-only { height: 200px; }
+    .svc-banner-text { position: absolute; bottom: 22px; left: 28px; z-index: 1; }
+    .svc-banner-name {
+      font-family: var(--font-brand); font-size: 1.8rem; font-weight: 700;
+      color: #fff; line-height: 1.1; text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+    }
+    .svc-banner-sub { font-size: 0.83rem; color: rgba(255,255,255,0.88); margin-top: 5px; font-weight: 500; letter-spacing: 0.03em; }
+
+    /* ── Form sections (same aesthetic as business.html) ── */
+    .svc-form-section {
+      background: var(--color-white); border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 26px 28px; margin-bottom: 18px;
+    }
+    .svc-form-section.no-top-radius { border-radius: 0 0 var(--radius-md) var(--radius-md); border-top: none; }
+    .svc-form-section-title {
+      font-size: 1rem; font-weight: 700; color: var(--color-primary);
+      margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+    }
+    .svc-form-section-title::before {
+      content: ''; display: block; width: 4px; height: 18px;
+      background: var(--color-gold); border-radius: 2px;
+    }
+    .svc-form-row { display: flex; gap: 16px; }
+    @media (max-width: 600px) { .svc-form-row { flex-direction: column; } }
+    .svc-form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; margin-bottom: 16px; }
+    .svc-form-group:last-child { margin-bottom: 0; }
+    .svc-form-label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
+    .svc-form-label .req { color: var(--color-danger); margin-left: 2px; }
+    .svc-form-hint { font-size: 0.72rem; color: var(--color-text-muted); margin-top: 1px; }
+    .svc-form-input, .svc-form-select, .svc-form-textarea {
+      padding: 10px 13px; border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm); font-size: 0.875rem;
+      color: var(--color-text); background: var(--color-white); font-family: var(--font-ui);
+      outline: none; transition: border-color var(--transition-fast); width: 100%; box-sizing: border-box;
+    }
+    .svc-form-input:focus, .svc-form-select:focus, .svc-form-textarea:focus {
+      border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(27,46,94,0.07);
+    }
+    .svc-form-input.error, .svc-form-select.error, .svc-form-textarea.error { border-color: var(--color-danger); }
+    .svc-form-textarea { resize: vertical; min-height: 90px; }
+
+    /* ── Stepper ── */
+    .svc-stepper { display: flex; align-items: flex-start; margin-bottom: 32px; }
+    .svc-step-item { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+    .svc-step-item:not(:last-child)::after {
+      content: ''; position: absolute; top: 14px; left: calc(50% + 16px);
+      width: calc(100% - 32px); height: 2px; background: var(--color-border); z-index: 0; transition: background .3s;
+    }
+    .svc-step-item.done:not(:last-child)::after { background: var(--color-primary); }
+    .svc-step-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid var(--color-border); background: var(--color-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted);
+      position: relative; z-index: 1; transition: all .2s;
+    }
+    .svc-step-item.done .svc-step-dot { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+    .svc-step-item.active .svc-step-dot { background: #fff; border-color: var(--color-primary); border-width: 2.5px; color: var(--color-primary); font-weight: 800; box-shadow: 0 0 0 4px rgba(27,46,94,0.1); }
+    .svc-step-label { font-size: 0.63rem; font-weight: 600; color: var(--color-text-muted); margin-top: 6px; text-align: center; max-width: 72px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .svc-step-item.active .svc-step-label, .svc-step-item.done .svc-step-label { color: var(--color-primary); }
+    @media (max-width: 480px) { .svc-step-label { display: none; } .svc-stepper { margin-bottom: 20px; } }
+
+    /* ── Intro process list ── */
+    .intro-process { display: flex; flex-direction: column; gap: 10px; }
+    .intro-process-step {
+      display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px;
+      background: var(--color-bg); border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border-light); transition: border-color .15s;
+    }
+    .intro-process-step:hover { border-color: var(--color-primary); }
+    .intro-process-num {
+      width: 28px; height: 28px; border-radius: 50%; background: var(--color-primary); color: #fff;
+      font-size: 0.78rem; font-weight: 700; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .intro-process-title { font-weight: 600; font-size: 0.9rem; color: var(--color-text); line-height: 1.3; }
+    .intro-process-fields { font-size: 0.77rem; color: var(--color-text-muted); margin-top: 3px; }
+
+    /* ── Informational detail (Teyad, etc.) ── */
+    .detail-body {
+      background: var(--color-white); border: 1.5px solid var(--color-border);
+      border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md);
+      padding: 28px 32px 32px;
+    }
+    @media (max-width: 600px) { .detail-body { padding: 22px 18px 26px; } }
+    .detail-desc { font-size: 1rem; color: var(--color-text); line-height: 1.8; margin: 0; }
+
+    /* ── Review KV ── */
+    .review-kv-row { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--color-border-light); font-size: 0.875rem; align-items: baseline; }
+    .review-kv-row:last-child { border-bottom: none; }
+    .review-kv-key { color: var(--color-text-muted); min-width: 160px; flex-shrink: 0; font-size: 0.8125rem; }
+    .review-kv-val { color: var(--color-text); font-weight: 500; word-break: break-word; }
+
+    /* ── Button row ── */
+    .svc-btn-row { display: flex; gap: 12px; justify-content: space-between; align-items: center; margin-top: 6px; }
+
+    /* ── Confirm ── */
+    .confirm-center { text-align: center; padding: 16px 0; }
+    .confirm-icon-circle {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: linear-gradient(135deg,#d1fae5,#6ee7b7);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px; font-size: 2.2rem;
+    }
+    .confirm-h { font-family: var(--font-brand); font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 10px; }
+    .confirm-p { font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.75; margin-bottom: 6px; }
+    .confirm-ref-txt { font-size: 0.72rem; color: #94a3b8; margin-bottom: 26px; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b2e5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{name}}">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <!-- Transición sin hueco crema: si el navegador soporta View Transitions
+       entre páginas (Safari/WKWebView iOS 18.2+, Chrome 123+), no se pinta
+       nada de la página nueva hasta que #pt-ready (final del body) se ha
+       leído; mientras, se sigue viendo la anterior y luego hay crossfade.
+       Sin soporte: todo igual que antes (overlay + spinner). -->
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div id="sidebar-placeholder"></div>
+
+  <main class="main-content">
+    <div class="servicios-inner">
+
+      <header class="page-header">
+        <div class="page-header-left">
+          <div class="page-header-label">Comunidad</div>
+          <h1 class="page-title">{{labels.services}}</h1>
+          <p class="page-subtitle">Acompañamos a cada miembro en los momentos más importantes de la vida — desde el nacimiento hasta el matrimonio, pasando por la educación, la salud y el apoyo social.</p>
+        </div>
+      </header>
+
+      <div id="view-lista"></div>
+
+      <div id="view-form" style="display:none;">
+        <button class="form-back-btn" id="btn-back">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+          {{labels.services}}
+        </button>
+        <div id="form-content"></div>
+      </div>
+
+    </div>
+  </main>
+
+<script src="/vendor/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+<script src="js/media.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  try { requireAuth(); initNav('servicios'); } catch(e) { console.error(e); }
+
+  /* ══════════════════════════════════════
+     SERVICIOS
+     steps: null o ausente → solo informativo
+     steps: [...] → formulario multi-paso
+  ══════════════════════════════════════ */
+  var SERVICES = [
+    {
+      id: 'barmitzvah',
+      gradient: 'linear-gradient(140deg,#2a1a4a 0%,#5a2d8a 60%,#2a1a4a 100%)',
+      image: 'img/placeholder.svg',
+      // Foto vertical con las caras a media altura: encuadre propio en el
+      // banner del detalle (solo mientras sea esta foto; si el admin la
+      // cambia, la nueva usa el encuadre general del CSS).
+      imagePos: { src: 'img/placeholder.svg', pos: 'center 30%' },
+      name: 'Bar / Bat Mitzvah',
+      subtitle: 'Preparación y celebración',
+      desc: 'El {{rabbi.short}} y el equipo de {{name}} os acompañan en la preparación y celebración del Bar o Bat Mitzvah de vuestro hijo/a. Desde las clases de Torá hasta la lectura en la sinagoga.',
+      steps: [
+        {
+          title: 'Datos del niño / niña',
+          fields: [
+            { id: 'nombre_nino',      label: 'Nombre',              type: 'text',   required: true,  placeholder: 'Nombre del niño/a' },
+            { id: 'apellidos_nino',   label: 'Apellidos',           type: 'text',   required: true,  placeholder: 'Apellidos' },
+            { id: 'fecha_nacimiento', label: 'Fecha de nacimiento', type: 'date',   required: true },
+            { id: 'tipo',             label: 'Bar o Bat Mitzvah',   type: 'select', required: true,  options: ['Bar Mitzvah (niño)', 'Bat Mitzvah (niña)'] }
+          ]
+        },
+        {
+          title: 'Planificación del evento',
+          fields: [
+            { id: 'fecha_prevista',   label: 'Fecha prevista del evento',        type: 'date',   required: false, hint: 'Aproximada — podemos ayudaros a elegirla' },
+            { id: 'tipo_celebracion', label: 'Tipo',                             type: 'select', required: true,  options: ['Solo preparación religiosa', 'Preparación + ceremonia en sinagoga', 'Preparación + celebración completa'] },
+            { id: 'num_invitados',    label: 'Número aproximado de invitados',   type: 'number', required: false, placeholder: 'Ej. 80', hint: 'Nos ayuda a organizar el espacio' }
+          ]
+        },
+        {
+          title: 'Datos de contacto',
+          fields: [
+            { id: 'nombre_padre', label: 'Nombre del padre / madre', type: 'text',     required: true,  placeholder: 'Nombre completo' },
+            { id: 'telefono',     label: 'Teléfono',                 type: 'tel',      required: true,  placeholder: '+34 600 000 000' },
+            { id: 'email',        label: 'Correo electrónico',       type: 'email',    required: true,  placeholder: 'correo@ejemplo.com' },
+            { id: 'notas',        label: 'Notas para el Rav',        type: 'textarea', required: false, placeholder: 'Información que quieras compartir...' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'britmila',
+      gradient: 'linear-gradient(140deg,#0e3558 0%,#1a6096 60%,#0e3558 100%)',
+      image: null,
+      name: 'Brit Milá',
+      subtitle: 'Entrada del bebé en la alianza',
+      desc: 'La Brit Milá es el primer pacto de un niño judío con D\'s. Coordinamos la ceremonia con el mohel y el Rav para que sea un momento sagrado y lleno de alegría familiar.',
+      steps: [
+        {
+          title: 'Datos del bebé',
+          fields: [
+            { id: 'nombre_bebe',      label: 'Nombre hebreo (si está decidido)',  type: 'text',   required: false, placeholder: 'Nombre hebreo', hint: 'Puede decidirse antes o durante la ceremonia' },
+            { id: 'fecha_nacimiento', label: 'Fecha de nacimiento',               type: 'date',   required: true },
+            { id: 'mohel',            label: '¿Necesitáis que la comunidad provea mohel?', type: 'select', required: true, options: ['Sí, necesitamos mohel', 'No, ya tenemos mohel'] }
+          ]
+        },
+        {
+          title: 'Datos de la familia',
+          fields: [
+            { id: 'nombre_padre', label: 'Nombre del padre',        type: 'text',  required: true,  placeholder: 'Nombre completo' },
+            { id: 'nombre_madre', label: 'Nombre de la madre',      type: 'text',  required: true,  placeholder: 'Nombre completo' },
+            { id: 'telefono',     label: 'Teléfono de contacto',    type: 'tel',   required: true,  placeholder: '+34 600 000 000' },
+            { id: 'email',        label: 'Correo electrónico',      type: 'email', required: true,  placeholder: 'correo@ejemplo.com' }
+          ]
+        },
+        {
+          title: 'Detalles de la ceremonia',
+          fields: [
+            { id: 'fecha_brit',    label: 'Fecha prevista (octavo día)',      type: 'date',     required: false, hint: 'La Brit se realiza al octavo día de vida' },
+            { id: 'lugar',         label: 'Lugar de la ceremonia',            type: 'select',   required: true,  options: ['Sinagoga {{name}}', 'Domicilio familiar', 'Por determinar'] },
+            { id: 'num_invitados', label: 'Número de invitados aproximado',   type: 'number',   required: false, placeholder: 'Ej. 30' },
+            { id: 'notas',         label: 'Notas',                            type: 'textarea', required: false, placeholder: 'Cualquier petición o información adicional...' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'bodas',
+      gradient: 'linear-gradient(140deg,#3a0e1a 0%,#8b2040 60%,#3a0e1a 100%)',
+      image: null,
+      name: 'Bodas',
+      subtitle: 'Casamiento judío con el {{rabbi.short}}',
+      desc: 'El {{rabbi.short}} os acompañará en uno de los momentos más sagrados de vuestra vida. Desde las clases de taharát hamishpajá hasta la ceremonia bajo la jupá.',
+      steps: [
+        {
+          title: 'Los novios',
+          fields: [
+            { id: 'nombre_novio', label: 'Nombre del novio',       type: 'text',  required: true, placeholder: 'Nombre completo' },
+            { id: 'nombre_novia', label: 'Nombre de la novia',     type: 'text',  required: true, placeholder: 'Nombre completo' },
+            { id: 'telefono',     label: 'Teléfono de contacto',   type: 'tel',   required: true, placeholder: '+34 600 000 000' },
+            { id: 'email',        label: 'Correo electrónico',     type: 'email', required: true, placeholder: 'correo@ejemplo.com' }
+          ]
+        },
+        {
+          title: 'La ceremonia',
+          fields: [
+            { id: 'fecha_boda',    label: 'Fecha prevista de la boda',  type: 'date',        required: false, hint: 'Aproximada — podemos ayudaros a elegir una fecha' },
+            { id: 'lugar_boda',    label: 'Lugar de la ceremonia',      type: 'text',        required: false, placeholder: 'Ej. Sinagoga, salón de eventos...' },
+            { id: 'num_invitados', label: 'Número de invitados',        type: 'number',      required: false, placeholder: 'Ej. 120' },
+            { id: 'ketuva_foto',   label: 'Foto de la ketuva de los padres', type: 'file-upload', required: true, hint: 'Sube una foto de la ketuva de los padres del novio o de la novia' }
+          ]
+        },
+        {
+          title: 'Preparación',
+          fields: [
+            { id: 'clases_tahara', label: '¿Habéis recibido clases de pureza familiar?', type: 'select',   required: true,  options: ['Sí', 'No, nos gustaría recibirlas', 'No lo necesitamos'] },
+            { id: 'conoce_leyes',  label: '¿Conocéis las leyes de kidushin?',            type: 'select',   required: false, options: ['Sí', 'Parcialmente', 'No'] },
+            { id: 'notas',         label: 'Preguntas o notas para el Rav',               type: 'textarea', required: false, placeholder: 'Cualquier pregunta o información...' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'najalah',
+      gradient: 'linear-gradient(140deg,#141420 0%,#2d2d4a 60%,#141420 100%)',
+      image: null,
+      name: 'Registro de Najalá / Azcará',
+      subtitle: 'Honra la memoria de tu ser querido',
+      desc: 'Acompáñanos a honrar la memoria de tu ser querido. Completa este formulario para organizar la najalá según las costumbres y necesidades de la familia.',
+      steps: [
+        {
+          title: 'Información del fallecido',
+          fields: [
+            { id: 'nombre_fallecido',    label: 'Nombre completo del fallecido/a', type: 'text', required: true,  placeholder: 'Nombre y apellidos' },
+            { id: 'nombre_hebreo',       label: 'Nombre hebreo',                   type: 'text', required: false, placeholder: 'Opcional' },
+            { id: 'fecha_fallecimiento', label: 'Fecha de fallecimiento',           type: 'date', required: true }
+          ]
+        },
+        {
+          title: 'Tipo de aniversario y relación',
+          fields: [
+            { id: 'tipo_aniversario', label: 'Tipo de aniversario', type: 'select', required: true,
+              options: ['Corte del mes de duelo (Shloshim)', 'Corte del año', 'Azcará anual'] },
+            { id: 'relacion', label: 'Relación familiar', type: 'select', required: true,
+              options: ['Padre / Madre', 'Abuelo / Abuela', 'Esposo / Esposa', 'Hermano / Hermana', 'Hijo / Hija', 'Otro'] }
+          ]
+        },
+        {
+          title: '¿Qué te gustaría organizar?',
+          fields: [
+            { id: 'organizacion', label: 'Tipo de acto', type: 'select', required: true,
+              options: ['Solo Minián', 'Minián + subida al cementerio', 'Minián + subida al cementerio + Seudá'] }
+          ]
+        },
+        {
+          title: 'Información del evento',
+          fields: [
+            { id: 'fecha_evento',   label: 'Fecha deseada',              type: 'date',     required: true },
+            { id: 'hora_evento',    label: 'Hora deseada',               type: 'time',     required: true },
+            { id: 'direccion',      label: 'Dirección',                  type: 'text',     required: true,  placeholder: 'Calle, número, ciudad' },
+            { id: 'cementerio',     label: 'Cementerio (si aplica)',      type: 'text',     required: false, placeholder: 'Nombre y ubicación del cementerio' }
+          ]
+        },
+        {
+          title: 'Participación y recordatorios',
+          fields: [
+            { id: 'num_asistentes',   label: 'Número aproximado de asistentes', type: 'number',   required: false, placeholder: 'Ej: 20' },
+            { id: 'recordatorio',     label: '¿Deseas recordatorio anual automático?', type: 'select', required: true,
+              options: ['Sí', 'No'] }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'tenyad',
+      gradient: 'linear-gradient(140deg,#0d3320 0%,#1a6640 60%,#0d3320 100%)',
+      image: null,
+      name: 'Ten Yad',
+      subtitle: 'Ayuda y voluntariado comunitario',
+      desc: 'Ten Yad conecta personas con oportunidades de ayudar, apoyar y fortalecer a la comunidad de forma simple y cercana. Cada gesto cuenta.',
+      steps: [
+        {
+          title: '¿Cómo te gustaría ayudar?',
+          fields: [
+            { id: 'forma_ayuda', label: '¿Cómo te gustaría ayudar?', type: 'select', required: true,
+              options: ['Ser voluntario/a', 'Donar alimentos al banco de alimentos', 'Donar una cesta familiar', 'Colaborar con el pago de un piso de protección', 'Otra forma de ayuda'] },
+            { id: 'area_ayuda', label: '¿En qué área podrías ayudar?', type: 'textarea', required: false,
+              placeholder: 'Cuéntanos cómo podrías colaborar...', hint: 'Rellena este campo si has seleccionado "Otra forma de ayuda" u quieres añadir más detalles' }
+          ]
+        },
+        {
+          title: 'Tus datos',
+          fields: [
+            { id: 'nombre',    label: 'Nombre',               type: 'text',  required: true,  placeholder: 'Tu nombre completo' },
+            { id: 'telefono',  label: 'Teléfono',             type: 'tel',   required: true,  placeholder: '+34 600 000 000' },
+            { id: 'email',     label: 'Correo electrónico',   type: 'email', required: true,  placeholder: 'correo@ejemplo.com' },
+            { id: 'notas',     label: 'Notas adicionales',    type: 'textarea', required: false, placeholder: 'Disponibilidad, días, cualquier detalle que quieras compartir...' }
+          ]
+        }
+      ]
+    }
+  ];
+
+  /* ══════════════════════════════════════
+     CARGAR IMÁGENES DESDE SUPABASE
+  ══════════════════════════════════════ */
+  (async function init() {
+    var sb = typeof getSupabase === 'function' ? getSupabase() : null;
+    if (sb) {
+      try {
+        var { data } = await sb.from('servicios_config').select('id, image_url');
+        await Promise.all((data || []).map(async function(row) {
+          var svc = SERVICES.find(function(s) { return s.id === row.id; });
+          if (svc && row.image_url) {
+            svc.image = typeof resolveMediaUrl === 'function'
+              ? await resolveMediaUrl('negocios', row.image_url)
+              : row.image_url;
+          }
+        }));
+      } catch(_) {}
+    }
+    showView('lista');
+  })();
+
+  /* ══════════════════════════════════════
+     ESTADO
+  ══════════════════════════════════════ */
+  var state = { view: 'lista', serviceId: null, step: 0, data: {}, fileUploads: {} };
+
+  var LS_KEY = 'kehila_servicios_requests';
+  function getRequests() { try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch(e) { return []; } }
+  function saveRequest(serviceId, data) {
+    var reqs = getRequests();
+    reqs.unshift({ id: 'srv_' + Date.now(), serviceId: serviceId, status: 'PENDING', data: data, createdAt: new Date().toISOString() });
+    localStorage.setItem(LS_KEY, JSON.stringify(reqs));
+  }
+
+  /* ══════════════════════════════════════
+     NAVEGACIÓN
+  ══════════════════════════════════════ */
+  function showView(view, serviceId, step) {
+    state.view = view;
+    if (serviceId !== undefined) state.serviceId = serviceId;
+    if (step !== undefined) state.step = step;
+
+    var lista = document.getElementById('view-lista');
+    var form  = document.getElementById('view-form');
+
+    if (view === 'lista') {
+      lista.style.display = ''; form.style.display = 'none';
+      renderLista();
+    } else {
+      lista.style.display = 'none'; form.style.display = '';
+      if (view === 'detalle') renderDetalle();
+      else if (view === 'intro')   renderIntro();
+      else if (view === 'step')    renderStep();
+      else if (view === 'review')  renderReview();
+      else if (view === 'confirm') renderConfirm();
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ══════════════════════════════════════
+     RENDER: LISTA
+  ══════════════════════════════════════ */
+  function renderLista() {
+    var user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    var isAdmin = user && (user.role === 'admin' || user.role === 'super_admin');
+    var container = document.getElementById('view-lista');
+    var html = '<div class="sv-grid">';
+
+    SERVICES.forEach(function(svc) {
+      var imgStyle = svc.image ? 'background-image:url(' + svc.image + ');' : 'background:' + svc.gradient + ';';
+      var ctaLabel = svc.link ? 'Reservar' : (svc.steps ? 'Solicitar' : 'Ver más');
+      var adminBtn = isAdmin
+        ? '<label class="sv-admin-edit" title="Cambiar foto" onclick="event.stopPropagation()">'
+          + '<svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316ZM16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"/></svg>'
+          + '<input type="file" accept="image/jpeg,image/png,image/webp" data-svc="' + svc.id + '">'
+          + '</label>'
+        : '';
+
+      html += '<div class="sv-card" data-service="' + svc.id + '">'
+        + '<div class="sv-card-img" style="' + imgStyle + '">' + adminBtn + '</div>'
+        + '<div class="sv-card-body">'
+        + '<div class="sv-name">' + svc.name + '</div>'
+        + '<div class="sv-subtitle">' + svc.subtitle + '</div>'
+        + '<div class="sv-cta">' + ctaLabel + ' <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg></div>'
+        + '</div></div>';
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    container.querySelectorAll('.sv-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var svc = SERVICES.find(function(s) { return s.id === card.dataset.service; });
+        if (!svc) return;
+        if (svc.link) { (window.top || window).location.href = svc.link; return; }
+        state.data = {}; state.fileUploads = {};
+        if (svc.steps) showView('intro', svc.id);
+        else showView('detalle', svc.id);
+      });
+    });
+
+    if (isAdmin) {
+      container.querySelectorAll('.sv-admin-edit input[type=file]').forEach(function(inp) {
+        inp.addEventListener('change', function(e) { e.stopPropagation(); uploadSvImg(inp.dataset.svc, inp); });
+      });
+    }
+  }
+
+  function buildBanner(svc) {
+    if (svc.image) {
+      return '<div class="svc-banner">'
+        + '<img src="' + svc.image + '" alt="' + svc.name + '"'
+        + (svc.imagePos && svc.image === svc.imagePos.src ? ' style="object-position:' + svc.imagePos.pos + '"' : '')
+        + '>'
+        + '<div class="svc-banner-overlay"></div>'
+        + '<div class="svc-banner-text"><div class="svc-banner-name">' + svc.name + '</div><div class="svc-banner-sub">' + svc.subtitle + '</div></div>'
+        + '</div>';
+    }
+    return '<div class="svc-banner gradient-only" style="background:' + svc.gradient + ';">'
+      + '<div class="svc-banner-text"><div class="svc-banner-name">' + svc.name + '</div><div class="svc-banner-sub">' + svc.subtitle + '</div></div>'
+      + '</div>';
+  }
+
+  /* ══════════════════════════════════════
+     RENDER: DETALLE INFORMATIVO (Teyad)
+  ══════════════════════════════════════ */
+  function renderDetalle() {
+    var svc = SERVICES.find(function(s) { return s.id === state.serviceId; });
+    if (!svc) return showView('lista');
+
+    document.getElementById('form-content').innerHTML =
+      '<div class="form-wrap">'
+      + buildBanner(svc)
+      + '<div class="detail-body"><p class="detail-desc">' + svc.desc + '</p></div>'
+      + '</div>';
+  }
+
+  /* ══════════════════════════════════════
+     RENDER: INTRO (servicios con form)
+  ══════════════════════════════════════ */
+  function renderIntro() {
+    var svc = SERVICES.find(function(s) { return s.id === state.serviceId; });
+    if (!svc) return showView('lista');
+
+    var processHTML = svc.steps.map(function(step, i) {
+      var fieldNames = step.fields.slice(0, 3).map(function(f) { return f.label; }).join(' · ');
+      if (step.fields.length > 3) fieldNames += ' · …';
+      return '<div class="intro-process-step">'
+        + '<div class="intro-process-num">' + (i + 1) + '</div>'
+        + '<div><div class="intro-process-title">' + step.title + '</div><div class="intro-process-fields">' + fieldNames + '</div></div>'
+        + '</div>';
+    }).join('');
+
+    document.getElementById('form-content').innerHTML =
+      '<div class="form-wrap">'
+      + buildBanner(svc)
+      + '<div class="svc-form-section no-top-radius">'
+      + '<p style="font-size:0.9375rem;color:var(--color-text);line-height:1.75;margin:0;">' + svc.desc + '</p>'
+      + '</div>'
+      + '<div class="svc-form-section">'
+      + '<div class="svc-form-section-title">Proceso de solicitud</div>'
+      + '<div class="intro-process">' + processHTML + '</div>'
+      + '</div>'
+      + '<button class="btn btn-primary btn-lg" id="btn-comenzar" style="width:100%;">Comenzar solicitud →</button>'
+      + '</div>';
+
+    document.getElementById('btn-comenzar').addEventListener('click', function() { showView('step', undefined, 0); });
+  }
+
+  /* ══════════════════════════════════════
+     HELPERS DE FORMULARIO
+  ══════════════════════════════════════ */
+  function renderField(f) {
+    var labelHTML = '<label class="svc-form-label" for="field_' + f.id + '">' + f.label + (f.required ? '<span class="req">*</span>' : '') + '</label>';
+    var hintHTML  = f.hint ? '<div class="svc-form-hint">' + f.hint + '</div>' : '';
+    var inputHTML = '';
+    if (f.type === 'select') {
+      inputHTML = '<select class="svc-form-select" id="field_' + f.id + '"><option value="">Seleccionar...</option>'
+        + f.options.map(function(o) { return '<option value="' + o + '">' + o + '</option>'; }).join('') + '</select>';
+    } else if (f.type === 'textarea') {
+      inputHTML = '<textarea class="svc-form-textarea" id="field_' + f.id + '" placeholder="' + (f.placeholder || '') + '" rows="4"></textarea>';
+    } else if (f.type === 'file-upload') {
+      var existingUrl = state.fileUploads && state.fileUploads[f.id];
+      var previewHTML = existingUrl
+        ? '<img src="' + existingUrl + '" style="max-width:100%;max-height:140px;border-radius:6px;margin-top:10px;border:1.5px solid var(--color-border);">'
+        : '';
+      inputHTML = '<div id="upload_wrap_' + f.id + '" style="border:1.5px solid var(--color-border);border-radius:var(--radius-sm);padding:14px;background:var(--color-bg);">'
+        + '<label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:.875rem;font-weight:600;color:var(--color-primary);">'
+        + '<svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>'
+        + (existingUrl ? 'Cambiar foto' : 'Seleccionar foto')
+        + '<input type="file" id="field_' + f.id + '" accept="image/*" style="display:none;"></label>'
+        + '<div id="preview_' + f.id + '">' + previewHTML + '</div>'
+        + '<div id="status_' + f.id + '" style="font-size:.75rem;color:var(--color-text-muted);margin-top:6px;">' + (existingUrl ? '✓ Foto subida' : '') + '</div>'
+        + '</div>';
+    } else {
+      inputHTML = '<input type="' + f.type + '" class="svc-form-input" id="field_' + f.id + '" placeholder="' + (f.placeholder || '') + '">';
+    }
+    return '<div class="svc-form-group">' + labelHTML + hintHTML + inputHTML + '</div>';
+  }
+
+  function validateStep(svc, stepIndex) {
+    var stepDef = svc.steps[stepIndex];
+    var valid = true;
+    stepDef.fields.forEach(function(f) {
+      if (f.type === 'file-upload') {
+        var wrap = document.getElementById('upload_wrap_' + f.id);
+        if (wrap) wrap.style.borderColor = '';
+        if (f.required && !(state.fileUploads && state.fileUploads[f.id])) {
+          if (wrap) wrap.style.borderColor = 'var(--color-danger)';
+          valid = false;
+        }
+        return;
+      }
+      var el = document.getElementById('field_' + f.id);
+      if (!el) return;
+      el.classList.remove('error');
+      if (f.required && !el.value.trim()) { el.classList.add('error'); valid = false; }
+    });
+    if (!valid) { var fe = document.querySelector('.error, [style*="border-color: var(--color-danger)"]'); if (fe) fe.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    return valid;
+  }
+
+  function saveStepData(svc, stepIndex) {
+    var stepData = {};
+    svc.steps[stepIndex].fields.forEach(function(f) {
+      if (f.type === 'file-upload') {
+        stepData[f.id] = (state.fileUploads && state.fileUploads[f.id]) || '';
+      } else {
+        var el = document.getElementById('field_' + f.id);
+        if (el) stepData[f.id] = el.value;
+      }
+    });
+    state.data['step_' + stepIndex] = stepData;
+  }
+
+  function buildStepper(svc, currentStep) {
+    return '<div class="svc-stepper">'
+      + svc.steps.map(function(s, i) {
+          var cls = i < currentStep ? 'done' : (i === currentStep ? 'active' : '');
+          var dot = i < currentStep
+            ? '<svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>'
+            : (i + 1);
+          return '<div class="svc-step-item ' + cls + '"><div class="svc-step-dot">' + dot + '</div><div class="svc-step-label">' + s.title + '</div></div>';
+        }).join('')
+      + '</div>';
+  }
+
+  /* ══════════════════════════════════════
+     RENDER: STEP
+  ══════════════════════════════════════ */
+  function renderStep() {
+    var svc = SERVICES.find(function(s) { return s.id === state.serviceId; });
+    if (!svc) return showView('lista');
+    var stepDef = svc.steps[state.step];
+    var isLast  = state.step === svc.steps.length - 1;
+
+    document.getElementById('form-content').innerHTML =
+      '<div class="form-wrap">'
+      + buildStepper(svc, state.step)
+      + '<div class="svc-form-section">'
+      + '<div class="svc-form-section-title">' + stepDef.title + '</div>'
+      + stepDef.fields.map(renderField).join('')
+      + '</div>'
+      + '<div class="svc-btn-row">'
+      + '<button class="btn btn-secondary" id="btn-anterior"><svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>' + (state.step === 0 ? 'Volver a la intro' : 'Anterior') + '</button>'
+      + '<button class="btn btn-primary" id="btn-continuar">' + (isLast ? 'Revisar solicitud' : 'Continuar') + '<svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg></button>'
+      + '</div></div>';
+
+    var saved = state.data['step_' + state.step] || {};
+    stepDef.fields.forEach(function(f) {
+      if (f.type === 'file-upload') {
+        // wire upload handler
+        var inp = document.getElementById('field_' + f.id);
+        if (inp) inp.addEventListener('change', function() { uploadFormFile(f.id, inp); });
+      } else {
+        var el = document.getElementById('field_' + f.id);
+        if (el && saved[f.id] !== undefined) el.value = saved[f.id];
+      }
+    });
+
+    var cur = state.step;
+    document.getElementById('btn-anterior').addEventListener('click', function() {
+      saveStepData(svc, cur);
+      if (cur === 0) showView('intro'); else showView('step', undefined, cur - 1);
+    });
+    document.getElementById('btn-continuar').addEventListener('click', function() {
+      if (!validateStep(svc, cur)) return;
+      saveStepData(svc, cur);
+      if (cur === svc.steps.length - 1) showView('review'); else showView('step', undefined, cur + 1);
+    });
+  }
+
+  /* ══════════════════════════════════════
+     RENDER: REVIEW
+  ══════════════════════════════════════ */
+  function renderReview() {
+    var svc = SERVICES.find(function(s) { return s.id === state.serviceId; });
+    if (!svc) return showView('lista');
+
+    var sectionsHTML = svc.steps.map(function(stepDef, i) {
+      var sd = state.data['step_' + i] || {};
+      var rows = stepDef.fields.map(function(f) {
+        var val = sd[f.id]; if (!val) return '';
+        return '<div class="review-kv-row"><span class="review-kv-key">' + f.label + '</span><span class="review-kv-val">' + val + '</span></div>';
+      }).join('');
+      if (!rows) return '';
+      return '<div class="svc-form-section"><div class="svc-form-section-title">' + stepDef.title + '</div>' + rows + '</div>';
+    }).join('');
+
+    document.getElementById('form-content').innerHTML =
+      '<div class="form-wrap">'
+      + '<div class="svc-form-section" style="margin-bottom:4px;">'
+      + '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--color-gold-dark);margin-bottom:4px;">' + svc.name + '</div>'
+      + '<div style="font-family:var(--font-brand);font-size:1.4rem;font-weight:700;color:var(--color-primary);">Revisa tu solicitud</div>'
+      + '<div style="font-size:0.875rem;color:var(--color-text-muted);margin-top:4px;">Comprueba que todos los datos son correctos antes de enviar.</div>'
+      + '</div>'
+      + sectionsHTML
+      + '<div class="svc-btn-row">'
+      + '<button class="btn btn-secondary" id="btn-edit"><svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>Editar</button>'
+      + '<button class="btn btn-primary" id="btn-enviar">Enviar solicitud <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/></svg></button>'
+      + '</div></div>';
+
+    document.getElementById('btn-edit').addEventListener('click', function() { showView('step', undefined, svc.steps.length - 1); });
+    document.getElementById('btn-enviar').addEventListener('click', async function() {
+      var btn = document.getElementById('btn-enviar');
+      btn.disabled = true; btn.textContent = 'Enviando…';
+
+      var allData = {};
+      svc.steps.forEach(function(stepDef, i) {
+        var sd = state.data['step_' + i] || {};
+        stepDef.fields.forEach(function(f) { if (sd[f.id]) allData[f.label] = sd[f.id]; });
+      });
+
+      // localStorage: best-effort (puede fallar en iframe)
+      try { saveRequest(state.serviceId, allData); } catch(_) {}
+
+      // Guardar en Supabase (await para asegurar que se guarda)
+      var sb = typeof getSupabase === 'function' ? getSupabase() : null;
+      var user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+      if (sb) {
+        try {
+          await sb.from('servicios_solicitudes').insert({
+            tipo: state.serviceId,
+            datos: allData,
+            usuario_id: user ? user.userId : null,
+            usuario_nombre: user ? user.name : 'Anónimo'
+          });
+        } catch(e) { console.error('Error al guardar solicitud:', e); }
+      }
+
+      showView('confirm');
+    });
+  }
+
+  /* ══════════════════════════════════════
+     RENDER: CONFIRM
+  ══════════════════════════════════════ */
+  function renderConfirm() {
+    var svc = SERVICES.find(function(s) { return s.id === state.serviceId; });
+    document.getElementById('form-content').innerHTML =
+      '<div class="form-wrap"><div class="svc-form-section"><div class="confirm-center">'
+      + '<div class="confirm-icon-circle">✓</div>'
+      + '<div class="confirm-h">¡Solicitud enviada!</div>'
+      + '<div class="confirm-p">Hemos recibido tu solicitud para <strong>' + (svc ? svc.name : 'el servicio') + '</strong>.<br>El equipo de {{name}} se pondrá en contacto contigo en menos de 48 horas.<br><br><em>Jazak uvaruj — que seas bendecido/a.</em></div>'
+      + '<button class="btn btn-primary btn-lg" id="btn-volver-lista" style="width:100%;">Volver a servicios</button>'
+      + '</div></div></div>';
+    document.getElementById('btn-volver-lista').addEventListener('click', function() { state.data = {}; state.serviceId = null; showView('lista'); });
+  }
+
+  /* ── Botón volver ── */
+  document.getElementById('btn-back').addEventListener('click', function() { state.data = {}; state.fileUploads = {}; showView('lista'); });
+
+  /* ══════════════════════════════════════
+     UPLOAD: ARCHIVO EN FORMULARIO (ketuva, etc.)
+  ══════════════════════════════════════ */
+  async function uploadFormFile(fieldId, input) {
+    var file = input.files[0]; if (!file) return;
+    var sb = typeof getSupabase === 'function' ? getSupabase() : null; if (!sb) return;
+    var wrap    = document.getElementById('upload_wrap_' + fieldId);
+    var preview = document.getElementById('preview_' + fieldId);
+    var status  = document.getElementById('status_' + fieldId);
+    if (wrap) wrap.style.opacity = '0.6';
+    if (status) status.textContent = 'Subiendo…';
+    try {
+      var path = 'ketuvas/' + fieldId + '_' + Date.now() + '.' + file.name.split('.').pop();
+      var { data: upData, error: upErr } = await sb.storage.from('negocios').upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) { if (status) status.textContent = 'Error: ' + upErr.message; return; }
+      var url = sb.storage.from('negocios').getPublicUrl(upData.path).data.publicUrl;
+      state.fileUploads[fieldId] = url;
+      var previewUrl = typeof resolveMediaUrl === 'function' ? (await resolveMediaUrl('negocios', url)) : url;
+      if (preview) preview.innerHTML = '<img src="' + previewUrl + '" style="max-width:100%;max-height:140px;border-radius:6px;margin-top:10px;border:1.5px solid var(--color-border);">';
+      if (status) status.textContent = '✓ Foto subida correctamente';
+      if (wrap) wrap.style.borderColor = 'var(--color-success)';
+    } catch(e) { if (status) status.textContent = 'Error inesperado.'; }
+    if (wrap) wrap.style.opacity = '';
+    input.value = '';
+  }
+
+  /* ══════════════════════════════════════
+     ADMIN: SUBIR FOTO
+  ══════════════════════════════════════ */
+  async function uploadSvImg(serviceId, input) {
+    var file = input.files[0]; if (!file) return;
+    var sb = typeof getSupabase === 'function' ? getSupabase() : null; if (!sb) return;
+    var label = input.closest('.sv-admin-edit');
+    if (label) label.style.opacity = '0.5';
+    try {
+      // Comprimir antes de subir: fotos de cámara directas pesaban varios
+      // cientos de KB / hasta 1MB cada una y ralentizaban la carga de la página.
+      var upFile = typeof resizeImageFile === 'function' ? await resizeImageFile(file) : file;
+      var path = 'servicios/' + serviceId + '_' + Date.now() + '.' + upFile.name.split('.').pop();
+      var { data: upData, error: upErr } = await sb.storage.from('negocios').upload(path, upFile, { upsert: true, contentType: upFile.type });
+      if (upErr) { alert('Error al subir: ' + upErr.message); return; }
+      var url = sb.storage.from('negocios').getPublicUrl(upData.path).data.publicUrl;
+      await sb.from('servicios_config').upsert({ id: serviceId, image_url: url, updated_at: new Date().toISOString() });
+      var svc = SERVICES.find(function(s) { return s.id === serviceId; });
+      if (svc) svc.image = typeof resolveMediaUrl === 'function' ? (await resolveMediaUrl('negocios', url)) : url;
+      renderLista();
+    } catch(e) { alert('Error inesperado.'); }
+    if (label) label.style.opacity = '';
+    input.value = '';
+  }
+
+})();
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(function(){});
+  }
+</script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>

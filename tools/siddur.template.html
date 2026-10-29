@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!-- GENERADO por tools/build_siddur.py a partir de tools/siddur.template.html — no editar siddur.html a mano. -->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <style>html,body{background:#FAF5EE}</style>
+  <style>
+    #pt-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#FAF5EE;transition:opacity .2s ease}
+    #pt-overlay .pt-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(27,46,94,.15);border-top-color:#1B2E5E;animation:pt-spin .8s linear infinite}
+    @keyframes pt-spin{to{transform:rotate(360deg)}}
+    body.page-ready #pt-overlay{opacity:0;pointer-events:none}
+    body:not(.page-ready) .main-content{visibility:hidden}
+  </style>
+  <link rel="icon" type="image/png" sizes="48x48" href="img/icon-48.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <title>{{name}} — Sidur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Frank+Ruhl+Libre:wght@400;500;700&family=Noto+Serif+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/siddur.css">
+  <script>
+  // Preferencias de lectura antes de pintar (sin parpadeo de tema/tamaño)
+  (function () {
+    try {
+      var s = JSON.parse(localStorage.getItem('kehila_sidur_prefs') || '{}'), r = document.documentElement;
+      var dark = s.theme === 'dark' || (s.theme === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+      if (dark) r.classList.add('sd-dark');
+      if (s.size) r.style.setProperty('--fs', s.size + 'px');
+      if (s.rubrics === false) r.classList.add('sd-no-rubrics');
+    } catch (e) {}
+  })();
+  </script>
+  <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/insights/script.js'></script>
+  <script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);}</script>
+  <script defer src='/_vercel/speed-insights/script.js'></script>
+  <script>if('PageRevealEvent' in window){document.documentElement.classList.add('vt');document.write('<link rel="expect" href="#pt-ready" blocking="render">');}</script>
+  <style>html.vt:not(.vt-wait) #pt-overlay{display:none!important}html.vt body:not(.page-ready) .main-content{visibility:visible!important}</style>
+  <script src="js/lang-en.js"></script>
+</head>
+<body>
+<div id="pt-overlay"><div class="pt-spinner"></div></div>
+<script>document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("page-ready");});</script>
+  <div class="app-layout">
+    <div id="sidebar-placeholder"></div>
+
+    <main class="main-content sd" id="sd">
+
+      <!-- Barra de lectura (solo visible con una tefilá abierta) -->
+      <div class="sd-safe" aria-hidden="true"></div>
+      <header class="sd-topbar" id="sdTopbar">
+        <div class="grp">
+          <button class="ico" id="sdBack" aria-label="Volver al índice del sidur">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <button class="ico" id="sdOpenToc" aria-label="Índice" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M4 7h16M4 12h11M4 17h16"/></svg>
+          </button>
+        </div>
+        <div class="sd-where notranslate" id="sdWhere" aria-live="polite" data-no-translate></div>
+        <div class="grp end">
+          <button class="ico" id="sdOpenSet" aria-label="Ajustes de lectura" aria-expanded="false">
+            <span class="aa notranslate" data-no-translate><b>A</b>a</span>
+          </button>
+        </div>
+        <div class="sd-progress" aria-hidden="true"><i id="sdBar"></i></div>
+      </header>
+
+      <!-- Portada + índice -->
+      <div id="sdLanding">
+        <section class="cover" id="top">
+          <div class="cover-in">
+            <div class="frame" aria-hidden="true"></div>
+            <p class="kicker">Nusaj Sefaradí</p>
+            <h1 class="he notranslate" lang="he" data-no-translate>סדור</h1>
+            <p class="es-title">Sidur</p>
+            <div class="orn big" aria-hidden="true"><i></i></div>
+            <p class="edition">Edot HaMizraj</p>
+            <p class="donor"><b>ChaiActive</b></p>
+            <a class="resume" id="sdResume" href="#" hidden>Continuar donde quedaste<span id="sdResumeWhere" class="notranslate" data-no-translate></span></a>
+            <a class="start" href="#indice" id="sdStart" aria-label="Ir al índice"><span>Índice</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M6 10l6 6 6-6"/></svg></a>
+          </div>
+        </section>
+
+        <section class="contents" id="indice">
+          <header class="sec-head plain"><h2 class="toc-title">Índice</h2><div class="orn"><i></i></div></header>
+<!--TOC_INLINE-->
+        </section>
+
+        <footer class="colophon">
+          <div class="orn big"><i></i></div>
+          <p class="he amen notranslate" lang="he" data-no-translate>אמן</p>
+          <p class="small">Texto basado en el <em>Siddur Edot HaMizrach</em>, publicado en Sefaria bajo dominio público (CC0). Se han retirado los signos de cantilación y las citas bibliográficas para una lectura más limpia. Ante cualquier duda de nusaj o halajá, consulta tu sidur impreso o a tu rab.</p>
+        </footer>
+      </div>
+
+      <!-- Lectura: aquí se carga una sola tefilá (siddur/<parte>.html) -->
+      <div id="sdReader" class="sd-book notranslate" data-no-translate hidden></div>
+
+      <!-- Índice lateral -->
+      <aside class="sd-drawer" id="sdDrawer" aria-hidden="true" aria-label="Índice">
+        <div class="sd-drawer-in">
+          <div class="sd-drawer-head">
+            <span>Índice</span>
+            <button class="ico" id="sdCloseToc" aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <nav id="sdTocDrawer">
+<!--TOC_DRAWER-->
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Ajustes de lectura -->
+      <div class="sd-sheet" id="sdSheet" aria-hidden="true">
+        <div class="row">
+          <span class="lbl">Tamaño</span>
+          <div class="stepper">
+            <button id="sdSmaller" aria-label="Reducir"><span style="font-size:.8em">A</span></button>
+            <button id="sdBigger" aria-label="Aumentar"><span style="font-size:1.25em">A</span></button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="lbl">Fondo</span>
+          <div class="seg" id="sdThemeSeg">
+            <button data-t="light">Claro</button>
+            <button data-t="auto">Auto</button>
+            <button data-t="dark">Noche</button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="lbl">Indicaciones</span>
+          <div class="seg" id="sdRubSeg">
+            <button data-r="1">Ver</button>
+            <button data-r="0">Ocultar</button>
+          </div>
+        </div>
+      </div>
+      <div class="sd-scrim" id="sdScrim"></div>
+    </main>
+  </div>
+
+  <script src="/vendor/supabase.min.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/router.js"></script>
+  <script>window.SIDUR = /*SIDUR_DATA*/null;</script>
+  <script src="js/siddur.js"></script>
+  <script>
+    function __siddurInit() {
+      requireAuth();
+      initNav('siddur');
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', __siddurInit);
+    else __siddurInit();
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
+  </script>
+<div id="pt-ready" hidden></div>
+</body>
+</html>
