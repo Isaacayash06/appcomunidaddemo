@@ -20,7 +20,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 6;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 7;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -226,7 +226,8 @@
         { id: DEMO_USER_ID, name: 'Usuario Demo', role: 'miembro', status: 'active', telefono: '+34 600 000 001', pais: 'España', ciudad: 'Madrid', created_at: hace(90) },
       ],
       children: [],
-      servicios_config: [],
+      servicios_config: ['barmitzvah', 'britmila', 'bodas', 'najalah', 'tenyad']
+        .map((id) => ({ id, image_url: `img/demo/servicio-${id}.jpg` })),
       app_config: [],
     };
   }
