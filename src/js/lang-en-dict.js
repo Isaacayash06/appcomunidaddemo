@@ -368,7 +368,6 @@ window.__KEHILA_EN={exact:{
 "Carnet de conducir": "Driver's license",
 "Carnet de conducir (valorable)": "Driver's license (a plus)",
 "Carnicería Ben David": "Ben David Butcher",
-"{{contact.address}}": "{{contact.address}}, Spain",
 "Carrusel del inicio. Sube las mejores fotos del mes — el título se genera solo (\"Momentos inolvidables de nuestra comunidad en [mes hebreo anterior]\"). Cuando cambie el mes, borra estas y sube las nuevas.": "Home carousel. Upload the best photos of the month — the title is generated automatically (\"Unforgettable moments of our community in [previous Hebrew month]\"). When the month changes, delete these and upload new ones.",
 "Carteles informativos": "Information posters",
 "Carteles y avisos": "Posters and notices",
@@ -2652,9 +2651,20 @@ window.__KEHILA_EN={exact:{
 "Por favor selecciona una fecha": "Please select a date",
 "Por favor selecciona un servicio": "Please select a service",
 "¿Necesitas ayuda para tevilar?": "Do you need help with the immersion?",
-"¿Qué vas a tevilar? Puedes elegir varios": "What are you immersing? You can choose several"
+"¿Qué vas a tevilar? Puedes elegir varios": "What are you immersing? You can choose several",
+"✅ Enviada correctamente —": "✅ Sent successfully —",
+"dispositivos alcanzados": "devices reached",
+"inscripciones, mikve, citas, preguntas, donaciones": "event sign-ups, mikveh, appointments, questions, donations"
 },
 patterns:[
+[
+"^de (\\d+) registrados$",
+"of {} signed up"
+],
+[
+"^Familiar de (.+?)$",
+"Relative of {}"
+],
 [
 "^(.+?)% de los aprobados$",
 "{}% of those approved"

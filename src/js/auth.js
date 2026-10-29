@@ -234,7 +234,7 @@ async function login(email, password, captchaToken = '') {
       userId: DEMO_USER_ID,
       name: (localStorage.getItem('kehila_lang') === 'en') ? 'Demo User' : 'Usuario Demo',
       email: normalizedEmail,
-      role: 'miembro',
+      role: /^admin@/.test(normalizedEmail) ? 'admin' : 'miembro',   // admin@… → panel de administración
       status: 'active',
       comunidad: '{{name}}',
       initials: 'UD',

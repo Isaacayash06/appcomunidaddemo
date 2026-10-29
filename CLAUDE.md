@@ -49,6 +49,12 @@ Para **añadir un módulo**: página en `src/`, entrada en `MODULES` (build) y e
 - Las escrituras se guardan en `localStorage` (`kehila_demo_db`) y se reinician cada día. Si cambias
   `seed()`, sube `SEED_VERSION`. Subidas, pagos y funciones edge devuelven «No disponible en la demo».
 - Sin `demoLogin`, `js/demo.js` no se copia: nunca llega a una comunidad real.
+- **Panel de administración**: en el login, «Como administrador» (o cualquier `admin@…`) entra con rol
+  `admin`; el botón flotante Miembro/Admin cambia de vista sin cerrar sesión. `seedAdmin()` añade miembros
+  (con pendientes de aprobar), inscripciones con nombre, donaciones, subgrupos, historial de avisos…;
+  `analyticsDashboard()` simula la RPC de analíticas. Las funciones edge se simulan (también las llamadas
+  con `fetch` a `/functions/v1/`): enviar un aviso lo deja en la campana 🔔 de los destinatarios —incluido
+  el propio usuario demo— y muestra cómo lo vería un móvil. Pagos y documentos: «No disponible en la demo».
 
 ### Inglés (botón ES/EN)
 `js/lang-en.js` traduce en el navegador todo el texto visible con el diccionario `js/lang-en-dict.js`

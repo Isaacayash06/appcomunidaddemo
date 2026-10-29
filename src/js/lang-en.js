@@ -203,6 +203,7 @@
   var SKIP = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEXTAREA: 1, CODE: 1, PRE: 1, svg: 1, SVG: 1, TEMPLATE: 1 };
   var ATTRS = ['placeholder', 'title', 'aria-label', 'alt'];
   var done = new WeakMap();   // nodo de texto → texto traducido que pusimos (evita bucles)
+  var doneAttr = new WeakMap();   // elemento → { atributo: valor traducido que pusimos } (ídem)
 
   function skipEl(el) {
     for (var e = el; e && e.nodeType === 1; e = e.parentNode) {
@@ -230,9 +231,18 @@
   function doAttrs(el) {
     // Un <textarea> no se traduce por dentro (lo escribe el usuario), pero su placeholder/title sí
     if (skipEl(el.nodeName === 'TEXTAREA' ? el.parentNode : el)) return;
+    var puestos = doneAttr.get(el);
     for (var i = 0; i < ATTRS.length; i++) {
       var v = el.getAttribute(ATTRS[i]);
-      if (v) { var r = translate(v); if (r !== null && r !== v) el.setAttribute(ATTRS[i], r); }
+      // Lo que ya tradujimos no se vuelve a traducir: si una traducción contiene su original,
+      // el MutationObserver la traduciría otra vez sin fin
+      if (!v || (puestos && puestos[ATTRS[i]] === v)) continue;
+      var r = translate(v);
+      if (r !== null && r !== v) {
+        if (!puestos) doneAttr.set(el, puestos = {});
+        puestos[ATTRS[i]] = r;
+        el.setAttribute(ATTRS[i], r);
+      }
     }
     if (el.nodeName === 'INPUT' && /^(button|submit|reset)$/i.test(el.type) && el.value) {
       var rv = translate(el.value); if (rv !== null) el.value = rv;

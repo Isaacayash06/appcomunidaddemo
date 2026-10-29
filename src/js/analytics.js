@@ -84,6 +84,8 @@ const _PAGE_LABELS = {
 const _TRACKED_PAGES = ['home', 'eventos', 'calendario', 'mikve', 'servicios', 'business',
   'professionals', 'shiurim', 'donativos', 'rav', 'citas-rabino', 'noticias', 'galeria',
   'kosher', 'siddur', 'voluntariado', 'contacto', 'perfil'];
+// Las leyendas de Chart.js se pintan en el canvas: el modo inglés (js/lang-en.js) no las ve
+const _anT = (s) => (typeof window.kehilaTranslate === 'function' ? window.kehilaTranslate(s) : s);
 function _pageLabel(id) { return _PAGE_LABELS[id] || (id ? id.charAt(0).toUpperCase() + id.slice(1) : 'Otra'); }
 
 function _rangeDates(rangeId) {
@@ -553,15 +555,15 @@ function _anRenderCharts(d) {
   if (crec && crec.offsetParent) {
     _destroyChart('crec');
     _anCharts.crec = new Chart(crec, { type: 'bar', options: base, data: { labels, datasets: [
-      { label: 'Nuevos registros', data: sem.map(w => w.nuevos), backgroundColor: '#1B2E5E', borderRadius: 4 },
-      { label: 'Aprobados', data: sem.map(w => w.aprobados), backgroundColor: '#C9A84C', borderRadius: 4 }
+      { label: _anT('Nuevos registros'), data: sem.map(w => w.nuevos), backgroundColor: '#1B2E5E', borderRadius: 4 },
+      { label: _anT('Aprobados'), data: sem.map(w => w.aprobados), backgroundColor: '#C9A84C', borderRadius: 4 }
     ] } });
   }
   const act = _el('an-chart-activos');
   if (act && act.offsetParent) {
     _destroyChart('act');
     _anCharts.act = new Chart(act, { type: 'line', options: base, data: { labels, datasets: [
-      { label: 'Personas activas', data: sem.map(w => w.activos), borderColor: '#1B2E5E', backgroundColor: 'rgba(27,46,94,.08)', fill: true, tension: .3, pointRadius: 3 }
+      { label: _anT('Personas activas'), data: sem.map(w => w.activos), borderColor: '#1B2E5E', backgroundColor: 'rgba(27,46,94,.08)', fill: true, tension: .3, pointRadius: 3 }
     ] } });
   }
 }

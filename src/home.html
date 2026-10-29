@@ -1898,8 +1898,9 @@
         // Ciudad
         const lat = city.lat;
         const coords = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}`;
-        document.getElementById('shabat-ciudad-name').textContent   = city.name;
-        document.getElementById('shabat-ciudad-coords').textContent = coords;
+        const cName = document.getElementById('shabat-ciudad-name'), cCoords = document.getElementById('shabat-ciudad-coords');
+        if (cName) cName.textContent = city.name;
+        if (cCoords) cCoords.textContent = coords;
 
       } catch(e) {
         console.warn('Shabat card: error cargando datos', e);

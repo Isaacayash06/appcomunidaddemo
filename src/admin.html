@@ -4820,6 +4820,7 @@
    * @returns {Promise<void>}
    */
   async function loadMarketplaceAdmin() {
+    if (!document.getElementById('wp-search')) return;   // la sección del marketplace no está en esta plantilla
     const sb = typeof getSupabase === 'function' ? getSupabase() : null;
     if (sb) {
       const { data } = await sb.from('anuncios').select('*').order('created_at', { ascending: false });

@@ -20,7 +20,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 12;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 13;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -227,6 +227,191 @@
     };
   }
 
+  // ─── Datos del panel de administración (admin.html) ──
+  // Miembros, inscripciones con nombre, donaciones, subgrupos, avisos enviados… Se añaden a
+  // los de seed(): las inscripciones y donaciones de ejemplo pasan a ser de miembros reales.
+  function seedAdmin(t) {
+    const PRACTICA = ['Tradicional', 'Ortodoxa', 'Masortí', 'Tradicional', 'Laica'];
+    const COMO = ['Amigos o familia', 'Sinagoga', 'Redes sociales', 'Amigos o familia', 'Un evento', 'Web'];
+    // [nombre, días desde el alta, estado, rol, ciudad, año de nacimiento]
+    const GENTE = [
+      ['David Levy', 420, 'active', 'miembro', 'Madrid', 1981], ['Sara Cohen', 400, 'active', 'miembro', 'Madrid', 1986],
+      ['Daniel Benarroch', 380, 'active', 'miembro', 'Madrid', 1975], ['Raquel Toledano', 360, 'active', 'staff', 'Madrid', 1979],
+      ['Moisés Serfaty', 330, 'active', 'miembro', 'Madrid', 1962], ['Esther Abecasis', 300, 'active', 'miembro', 'Pozuelo', 1990],
+      ['Jonathan Amselem', 270, 'active', 'miembro', 'Madrid', 1994], ['Miriam Bendahan', 240, 'active', 'miembro', 'Madrid', 1988],
+      ['Samuel Hassan', 200, 'active', 'miembro', 'Alcobendas', 1970], ['Rebeca Azancot', 180, 'active', 'miembro', 'Madrid', 1997],
+      ['Isaac Benchimol', 150, 'active', 'miembro', 'Madrid', 1958], ['Lea Garzón', 120, 'active', 'miembro', 'Las Rozas', 1992],
+      ['Aarón Pinto', 95, 'active', 'miembro', 'Madrid', 2001], ['Débora Querub', 70, 'active', 'miembro', 'Madrid', 1984],
+      ['Yosef Bensadón', 45, 'active', 'staff', 'Madrid', 1977], ['Ruth Chocrón', 30, 'active', 'miembro', 'Pozuelo', 1999],
+      ['Elías Benzaquén', 12, 'active', 'miembro', 'Madrid', 1966], ['Noa Wahnón', 5, 'active', 'miembro', 'Madrid', 2003],
+      ['Marcos Ruiz', 260, 'suspended', 'miembro', 'Madrid', 1983],
+      ['Ana Martínez', 9, 'pending', 'miembro', 'Madrid', 1991], ['Tamar Levy', 4, 'pending', 'miembro', 'Madrid', 1996],
+      ['Benjamín Attias', 2, 'pending', 'miembro', 'Alcobendas', 1987], ['Nathan Cohen', 1, 'pending', 'miembro', 'Madrid', 2000],
+    ];
+    const slug = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]+/g, '.');
+    const miembros = GENTE.map(([name, dias, status, role, ciudad, anio], i) => ({
+      id: 'u-' + String(i + 1).padStart(2, '0'), name, email: slug(name) + '@example.com',
+      telefono: '+34 600 000 ' + String(100 + i), status, role, ciudad, pais: 'España', cp: '28001',
+      initials: name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
+      fecha_nac: `${anio}-0${(i % 9) + 1}-1${i % 9}`, nacionalidad: 'Española', pais_nac: i % 4 ? 'España' : 'Marruecos',
+      practica: PRACTICA[i % PRACTICA.length], como_conocio: COMO[i % COMO.length],
+      familiar: i % 3 === 0, familiar_nombre: i % 3 === 0 ? L('Familia ', 'The ') + name.split(' ')[1] + L('', 's') : null,
+      doc_tipo: 'DNI', created_at: hace(dias, 9 + (i % 9)),
+    }));
+    const activos = miembros.filter((m) => m.status === 'active');
+    const p = t.profiles.find((x) => x.id === DEMO_USER_ID);
+    Object.assign(p, { email: 'demo@example.com', initials: 'UD', practica: 'Tradicional', como_conocio: 'Web' });
+    t.profiles = [p, ...miembros];
+    t.children = [
+      { id: 'ch-1', parent_id: 'u-01', nombre: 'Leo', apellidos: 'Levy', fecha_nac: '2015-03-12', created_at: hace(400) },
+      { id: 'ch-2', parent_id: 'u-01', nombre: 'Abigail', apellidos: 'Levy', fecha_nac: '2018-07-02', created_at: hace(400) },
+      { id: 'ch-3', parent_id: 'u-03', nombre: 'Rafael', apellidos: 'Benarroch', fecha_nac: '2013-11-20', created_at: hace(370) },
+    ];
+
+    // Inscripciones: miembros reales (y algún familiar) para que el panel muestre quién va
+    const OCUPACION = { 'ev-1': 34, 'ev-2': 14, 'ev-3': 16, 'ev-4': 28, 'ev-5': 19, 'ev-6': 31, 'ev-7': 11 };
+    const insc = t.inscripciones.filter((r) => r.usuario_id === DEMO_USER_ID);
+    Object.entries(OCUPACION).forEach(([ev, n], e) => {
+      for (let i = 0; i < n; i++) {
+        const m = activos[(i + e * 3) % activos.length];
+        const nombre = m.name.split(' ')[0];
+        const familiar = i >= activos.length ? (i % 2 ? L(`Hijo/a de ${nombre}`, `${nombre}'s child`) : L(`Pareja de ${nombre}`, `${nombre}'s partner`)) : null;
+        insc.push({ id: `i-${ev}-${i}`, evento_id: ev, usuario_id: m.id, familiar_nombre: familiar, created_at: hace(1 + (i % 9), 10 + (i % 10)) });
+      }
+    });
+    t.inscripciones = insc;
+
+    const CAMP = ['Fondo general', 'Ayuda social', 'Educación', 'Israel'];
+    t.donaciones = [...t.donaciones, ...activos.slice(0, 14).map((m, i) => ({
+      id: 'd-x' + i, usuario_id: m.id, usuario_nombre: m.name, campana_nombre: CAMP[i % 4],
+      cantidad: [18, 36, 50, 100, 180, 26, 72][i % 7], recurrente: i % 4 === 0,
+      dedicatoria: i % 5 === 0 ? 'Leilui nishmat de mi abuelo' : null, created_at: hace(2 + i * 3, 11),
+    }))];
+    t.campanas = [
+      { id: 'cp-1', nombre: 'Fondo general', activo: true },
+      { id: 'cp-2', nombre: 'Cenas de Shabat para familias', activo: true },
+    ];
+
+    t.subgrupos = [
+      { id: 'sg-1', nombre: 'Jóvenes profesionales', tipo: 'edad', icono: '💼', descripcion: 'De 22 a 35 años', genero: null, edad_min: 22, edad_max: 35, auto_asignar: true, parent_id: null, creado_en: hace(200) },
+      { id: 'sg-2', nombre: 'Grupo de mujeres', tipo: 'genero', icono: '🌸', descripcion: 'Shiurim y actividades', genero: 'mujer', edad_min: null, edad_max: null, auto_asignar: false, parent_id: null, creado_en: hace(190) },
+      { id: 'sg-3', nombre: 'Familias Talmud Torah', tipo: 'manual', icono: '📚', descripcion: 'Padres de alumnos', genero: null, edad_min: null, edad_max: null, auto_asignar: false, parent_id: null, creado_en: hace(180) },
+      { id: 'sg-4', nombre: 'Equipo de voluntarios', tipo: 'manual', icono: '🤝', descripcion: 'Ayuda social y eventos', genero: null, edad_min: null, edad_max: null, auto_asignar: false, parent_id: null, creado_en: hace(150) },
+    ];
+    const enGrupo = { 'sg-1': [6, 9, 12, 15, 16, 17], 'sg-2': [1, 3, 5, 7, 9, 11, 13, 15], 'sg-3': [0, 2, 4, 10], 'sg-4': [1, 3, 6, 8, 11, 14, 16] };
+    t.subgrupo_miembros = Object.entries(enGrupo).flatMap(([sg, idx]) => idx.map((i) => ({ id: `sm-${sg}-${i}`, subgrupo_id: sg, user_id: activos[i].id })));
+    t.subgrupo_miembros.push({ id: 'sm-demo', subgrupo_id: 'sg-4', user_id: DEMO_USER_ID });
+    t.staff_permisos = [
+      { user_id: 'u-04', area: 'eventos' }, { user_id: 'u-04', area: 'mikve' }, { user_id: 'u-15', area: 'rav' }, { user_id: 'u-15', area: 'servicios' },
+    ];
+
+    // Avisos ya enviados (historial de la pestaña Notificaciones)
+    t.push_log = [
+      { id: 'pl-1', title: 'Shabat Shalom 🕯️', body: 'Encendido de velas hoy a las 18:00. ¡Shabat Shalom a toda la comunidad!', tipo: 'comunidad', total_tokens: 21, sent: 20, failed: 1, created_at: hace(6, 17) },
+      { id: 'pl-2', title: 'Nuevo evento: Cena de Shabat comunitaria', body: 'Abiertas las inscripciones. Plazas limitadas.', tipo: 'eventos', total_tokens: 21, sent: 21, failed: 0, created_at: hace(1, 12) },
+      { id: 'pl-3', title: 'Recordatorio: shiur del martes', body: 'Esta tarde a las 19:30 en la sala de estudio.', tipo: 'shiurim', total_tokens: 14, sent: 14, failed: 0, created_at: hace(9, 13) },
+    ];
+    t.notif_envios = [
+      { clave: 'evento_nuevo:ev-1', tipo: 'evento_nuevo', total: 21, sent: 20, failed: 1, buzon: 22, created_at: hace(1, 12) },
+      { clave: 'cuenta_aprobada:u-18', tipo: 'cuenta_aprobada', total: 1, sent: 1, failed: 0, buzon: 1, created_at: hace(5, 10) },
+      { clave: 'rav_respondio:q-1', tipo: 'rav_respondio', total: 1, sent: 1, failed: 0, buzon: 1, created_at: hace(8, 16) },
+      { clave: 'noticia_nueva:n-2', tipo: 'noticia_nueva', total: 21, sent: 19, failed: 2, buzon: 22, created_at: hace(4, 11) },
+    ];
+    t.notif_config = [];
+
+    t.servicios_solicitudes = [
+      { id: 'ss-1', tipo: 'bodas', usuario_id: 'u-07', usuario_nombre: 'Jonathan Amselem', created_at: hace(3, 18),
+        datos: { 'Nombre del novio': 'Jonathan Amselem', 'Nombre de la novia': 'Rebeca Azancot', 'Teléfono de contacto': '+34 600 000 106', 'Fecha prevista de la boda': dia(150), 'Número de invitados': '180', '¿Habéis recibido clases de pureza familiar?': 'No, nos gustaría recibirlas' } },
+      { id: 'ss-2', tipo: 'barmitzvah', usuario_id: 'u-01', usuario_nombre: 'David Levy', created_at: hace(6, 10),
+        datos: { 'Nombre del padre / madre': 'David Levy', 'Nombre': 'Leo', 'Bar o Bat Mitzvah': 'Bar Mitzvah (niño)', 'Tipo': 'Preparación + ceremonia en sinagoga', 'Número aproximado de invitados': '90' } },
+      { id: 'ss-3', tipo: 'najalah', usuario_id: 'u-05', usuario_nombre: 'Moisés Serfaty', created_at: hace(10, 9),
+        datos: { 'Tu nombre completo': 'Moisés Serfaty', 'Nombre completo del fallecido/a': 'Jacob Serfaty', 'Fecha de fallecimiento': '2009-02-14', 'Relación': 'Padre' } },
+    ];
+
+    // Agenda del mikve y preguntas/citas de otros miembros
+    const MK = [['mujer', '20:00'], ['mujer', '20:30'], ['hombre', '07:00'], ['kelim', '11:00'], ['mujer', '21:00'], ['hombre', '06:45']];
+    t.mikve_reservas = [...t.mikve_reservas, ...MK.map(([servicio, hora], i) => ({
+      id: 'mk-x' + i, usuario_id: activos[(i * 3 + 1) % activos.length].id, usuario_nombre: activos[(i * 3 + 1) % activos.length].name,
+      fecha: dia(i < 4 ? i : -i), hora, servicio, estado: i === 4 ? 'cancelada' : 'confirmada', notas: i === 3 ? 'Vajilla nueva de cristal' : '', total: 0, created_at: hace(i + 1),
+    }))];
+    t.preguntas_rav = [...t.preguntas_rav,
+      { id: 'q-3', usuario_id: 'u-10', usuario_nombre: null, categoria: 'Familia', estado: 'pendiente', publica: false, pregunta: '¿A partir de qué edad deben los niños ayunar en Yom Kipur?', respuesta: null, created_at: hace(0, 8) },
+      { id: 'q-4', usuario_id: 'u-13', usuario_nombre: null, categoria: 'Tefila', estado: 'pendiente', publica: true, pregunta: 'Si llego tarde a la sinagoga, ¿qué partes de Shajarit puedo saltarme para rezar la Amidá con el minián?', respuesta: null, created_at: hace(1, 20) },
+      { id: 'q-5', usuario_id: 'u-06', usuario_nombre: null, categoria: 'Kashrut', estado: 'pendiente', publica: false, pregunta: '¿Cuánto tiempo hay que esperar entre carne y leche según la costumbre sefardí?', respuesta: null, created_at: hace(2, 15) },
+    ];
+    t.citas = [...t.citas,
+      { id: 'ci-2', usuario_id: 'u-08', tipo_cita: 'Preparación de boda', tipo_emoji: '💍', modalidad: 'presencial', estado: 'pendiente', created_at: hace(1) },
+      { id: 'ci-3', usuario_id: 'u-12', tipo_cita: 'Consulta halájica', tipo_emoji: '📖', modalidad: 'online', estado: 'confirmada', created_at: hace(4) },
+    ];
+    return t;
+  }
+
+  // ─── Analíticas (rpc analytics_dashboard): cifras de ejemplo coherentes con los datos ──
+  function analyticsDashboard(params) {
+    const desde = new Date(params?.p_desde || Date.now() - 30 * 864e5), hasta = new Date(params?.p_hasta || Date.now());
+    const prof = table('profiles'), activos = prof.filter((m) => m.status === 'active');
+    const pendientes = prof.filter((m) => m.status === 'pending');
+    const diasPend = pendientes.map((m) => (Date.now() - new Date(m.created_at)) / 864e5);
+    const semanas = [], cohortes = [];
+    for (let w = 11; w >= 0; w--) {
+      const d = new Date(); d.setDate(d.getDate() - d.getDay() + 1 - w * 7);
+      const sem = ymd(d), base = 14 + Math.round(6 * Math.sin(w / 2)) + (11 - w);
+      semanas.push({ semana: sem, nuevos: 1 + ((w * 7) % 4), aprobados: 1 + ((w * 5) % 3), activos: base, visitas: base * 9 + w * 3 });
+      if (w % 2 === 0) cohortes.push({ semana: sem, tamano: 2 + (w % 3), s1: w >= 1 ? 1 + (w % 2) : null, s2: w >= 2 ? 1 : null, s4: w >= 4 ? 1 : null, s8: w >= 8 ? 1 : null });
+    }
+    const insc = table('inscripciones');
+    const eventos = table('eventos').map((e) => ({ titulo: e.titulo, fecha: e.fecha, aforo: e.aforo, inscritos: insc.filter((i) => i.evento_id === e.id).length }));
+    const heatmap = [];
+    for (let dow = 1; dow <= 7; dow++) for (let h = 7; h <= 23; h++) {
+      const pico = (h >= 19 && h <= 22 ? 6 : h >= 8 && h <= 9 ? 4 : 1) * (dow === 5 ? 1.6 : dow === 6 ? 0.2 : 1);
+      heatmap.push([dow, h, Math.round(pico * (1 + ((dow * h) % 3)))]);
+    }
+    const ev = (event, veces, usuarios, paso) => ({ event, paso: paso ?? null, veces, usuarios, sesiones: usuarios });
+    return {
+      periodo: { desde: desde.toISOString(), hasta: hasta.toISOString() },
+      kpis: {
+        nuevos: 7, nuevos_prev: 5, activos: activos.length - 2, activos_prev: activos.length - 5, activos_7d: activos.length - 6,
+        miembros_activos: activos.length + 1, pendientes: pendientes.length,
+        pendientes_mas_7d: diasPend.filter((d) => d > 7).length,
+        pendientes_dias_media: pendientes.length ? Math.round(diasPend.reduce((a, b) => a + b, 0) / pendientes.length * 10) / 10 : 0,
+        aprobacion_horas_media: 19, nunca_abrieron: 2,
+      },
+      semanal: semanas,
+      secciones: [['home', 19, 412], ['eventos', 17, 236], ['calendario', 14, 158], ['shiurim', 11, 97], ['rav', 9, 64], ['donativos', 8, 41],
+        ['business', 8, 52], ['mikve', 6, 38], ['noticias', 12, 88], ['siddur', 10, 120], ['servicios', 5, 17], ['perfil', 15, 40], ['galeria', 7, 33]]
+        .map(([page, usuarios, visitas]) => ({ page, usuarios, visitas })),
+      acciones: {
+        inscripciones_eventos: insc.length, inscritos_unicos: new Set(insc.map((i) => i.usuario_id)).size,
+        mikve_reservas: table('mikve_reservas').length, citas_rav: table('citas').length, preguntas_rav: table('preguntas_rav').length,
+        donaciones: table('donaciones').length, donaciones_eur: table('donaciones').reduce((s, d) => s + (d.cantidad || 0), 0),
+        noticias_leidas: 143, shiurim_vistas_total: table('shiurim').reduce((s, x) => s + (x.vistas || 0), 0), voluntariado: 6,
+        servicios_solicitudes: table('servicios_solicitudes').length,
+      },
+      cohortes,
+      audiencia: {
+        edades: [['18–29', 5, 4], ['30–44', 9, 8], ['45–59', 6, 4], ['60+', 3, 2]].map(([franja, miembros, act]) => ({ franja, miembros, activos: act })),
+        genero: { hombre: 11, mujer: 12 },
+        ciudad: [['Madrid', 17], ['Pozuelo', 2], ['Alcobendas', 2], ['Las Rozas', 1]],
+        como_conocio: prof.reduce((acc, m) => { const k = m.como_conocio || 'Sin dato'; acc[k] = (acc[k] || 0) + 1; return acc; }, {}),
+      },
+      plataformas: { actividad: { ios: 11, android: 6, pwa: 3, web: 7 }, push: { ios: 10, android: 5 } },
+      heatmap,
+      eventos,
+      app_events: [
+        ev('registro_paso', 31, 31, 1), ev('registro_paso', 24, 24, 2), ev('registro_paso', 19, 19, 3), ev('registro_paso', 16, 16, 4), ev('registro_enviado', 14, 14),
+        ev('mikve_paso', 12, 12, 1), ev('mikve_paso', 11, 11, 2), ev('mikve_paso', 10, 10, 3), ev('mikve_paso', 9, 9, 4), ev('mikve_paso', 8, 8, 5), ev('mikve_paso', 8, 8, 6), ev('mikve_ok', 7, 7),
+        ev('inscripcion_inicio', 64, 41), ev('inscripcion_ok', 52, 34), ev('cita_inicio', 9, 8), ev('cita_ok', 6, 6),
+        ev('donacion_inicio', 38, 29), ev('donacion_click', 17, 15), ev('shiur_play', 96, 31),
+        ev('login_error', 7, 5), ev('inscripcion_error', 1, 1),
+      ],
+      calidad: {
+        errores_total: 3, errores_usuarios: 2, push_enviados: 96, push_envios: 5, push_fallidos: 3,
+        errores_top: [{ msg: 'Failed to fetch', page: 'eventos', veces: 2, ultima: hace(3) }, { msg: 'Load failed', page: 'galeria', veces: 1, ultima: hace(8) }],
+        versiones: { 'ios 2.4.0': 9, 'ios 2.3.1': 2, 'android 2.4.0': 5, 'android 2.2.0': 1 },
+      },
+    };
+  }
+
   // ─── Inglés (botón ES/EN): los datos de ejemplo se sirven ya traducidos ──
   // Solo textos de contenido. Los códigos que la app compara (categoría de evento,
   // de negocio o de pregunta, estado…) se quedan en español: los traduce lang-en-dict.js al pintarlos.
@@ -312,6 +497,24 @@
     '¿Se puede dejar una luz con temporizador…?': 'Can I leave a light on a timer…?',
     'Nuevo horario de tefilot': 'New prayer times', 'Consulta los horarios de invierno.': 'Check the winter times.',
     'Usuario Demo': 'Demo User', 'España': 'Spain',
+    // Panel de administración
+    'Tradicional': 'Traditional', 'Ortodoxa': 'Orthodox', 'Masortí': 'Masorti', 'Laica': 'Secular',
+    'Amigos o familia': 'Friends or family', 'Redes sociales': 'Social media', 'Un evento': 'An event', 'Española': 'Spanish', 'Marruecos': 'Morocco',
+    'Educación': 'Education', 'Israel': 'Israel', 'Leilui nishmat de mi abuelo': 'In memory of my grandfather',
+    'Cenas de Shabat para familias': 'Shabbat dinners for families',
+    'Jóvenes profesionales': 'Young professionals', 'De 22 a 35 años': 'Ages 22 to 35', 'Grupo de mujeres': "Women's group",
+    'Shiurim y actividades': 'Shiurim and activities', 'Familias Talmud Torah': 'Talmud Torah families', 'Padres de alumnos': "Students' parents",
+    'Equipo de voluntarios': 'Volunteer team', 'Ayuda social y eventos': 'Social aid and events',
+    'Shabat Shalom 🕯️': 'Shabbat Shalom 🕯️', 'Encendido de velas hoy a las 18:00. ¡Shabat Shalom a toda la comunidad!': 'Candle lighting today at 18:00. Shabbat Shalom to the whole community!',
+    'Abiertas las inscripciones. Plazas limitadas.': 'Sign-ups are open. Limited places.',
+    'Recordatorio: shiur del martes': "Reminder: Tuesday's shiur", 'Esta tarde a las 19:30 en la sala de estudio.': 'This evening at 19:30 in the study room.',
+    'No, nos gustaría recibirlas': "No, we'd like to take them", 'Bar Mitzvah (niño)': 'Bar Mitzvah (boy)',
+    'Preparación + ceremonia en sinagoga': 'Preparation + synagogue ceremony', 'Padre': 'Father',
+    'Vajilla nueva de cristal': 'New glass dishes',
+    '¿A partir de qué edad deben los niños ayunar en Yom Kipur?': 'From what age should children fast on Yom Kippur?',
+    'Si llego tarde a la sinagoga, ¿qué partes de Shajarit puedo saltarme para rezar la Amidá con el minián?': 'If I arrive late to synagogue, which parts of Shacharit can I skip to say the Amidah with the minyan?',
+    '¿Cuánto tiempo hay que esperar entre carne y leche según la costumbre sefardí?': 'How long should you wait between meat and dairy according to Sephardic custom?',
+    'Preparación de boda': 'Wedding preparation', 'Consulta halájica': 'Halachic consultation',
   };
   // Campos que son códigos: la app los compara ('Shabat', 'Estudio'…), no se traducen
   const CODIGOS = new Set(['id', 'categoria', 'estado', 'tipo', 'apartado', 'servicio', 'modalidad', 'role', 'status', 'usuario_id', 'user_id', 'evento_id']);
@@ -337,7 +540,7 @@
       const saved = JSON.parse(localStorage.getItem(DB_KEY) || 'null');
       if (saved && saved.v === SEED_VERSION && saved.lang === LANG && saved.day === dia(0) && saved.tables) return saved.tables;
     } catch (_) { /* ignorar */ }
-    return localize(seed());
+    return localize(seedAdmin(seed()));
   }
   function saveDb() {
     try { localStorage.setItem(DB_KEY, JSON.stringify({ v: SEED_VERSION, lang: LANG, day: dia(0), tables: db })); } catch (_) { /* ignorar */ }
@@ -505,12 +708,13 @@
 
   function createDemoSupabase() {
     db = loadDb();
+    syncRole();
     return {
       from: (name) => new Query(name),
-      rpc: () => ok(null),
+      rpc: (name, params) => ok(name === 'analytics_dashboard' ? analyticsDashboard(params) : null),
       channel: () => ({ on() { return this; }, subscribe() { return this; }, unsubscribe() {} }),
       removeChannel: () => ok(),
-      functions: { invoke: () => fail() },
+      functions: { invoke: (name, opts) => ok(demoFunction(name, opts && opts.body)) },
       storage: {
         from: () => ({
           getPublicUrl: (p) => ({ data: { publicUrl: absUrl(p) } }),
@@ -540,6 +744,147 @@
       },
     };
   }
+
+  // ─── Rol (miembro / admin) ──
+  // El usuario demo es uno solo: el panel comprueba el rol contra profiles (verifyAdminRealtime),
+  // así que el perfil sigue al rol con el que se entró o al que se cambió con el botón.
+  function currentUser() { try { return JSON.parse(localStorage.getItem('kehila_user') || 'null'); } catch (_) { return null; } }
+  function syncRole() {
+    const u = currentUser(), p = table('profiles').find((x) => x.id === DEMO_USER_ID);
+    if (u && u.source === 'demo' && p && p.role !== u.role) { p.role = u.role; saveDb(); }
+  }
+  function setRole(role) {
+    const u = currentUser();
+    if (!u || u.source !== 'demo') return;
+    localStorage.setItem('kehila_user', JSON.stringify({ ...u, role }));
+    if (db) syncRole();
+    location.href = role === 'admin' ? 'admin.html' : 'home.html';
+  }
+
+  // ─── Funciones edge simuladas ──
+  /** Envía un aviso: lo deja en la campana 🔔 de los destinatarios (incluido el usuario demo) y en el historial. */
+  function sendPush(body) {
+    body = body || {};
+    const prof = table('profiles');
+    let ids = body.subgrupo_id
+      ? table('subgrupo_miembros').filter((m) => m.subgrupo_id === body.subgrupo_id).map((m) => m.user_id)
+      : prof.filter((m) => m.status === 'active').map((m) => m.id);
+    if (!body.subgrupo_id && !ids.includes(DEMO_USER_ID)) ids.push(DEMO_USER_ID);
+    const now = new Date().toISOString();
+    ids.forEach((user_id) => table('notif_buzon').push({
+      id: newId(), user_id, tipo: body.tipo || 'comunidad', titulo: body.title || '', cuerpo: body.body || '', url: null, leida: false, created_at: now,
+    }));
+    const failed = ids.length > 8 ? 1 : 0;
+    table('push_log').push({ id: newId(), title: body.title, body: body.body, tipo: body.tipo || 'comunidad', total_tokens: ids.length, sent: ids.length - failed, failed, created_at: now });
+    saveDb();
+    avisarEnPantalla(body.title, body.body, ids.includes(DEMO_USER_ID));
+    return { sent: ids.length - failed, failed, total: ids.length };
+  }
+  function demoFunction(name, body) {
+    switch (name) {
+      case 'send-push': return sendPush(body);
+      case 'notify-approval': return { email: true, pushSent: 1, pushFailed: 0 };
+      case 'notif-instant': case 'notif-cron': {
+        // «Probar en mi móvil»: el aviso de prueba llega al propio usuario demo
+        const r = sendPushTo([DEMO_USER_ID], { title: L('Aviso de prueba', 'Test notification'), body: L('Así verán los miembros este aviso automático.', 'This is how members will see this automatic notification.') });
+        return { ok: true, sent: r, total: r, buzon: r };
+      }
+      default: return { ok: true };
+    }
+  }
+  function sendPushTo(ids, msg) {
+    const now = new Date().toISOString();
+    ids.forEach((user_id) => table('notif_buzon').push({ id: newId(), user_id, tipo: 'prueba', titulo: msg.title, cuerpo: msg.body, url: null, leida: false, created_at: now }));
+    saveDb();
+    avisarEnPantalla(msg.title, msg.body, true);
+    return ids.length;
+  }
+  // Las páginas también llaman a las funciones con fetch(SUPABASE_URL + '/functions/v1/…')
+  const FN_URL = '{{integrations.supabaseUrl}}/functions/v1/';
+  const SIN_DEMO = ['create-payment-intent', 'create-subscription', 'upload-document', 'view-document', 'delete-account'];
+  const realFetch = window.fetch.bind(window);
+  window.fetch = function (input, init) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    if (!url.startsWith(FN_URL)) return realFetch(input, init);
+    if (!db) db = loadDb();
+    const name = url.slice(FN_URL.length).split(/[?/]/)[0];
+    let body = null;
+    try { body = init && init.body ? JSON.parse(init.body) : null; } catch (_) { /* cuerpo no JSON */ }
+    const res = SIN_DEMO.includes(name)
+      ? new Response(JSON.stringify({ error: NO_DISPONIBLE.message }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+      : new Response(JSON.stringify(demoFunction(name, body)), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Promise((r) => setTimeout(() => r(res), 400));
+  };
+
+  // ─── Interfaz de la demo ──
+  const L = (es, en) => (LANG === 'en' ? en : es);
+  const CSS = `
+    #demo-role{position:fixed;right:20px;bottom:64px;z-index:9000;display:flex;background:#fff;border-radius:22px;box-shadow:0 4px 14px rgba(0,0,0,.2);padding:3px;font:600 12px/1 system-ui,-apple-system,sans-serif}
+    #demo-role button{border:0;background:none;padding:8px 12px;border-radius:19px;cursor:pointer;color:#1B2E5E;font:inherit}
+    #demo-role button.on{background:#1B2E5E;color:#fff}
+    @media (max-width:1023px){#demo-role{right:14px;bottom:calc(128px + env(safe-area-inset-bottom,0px))}}
+    #demo-push{position:fixed;left:50%;top:16px;z-index:10000;width:min(380px,calc(100vw - 32px));transform:translate(-50%,-200%);visibility:hidden;transition:transform .45s cubic-bezier(.2,.9,.3,1.2),visibility 0s .45s;
+      background:rgba(250,250,252,.97);backdrop-filter:blur(12px);border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:12px 14px;display:flex;gap:10px;font-family:system-ui,-apple-system,sans-serif;color:#111}
+    #demo-push.show{transform:translate(-50%,0);visibility:visible;transition:transform .45s cubic-bezier(.2,.9,.3,1.2)}
+    #demo-push img{width:38px;height:38px;border-radius:9px;flex-shrink:0}
+    #demo-push .t{font-weight:600;font-size:14px;margin:1px 0 2px}#demo-push .b{font-size:13px;color:#333;line-height:1.35}
+    #demo-push .k{font-size:11px;color:#777;display:flex;justify-content:space-between;gap:8px}
+    #demo-login{margin-top:18px;padding:14px;border:1px dashed #C9A84C;border-radius:12px;background:rgba(201,168,76,.07);font-family:inherit}
+    #demo-login p{margin:0 0 10px;font-size:13px;color:#555}
+    #demo-login div{display:flex;gap:8px}
+    #demo-login button{flex:1;padding:10px;border-radius:10px;border:1.5px solid #1B2E5E;background:#fff;color:#1B2E5E;font-weight:600;cursor:pointer;font-family:inherit}
+    #demo-login button.admin{background:#1B2E5E;color:#fff}`;
+
+  /** Simula el aviso que recibe el móvil de un miembro y refresca la campana 🔔. */
+  function avisarEnPantalla(title, body, alUsuario) {
+    if (alUsuario) setTimeout(() => document.dispatchEvent(new Event('visibilitychange')), 200);
+    const el = document.getElementById('demo-push');
+    if (!el) return;
+    el.querySelector('.t').textContent = title || '';
+    el.querySelector('.b').textContent = body || '';
+    el.classList.add('show');
+    clearTimeout(avisarEnPantalla.t);
+    avisarEnPantalla.t = setTimeout(() => el.classList.remove('show'), 6000);
+  }
+
+  function montarInterfaz() {
+    const page = location.pathname.split('/').pop() || 'index.html';
+    const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
+
+    const push = document.createElement('div');
+    push.id = 'demo-push'; push.className = 'notranslate';
+    push.innerHTML = `<img src="img/icon-192.png" alt=""><div style="flex:1;min-width:0"><div class="k"><span>{{appName}}</span><span>${L('ahora', 'now')}</span></div><div class="t"></div><div class="b"></div></div>`;
+    document.body.appendChild(push);
+
+    const u = currentUser();
+    if (/^(index\.html|reset-password\.html)$/.test(page)) {
+      // Login: entrar con un clic como miembro o como administrador
+      const form = document.getElementById('login-form');
+      if (!form || document.getElementById('demo-login')) return;
+      const box = document.createElement('div');
+      box.id = 'demo-login'; box.className = 'notranslate';
+      box.innerHTML = `<p>${L('Demo: entra con un clic', 'Demo: sign in with one click')}</p><div>
+        <button type="button" data-email="demo@example.com">${L('Como miembro', 'As a member')}</button>
+        <button type="button" class="admin" data-email="admin@example.com">${L('Como administrador', 'As an admin')}</button></div>`;
+      box.querySelectorAll('button').forEach((b) => b.onclick = () => {
+        document.getElementById('login-email').value = b.dataset.email;
+        document.getElementById('login-password').value = 'demo';
+        form.requestSubmit();
+      });
+      form.insertAdjacentElement('afterend', box);
+      return;
+    }
+    if (!u || u.source !== 'demo') return;
+    // Cambiar de vista sin cerrar sesión
+    const sw = document.createElement('div');
+    sw.id = 'demo-role'; sw.className = 'notranslate';
+    const esAdmin = u.role === 'admin';
+    sw.innerHTML = `<button type="button" class="${esAdmin ? '' : 'on'}" data-role="miembro">👤 ${L('Miembro', 'Member')}</button><button type="button" class="${esAdmin ? 'on' : ''}" data-role="admin">🛠 ${L('Admin', 'Admin')}</button>`;
+    sw.querySelectorAll('button').forEach((b) => b.onclick = () => { if (b.dataset.role !== u.role) setRole(b.dataset.role); });
+    document.body.appendChild(sw);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montarInterfaz);
+  else montarInterfaz();
 
   window.createDemoSupabase = createDemoSupabase;
 })();
