@@ -20,7 +20,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 11;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 12;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -57,11 +57,6 @@
       <g transform="translate(400 ${texto ? 220 : 250}) scale(2.2)">${ICONOS[icono] || ICONOS.estrella}</g>
       ${texto ? `<text x="400" y="420" text-anchor="middle" font-family="Georgia,serif" font-size="40" fill="#fff" opacity=".9">${texto}</text>` : ''}
     </svg>`;
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  }
-  function logo(iniciales, variante = 0) {
-    const c = ['#1B2E5E', '#C9A84C', '#2a4785', '#0f1a36'][variante % 4];
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="40" fill="${c}"/><text x="100" y="124" text-anchor="middle" font-family="Georgia,serif" font-size="72" font-weight="700" fill="#fff">${iniciales}</text></svg>`;
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   }
 
@@ -131,19 +126,19 @@
     });
     const negocios = [
       negocio('b-1', 'Panadería Shalom', 'Alimentación', 'Jalot, rugelaj y bollería kosher parve horneada cada mañana. Encargos para Shabat hasta el jueves.', {
-        direccion: 'Calle de Ejemplo, 12', telefono: '+34 600 000 011', email: 'hola@panaderia.example.com', kosher: true, cierra_shabat: true, logo_url: logo('PS', 1) }),
+        direccion: 'Calle de Ejemplo, 12', telefono: '+34 600 000 011', email: 'hola@panaderia.example.com', kosher: true, cierra_shabat: true, logo_url: 'img/demo/logo-b-1.jpg' }),
       negocio('b-2', 'Restaurante Jerusalén', 'Hostelería', 'Cocina mediterránea e israelí bajo supervisión. Menú del día, comida para llevar y catering para eventos.', {
-        direccion: 'Avenida de Muestra, 45', telefono: '+34 600 000 012', web: 'https://restaurante.example.com', kosher: true, cierra_shabat: true, logo_url: logo('RJ', 0) }),
+        direccion: 'Avenida de Muestra, 45', telefono: '+34 600 000 012', web: 'https://restaurante.example.com', kosher: true, cierra_shabat: true, logo_url: 'img/demo/logo-b-2.jpg' }),
       negocio('b-3', 'Asesoría Levi & Asociados', 'Legal', 'Derecho de familia, sucesiones y extranjería. Primera consulta gratuita para miembros de la comunidad.', {
-        direccion: 'Plaza Ficticia, 3', telefono: '+34 600 000 013', email: 'contacto@asesoria.example.com', logo_url: logo('LA', 2) }),
+        direccion: 'Plaza Ficticia, 3', telefono: '+34 600 000 013', email: 'contacto@asesoria.example.com', logo_url: 'img/demo/logo-b-3.jpg' }),
       negocio('b-4', 'Clínica Dental Sonrisa', 'Médico', 'Odontología general, ortodoncia e implantes. Descuento del 10 % para familias de la comunidad.', {
-        direccion: 'Calle Inventada, 8', telefono: '+34 600 000 014', logo_url: logo('DS', 3) }),
+        direccion: 'Calle Inventada, 8', telefono: '+34 600 000 014', logo_url: 'img/demo/logo-b-4.jpg' }),
       negocio('b-5', 'Hogar Inmobiliaria', 'Inmobiliaria', 'Compra, venta y alquiler cerca de la sinagoga. Te ayudamos a encontrar casa a distancia caminando.', {
-        telefono: '+34 600 000 015', web: 'https://hogar.example.com', logo_url: logo('HI', 0) }),
+        telefono: '+34 600 000 015', web: 'https://hogar.example.com', logo_url: 'img/demo/logo-b-5.jpg' }),
       negocio('b-6', 'Código Kodesh', 'Tecnología', 'Desarrollo web y apps para pequeños negocios y entidades. Webs, tiendas online y mantenimiento.', {
-        email: 'hola@codigo.example.com', web: 'https://codigo.example.com', logo_url: logo('CK', 2) }),
+        email: 'hola@codigo.example.com', web: 'https://codigo.example.com', logo_url: 'img/demo/logo-b-6.jpg' }),
       negocio('b-7', 'Academia Alef', 'Educación', 'Clases particulares de hebreo, matemáticas e inglés para todas las edades. Online o presencial.', {
-        telefono: '+34 600 000 017', logo_url: logo('AA', 1) }),
+        telefono: '+34 600 000 017', logo_url: 'img/demo/logo-b-7.jpg' }),
     ];
 
     const shiur = (id, apartado, titulo, maestro, dias, duracion, icono, variante, extra = {}) => ({
