@@ -82,6 +82,10 @@
     "background": "#FAF5EE"
   },
 
+  "brand": {
+    "assets": "brand/default"
+  },
+
   "app": {
     "scheme": "comunidad",
     "androidPackage": "com.example.comunidad",

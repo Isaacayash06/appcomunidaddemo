@@ -462,7 +462,7 @@ function buildSidebar(activePage) {
       <div class="sidebar-inner">
         <!-- Logo -->
         <a href="home.html" class="sidebar-logo" style="text-decoration:none;cursor:pointer;display:flex;justify-content:center;align-items:center;width:100%;padding:6px 0 14px;">
-          <img src="img/logo.svg" alt="{{name}}" style="width:112px;height:112px;object-fit:contain;display:block;flex-shrink:0;">
+          <img src="img/{{brand.logoFile}}" alt="{{name}}" style="width:112px;height:112px;object-fit:contain;display:block;flex-shrink:0;">
         </a>
 
         <!-- Usuario -->
@@ -717,7 +717,7 @@ function buildHamburger(activePage) {
     <div id="hb-drawer">
       <div class="hb-header">
         <a href="home.html" class="hb-logo" style="text-decoration:none;" onclick="closeHamburger()">
-          <img src="img/logo.svg" alt="{{name}}" style="width:36px;height:36px;object-fit:contain;flex-shrink:0;">
+          <img src="img/{{brand.logoFile}}" alt="{{name}}" style="width:36px;height:36px;object-fit:contain;flex-shrink:0;">
           <div>
             <div class="hb-logo-text">{{name}}</div>
             <div class="hb-logo-sub">{{tagline}}</div>

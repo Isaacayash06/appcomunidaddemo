@@ -220,6 +220,15 @@
       },
       "additionalProperties": false
     },
+    "brand": {
+      "type": "object",
+      "properties": {
+        "assets": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
     "app": {
       "type": "object",
       "properties": {
@@ -263,8 +272,7 @@
           "type": "string"
         },
         "demoLogin": {
-          "type": "boolean",
-          "description": "Solo demos: «Entrar» funciona con cualquier email/contraseña, sin Supabase. Nunca en producción."
+          "type": "boolean"
         }
       },
       "additionalProperties": false

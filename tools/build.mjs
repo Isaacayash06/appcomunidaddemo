@@ -166,6 +166,13 @@ function loadConfig(slug) {
   cfg.contact.whatsappDigits = digits(cfg.contact.whatsapp);
   try { cfg.integrations.supabaseRef = new URL(cfg.integrations.supabaseUrl).hostname.split('.')[0]; }
   catch { fail(`"integrations.supabaseUrl" no es una URL válida: ${cfg.integrations.supabaseUrl}`); }
+  // Logo: carpeta con logo.png + icon-<n>.png (tools/brand_assets.py), o "" para el generado con el tema
+  if (cfg.brand.assets) {
+    const dir = path.resolve(ROOT, cfg.brand.assets);
+    const missing = ['logo.png', ...ICON_SIZES.map((n) => `icon-${n}.png`)].filter((f) => !fs.existsSync(path.join(dir, f)));
+    if (missing.length) fail(`"brand.assets" (${cfg.brand.assets}): faltan ${missing.join(', ')}. Genéralos con: python3 tools/brand_assets.py <imagen> ${cfg.brand.assets}`);
+  }
+  cfg.brand.logoFile = cfg.brand.assets ? 'logo.png' : 'logo.svg';
   cfg.taglineUpper = cfg.tagline.toUpperCase();
   cfg.taglineEnUpper = cfg.taglineEn.toUpperCase();
   cfg.buildId = 'b' + Date.now().toString(36);
@@ -327,10 +334,15 @@ function build(slug, outArg) {
   // Marca generada
   const { logo, avatar, placeholder } = brandAssets(cfg, cm);
   fs.mkdirSync(path.join(out, 'img'), { recursive: true });
-  fs.writeFileSync(path.join(out, 'img', 'logo.svg'), logo);
   fs.writeFileSync(path.join(out, 'img', 'avatar.svg'), avatar);
   fs.writeFileSync(path.join(out, 'img', 'placeholder.svg'), placeholder);
-  for (const n of ICON_SIZES) fs.writeFileSync(path.join(out, 'img', `icon-${n}.png`), iconPng(n, cfg.theme.primary, cfg.theme.accent));
+  if (cfg.brand.assets) {
+    const dir = path.resolve(ROOT, cfg.brand.assets);
+    for (const f of ['logo.png', ...ICON_SIZES.map((n) => `icon-${n}.png`)]) fs.copyFileSync(path.join(dir, f), path.join(out, 'img', f));
+  } else {
+    fs.writeFileSync(path.join(out, 'img', 'logo.svg'), logo);
+    for (const n of ICON_SIZES) fs.writeFileSync(path.join(out, 'img', `icon-${n}.png`), iconPng(n, cfg.theme.primary, cfg.theme.accent));
+  }
   fs.writeFileSync(path.join(out, 'community.json'), JSON.stringify({ ...pub, builtAt: new Date().toISOString() }, null, 2) + '\n');
 
   // Tokens sin resolver (también los que pudieran quedar escritos a mano)

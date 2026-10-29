@@ -24,6 +24,13 @@ equivalente de `theme.primary/accent/background` (mapa en `colorMap()` de `tools
 variantes oscuras, claras y `rgba`). Si añades un color de marca nuevo al código, añádelo al mapa
 o, mejor, usa `var(--color-primary)` / `var(--color-gold)`.
 
+### Logo
+`brand.assets` (por defecto `brand/default`, el logo oficial de la app) es una carpeta con `logo.png`
+(interfaz: sidebar, login) e `icon-<n>.png` (favicon, PWA, iOS/Android). Se genera desde una imagen de
+icono con `python3 tools/brand_assets.py <imagen.png> brand/<nombre>` (requiere Pillow). Una comunidad
+puede apuntar a su propia carpeta, o poner `""` para el logo generado con los colores del tema (`logo.svg`).
+En el código, el logo se referencia como `img/{{brand.logoFile}}`, nunca con el nombre de fichero fijo.
+
 ### Módulos
 `modules.<nombre>: false` en la comunidad:
 1. el build no copia las páginas de ese módulo (mapa `MODULES` en `tools/build.mjs`);
@@ -56,8 +63,8 @@ para listas (p. ej. `team`) la página lee `window.COMMUNITY`.
    este repo si es sensible.
 2. Los ejemplos usan dominios `example.com` y teléfonos `+34 600 000 0xx`.
 3. Ejecutar `npm run check` antes de cada commit.
-4. Las imágenes del login/home son placeholders SVG generados (`img/placeholder.svg`, `logo.svg`, `avatar.svg`
-   e iconos PNG salen del build con los colores de la comunidad). No añadir fotos reales aquí.
+4. Las imágenes del login/home son placeholders SVG generados (`img/placeholder.svg`, `avatar.svg` salen del
+   build con los colores de la comunidad; el logo y los iconos vienen de `brand/`). No añadir fotos reales aquí.
 5. Los `kehila_*` de `localStorage` son nombres técnicos internos del producto; no son marca de comunidad.
 
 ## Estructura
@@ -65,7 +72,8 @@ para listas (p. ej. `team`) la página lee `window.COMMUNITY`.
 ```
 community/   _defaults.json (todo lo configurable + valores neutros), <slug>.json, community.schema.json
 src/         la app (páginas, css/, js/, vendor/, siddur/)
-tools/       build.mjs · serve.mjs · new-community.mjs · check.mjs · build_siddur.py
+brand/       logo oficial: default/ (logo.png + icon-<n>.png), generado con tools/brand_assets.py
+tools/       build.mjs · serve.mjs · new-community.mjs · check.mjs · build_siddur.py · brand_assets.py
 supabase/    backend de referencia (esquema + funciones edge). Ver supabase/README.md
 dist/        salida del build (no se versiona)
 ```
