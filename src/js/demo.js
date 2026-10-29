@@ -20,7 +20,7 @@
   'use strict';
 
   const DB_KEY = 'kehila_demo_db';
-  const SEED_VERSION = 5;   // subir al cambiar seed(): descarta lo guardado en los navegadores
+  const SEED_VERSION = 6;   // subir al cambiar seed(): descarta lo guardado en los navegadores
   const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
   const NO_DISPONIBLE = { message: 'No disponible en la demo', code: 'demo' };
 
@@ -83,8 +83,9 @@
       ev('ev-3', 'Taller de jalot para familias', proximo(0, 9), '11:00', 'Cocina comunitaria', 'Educación', 'jala', 2, {
         imagen_url: 'img/demo/evento-taller-jalot.jpg',
         descripcion: 'Aprende a trenzar jalot con tus hijos. Incluye ingredientes, delantal y una jalá para llevar a casa.', aforo: 24 }),
-      ev('ev-4', 'Torneo de fútbol comunitario', proximo(0, 20), '10:00', 'Polideportivo municipal', 'Comunidad', 'balon', 3, {
-        descripcion: 'Torneo de fútbol 7 por equipos mixtos de todas las edades. Inscríbete solo o con tu equipo; al terminar, entrega de trofeos y barbacoa kosher.', aforo: 56 }),
+      ev('ev-4', 'Torneo de fútbol comunitario', proximo(0, 20), '10:00', 'Parque Deportivo', 'Comunidad', 'balon', 3, {
+        imagen_url: 'img/demo/evento-torneo-futbol.jpg',
+        descripcion: 'Torneo de fútbol 7 por equipos mixtos de todas las edades. Inscríbete solo o con tu equipo; trofeos y comida kosher.', aforo: 56 }),
       ev('ev-5', 'Encuentro de jóvenes profesionales', proximo(3, 1), '19:30', 'Terraza del centro', 'Comunidad', 'personas', 0, {
         imagen_url: 'img/demo/evento-jovenes-profesionales.jpg',
         descripcion: 'Networking informal para jóvenes de 22 a 35 años, con picoteo kosher y una charla breve.', aforo: 50 }),
@@ -244,7 +245,7 @@
     'Taller de jalot para familias': 'Challah workshop for families',
     'Aprende a trenzar jalot con tus hijos. Incluye ingredientes, delantal y una jalá para llevar a casa.': 'Learn to braid challah with your kids. Ingredients, an apron and a challah to take home are included.',
     'Torneo de fútbol comunitario': 'Community football tournament',
-    'Torneo de fútbol 7 por equipos mixtos de todas las edades. Inscríbete solo o con tu equipo; al terminar, entrega de trofeos y barbacoa kosher.': '7-a-side football tournament with mixed teams of all ages. Sign up on your own or with your team; trophies and a kosher barbecue afterwards.',
+    'Torneo de fútbol 7 por equipos mixtos de todas las edades. Inscríbete solo o con tu equipo; trofeos y comida kosher.': '7-a-side football tournament with mixed teams of all ages. Sign up on your own or with your team; trophies and a kosher lunch.',
     'Encuentro de jóvenes profesionales': 'Young professionals meetup',
     'Networking informal para jóvenes de 22 a 35 años, con picoteo kosher y una charla breve.': 'Informal networking for 22 to 35-year-olds, with kosher snacks and a short talk.',
     'Celebración de Tu Bishvat': 'Tu BiShvat celebration',
@@ -253,7 +254,7 @@
     'Primer módulo de hebreo conversacional: alefato, saludos y frases útiles del día a día.': 'First module of conversational Hebrew: the alef-bet, greetings and useful everyday phrases.',
     '¡Te esperamos! Recibirás un recordatorio el día antes.': "We'll see you there! You'll get a reminder the day before.",
     'Salón principal': 'Main hall', 'Sala de estudio': 'Study room', 'Cocina comunitaria': 'Community kitchen',
-    'Polideportivo municipal': 'Municipal sports center', 'Terraza del centro': 'Center terrace', 'Jardín del centro': 'Center garden', 'Aula 2': 'Classroom 2',
+    'Parque Deportivo': 'Sports park', 'Terraza del centro': 'Center terrace', 'Jardín del centro': 'Center garden', 'Aula 2': 'Classroom 2',
     // Noticias
     'Abrimos inscripciones para la cena de Shabat comunitaria': 'Sign-ups are open for the community Shabbat dinner',
     'Más de 80 plazas, menú de tres platos y un ambiente familiar. Reserva tu sitio desde la sección de eventos.': 'Over 80 seats, a three-course menu and a family atmosphere. Book your place from the events section.',
