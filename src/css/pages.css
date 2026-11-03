@@ -204,8 +204,10 @@
 
 /* Admin item */
 .nav-item.admin-item {
-  color: rgba(201,168,76,0.8);
+  color: var(--color-gold);   /* dentro de .sidebar es --color-gold-on-dark */
+  opacity: .85;
 }
+.nav-item.admin-item:hover, .nav-item.admin-item.active { opacity: 1; }
 .nav-item.admin-item:hover, .nav-item.admin-item.active {
   color: var(--color-gold);
   background: rgba(201,168,76,0.1);

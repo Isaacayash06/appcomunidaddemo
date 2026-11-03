@@ -383,7 +383,7 @@
 }
 
 /* Colores de avatar por letra inicial */
-.avatar[data-color="0"]  { background: #1B2E5E; color: #C9A84C; }
+.avatar[data-color="0"]  { background: #1B2E5E; color: var(--color-gold); }
 .avatar[data-color="1"]  { background: #065F46; color: #A7F3D0; }
 .avatar[data-color="2"]  { background: #7C3AED; color: #EDE9FE; }
 .avatar[data-color="3"]  { background: #92400E; color: #FDE68A; }

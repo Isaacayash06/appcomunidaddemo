@@ -819,7 +819,7 @@ function buildHamburger(activePage) {
       background: var(--color-primary, #1b2e5e);
       border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      color: #c9a84c;
+      color: var(--color-gold-on-dark, #c9a84c);
       flex-shrink: 0;
     }
     .hb-logo-icon svg { width: 20px; height: 20px; }

@@ -96,6 +96,11 @@ function hslToRgb(h, s, l) {
 }
 const shade = (hex, dl, ds = 0) => { const [r, g, b] = hexToRgb(hex); const [h, s, l] = rgbToHsl(r, g, b); return rgbToHex(...hslToRgb(h, Math.max(0, Math.min(1, s + ds)), Math.max(0, Math.min(1, l + dl)))); };
 const mixWhite = (hex, t) => { const [r, g, b] = hexToRgb(hex); return rgbToHex(r + (255 - r) * t, g + (255 - g) * t, b + (255 - b) * t); };
+// Contraste WCAG entre dos colores (1–21)
+const luminance = (hex) => { const c = hexToRgb(hex).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+const contrast = (x, y) => { const [a, b] = [luminance(x), luminance(y)].sort((m, n) => n - m); return (a + 0.05) / (b + 0.05); };
+/** El acento sobre fondos oscuros (barra lateral, cabeceras azul marino): se aclara hasta leerse bien (≥ 4,5). */
+const accentOnDark = (accent, dark) => { for (let t = 0; t <= 1; t += 0.05) { const c = mixWhite(accent, t); if (contrast(c, dark) >= 4.5) return c; } return '#FFFFFF'; };
 
 /** Colores de marca originales del código → colores del tema de la comunidad. */
 function colorMap(theme) {
@@ -104,6 +109,7 @@ function colorMap(theme) {
     hex: [
       ['#1B2E5E', p], ['#12204A', shade(p, -0.06, 0.05)], ['#2A4080', shade(p, 0.09, -0.04)],
       ['#C9A84C', a], ['#F5EDD6', mixWhite(a, 0.82)], ['#A8892E', shade(a, -0.1)],
+      ['#D4B65F', accentOnDark(a, p)],   // --color-gold-on-dark (main.css)
       ['#FAF5EE', bg],
       // tonos intermedios que el código usa en degradados y textos de acento
       ['#243D7A', shade(p, 0.07, -0.02)], ['#2D4A8A', shade(p, 0.12, -0.04)], ['#2D4A82', shade(p, 0.12, -0.04)],

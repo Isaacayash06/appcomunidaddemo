@@ -7,13 +7,22 @@
   "centerName": "Centro Comunitario Demo",
   "city": "Madrid",
   "domain": "demo.example.com",
-  "mikve": { "name": "Mikve Demo" },
+  "mikve": {
+    "name": "Mikve Demo"
+  },
   "contact": {
     "email": "info@demo.example.com",
     "privacyEmail": "privacidad@demo.example.com",
     "donationsEmail": "donativos@demo.example.com"
   },
-  "integrations": { "demoLogin": true },
+  "theme": {
+    "primary": "#1B2E5E",
+    "accent": "#8E2F3C",
+    "background": "#F7F7F4"
+  },
+  "integrations": {
+    "demoLogin": true
+  },
   "app": {
     "scheme": "comunidaddemo",
     "androidPackage": "com.example.comunidaddemo",

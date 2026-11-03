@@ -24,6 +24,11 @@ equivalente de `theme.primary/accent/background` (mapa en `colorMap()` de `tools
 variantes oscuras, claras y `rgba`). Si añades un color de marca nuevo al código, añádelo al mapa
 o, mejor, usa `var(--color-primary)` / `var(--color-gold)`.
 
+Sobre fondos azul marino (barra lateral, cabeceras oscuras, tarjeta de Shabat…) el acento se cambia por
+`--color-gold-on-dark`, que el build calcula aclarando el acento hasta contraste ≥ 4,5 con `theme.primary`
+(con un acento claro, como el dorado original, sale igual). La lista de zonas oscuras está al principio de
+`css/main.css`: si creas otra, añádela ahí y usa `var(--color-gold)` dentro, nunca el hex.
+
 ### Logo
 `brand.assets` (por defecto `brand/default`, el logo oficial de la app) es una carpeta con `logo.png`
 (interfaz: sidebar, login) e `icon-<n>.png` (favicon, PWA, iOS/Android). Se genera desde una imagen de

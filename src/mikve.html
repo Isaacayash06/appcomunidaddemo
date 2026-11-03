@@ -25,8 +25,8 @@
       --mk-surface:   #FDFAF5;
       --mk-navy:      #0D2545;
       --mk-gold:      #B8963E;
-      --mk-gold-bg:   #F0E3C0;
-      --mk-gold-pale: #FBF5E4;
+      --mk-gold-bg:   var(--color-gold-light);
+      --mk-gold-pale: color-mix(in srgb, var(--color-gold-light) 45%, #fff);
       --mk-border:    #DDD5C7;
       --mk-text:      #0D2545;
       --mk-muted:     #8A7E73;
@@ -38,7 +38,7 @@
     .mk-page-header { background: var(--mk-navy); position: relative; padding: 44px 24px 0; text-align: center; border-radius: 0 0 36px 36px; overflow: hidden; }
     .mk-page-header-inner { position: relative; z-index: 1; }
     .mk-page-header h1 { font-family: var(--font-brand, Georgia, serif); font-size: 2rem; font-weight: 700; color: #fff; margin: 0 0 5px; letter-spacing: -0.01em; }
-    .mk-page-header p { color: var(--mk-gold); font-size: 0.875rem; font-weight: 700; margin: 0 0 28px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .mk-page-header p { color: var(--color-gold-on-dark); font-size: 0.875rem; font-weight: 700; margin: 0 0 28px; letter-spacing: 0.06em; text-transform: uppercase; }
     @media (max-width: 768px) { .mk-page-header { padding: 56px 24px 0; border-radius: 0 0 24px 24px; } .mk-page-header h1 { font-size: 1.625rem; } }
 
     /* Reset button */

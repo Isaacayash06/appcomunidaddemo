@@ -49,7 +49,7 @@
     st.textContent =
       '#kehila-lang-fab{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:9000;' +
       'display:flex;align-items:center;gap:6px;font:800 13px/1 system-ui,-apple-system,sans-serif;letter-spacing:.03em;' +
-      'color:#1B2E5E;background:#F5C542;border:none;border-radius:22px;padding:9px 14px;cursor:pointer;' +
+      'color:#fff;background:var(--color-primary,#1B2E5E);border:none;border-radius:22px;padding:9px 14px;cursor:pointer;' +
       'box-shadow:0 4px 14px rgba(0,0,0,.28);-webkit-tap-highlight-color:transparent}' +
       '#kehila-lang-fab:active{transform:scale(.96)}' +
       '@media (min-width:1024px){#kehila-lang-fab{bottom:20px;right:20px}}';

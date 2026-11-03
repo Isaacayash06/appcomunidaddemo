@@ -76,6 +76,7 @@ body::before {
   --color-gold:         #C9A84C;
   --color-gold-light:   #F5EDD6;
   --color-gold-dark:    #A8892E;
+  --color-gold-on-dark: #D4B65F;   /* el acento sobre azul marino: el build lo aclara hasta que se lea (≥ 4,5) */
   --color-bg:           #FAF5EE;
   --color-white:        #FFFFFF;
   --color-text:         #1A1A2E;
@@ -132,6 +133,14 @@ body::before {
   --z-overlay:  200;
   --z-modal:    300;
   --z-toast:    400;
+}
+
+/* Sobre fondos azul marino el acento usa su versión clara: lo que dentro use var(--color-gold) la hereda.
+   Con un acento claro (el dorado original) no cambia nada; con uno oscuro (burdeos, verde…) sigue leyéndose. */
+.sidebar, .login-hero, .auth-hero, .hero-overlay, .priv-hero, .rav-hero, .biz-hero, .don-hero-overlay, .modal-hero,
+.newsletter-card, .contact-card.phone, .reg-conf-card, .shabat-card, .badge-admin, .evento-date-strip, .event-admin-date,
+.avatar[data-color="0"], .q-icon, .rav-avatar, .pod-icon {
+  --color-gold: var(--color-gold-on-dark);
 }
 
 /* ─── Reset CSS ─── */
