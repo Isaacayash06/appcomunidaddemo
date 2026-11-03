@@ -50,6 +50,23 @@ const DEMO_LOGIN = {{integrations.demoLogin}};
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
 const _isDemoUser = (u) => DEMO_LOGIN && !!u && u.source === 'demo';
 
+// ─── Escaparate (showcase) ─────────────────────
+// La web de Chai Active enseña la demo dentro de un iPhone / portátil dibujado:
+// un iframe que abre la app con ?showcase=1. Ahí la app debe comportarse como
+// la ventana principal (barra inferior, menú, botón atrás, barra lateral…).
+// El resto de iframes (p. ej. páginas incrustadas en el panel admin) siguen
+// ocultando la navegación. Solo en builds de demo (DEMO_LOGIN).
+var KEHAL_SHOWCASE = (function () {
+  if (!DEMO_LOGIN) return false;
+  try {
+    if (/[?&]showcase=1(&|$)/.test(window.location.search)) sessionStorage.setItem('kehal_showcase', '1');
+    // Solo el iframe directo de la página que lo incrusta, no iframes anidados.
+    return sessionStorage.getItem('kehal_showcase') === '1' && window.parent === window.top;
+  } catch (e) { return false; }
+})();
+/** true si la página está incrustada en un iframe que NO es el escaparate. */
+function isEmbeddedFrame() { return window.self !== window.top && !KEHAL_SHOWCASE; }
+
 // Cliente Supabase
 let _supabase = null;
 /**

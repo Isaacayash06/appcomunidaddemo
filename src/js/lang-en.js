@@ -15,6 +15,12 @@
    ============================================= */
 (function () {
   var KEY = 'kehila_lang';
+  // ?lang=es|en en la URL fija el idioma (lo usa la web de Chai Active para
+  // abrir la demo en el idioma del visitante). Después manda el botón ES/EN.
+  try {
+    var q = /[?&]lang=(es|en)(&|$)/.exec(window.location.search);
+    if (q) localStorage.setItem(KEY, q[1]);
+  } catch (e) {}
   function readLang() { try { return localStorage.getItem(KEY) || 'es'; } catch (e) { return 'es'; } }
   var LANG = readLang();
   window.__kehilaLang = LANG;

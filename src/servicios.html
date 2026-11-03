@@ -576,7 +576,7 @@
       card.addEventListener('click', function() {
         var svc = SERVICES.find(function(s) { return s.id === card.dataset.service; });
         if (!svc) return;
-        if (svc.link) { (window.top || window).location.href = svc.link; return; }
+        if (svc.link) { ((typeof isEmbeddedFrame === 'function' && isEmbeddedFrame()) ? window.top : window).location.href = svc.link; return; }
         state.data = {}; state.fileUploads = {};
         if (svc.steps) showView('intro', svc.id);
         else showView('detalle', svc.id);

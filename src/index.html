@@ -13,6 +13,9 @@
     // localStorage que hace getCurrentUser() en auth.js: no puede esperar a
     // que carguen ese script ni el CDN de Supabase, o ya se vería el flash.
     (function () {
+      // Escaparate (?showcase=1, ver auth.js): guardarlo YA, antes de la
+      // redirección de abajo, que salta antes de que cargue auth.js.
+      try { if (/[?&]showcase=1(&|$)/.test(location.search)) sessionStorage.setItem('kehal_showcase', '1'); } catch (e) {}
       try {
         const raw = localStorage.getItem('kehila_user');
         if (!raw) return;

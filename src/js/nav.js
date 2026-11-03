@@ -394,7 +394,7 @@ for (let i = BOTTOM_NAV_ITEMS.length - 1; i >= 0; i--) {
  */
 function buildSidebar(activePage) {
   // Si está en un iframe, suprimir sidebar y quitar márgenes
-  if (window.self !== window.top) {
+  if (isEmbeddedFrame()) {
     var embedStyle = document.createElement('style');
     embedStyle.textContent = '.sidebar{display:none!important;}.main-content{margin-left:0!important;width:100vw!important;padding-bottom:0!important;}.page-header{display:none!important;}.bottom-nav{display:none!important;}';
     document.head.appendChild(embedStyle);
@@ -517,7 +517,7 @@ function buildSidebar(activePage) {
  * @param {string} activePage - ID de la página activa
  */
 function buildBottomNav(activePage) {
-  if (window.self !== window.top) return;
+  if (isEmbeddedFrame()) return;
   const _t = (key) => (typeof t === 'function') ? t(key) : key;
   const NAV_KEYS = {
     home: 'nav_home', eventos: 'nav_eventos', calendario: 'nav_calendario',
@@ -686,7 +686,7 @@ function toggleMoreDrawer() {
  * @param {string} activePage
  */
 function buildHamburger(activePage) {
-  if (window.self !== window.top) return;
+  if (isEmbeddedFrame()) return;
   const user = getCurrentUser();
   if (!user) return;
 
@@ -916,7 +916,7 @@ function closeHamburger() {
  * @param {string} activePage - id de la página activa
  */
 function buildBackBtn(activePage) {
-  if (window.self !== window.top) return;
+  if (isEmbeddedFrame()) return;
   if (activePage === 'home') return;
 
   const btn = document.createElement('button');
@@ -1011,7 +1011,7 @@ const _SUB_TABS = {
 Object.keys(_SUB_TABS).forEach(k => { _SUB_TABS[k] = _SUB_TABS[k].filter(t => navModuleOn(t.id)); });
 
 function renderSubTabs(pageId) {
-  if (window.self !== window.top) return;
+  if (isEmbeddedFrame()) return;
   var group = _SUB_GROUPS[pageId];
   if (!group) return;
   var tabs = _SUB_TABS[group];
