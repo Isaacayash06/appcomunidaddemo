@@ -64,6 +64,12 @@ var KEHAL_SHOWCASE = (function () {
     return sessionStorage.getItem('kehal_showcase') === '1' && window.parent === window.top;
   } catch (e) { return false; }
 })();
+// En el escaparate no se registra el service worker: no hace falta offline ni
+// instalación, y al activarse recarga todas las páginas abiertas (sw.js →
+// clients.navigate), lo que dejaba en blanco los iframes que cargaban a la vez.
+if (KEHAL_SHOWCASE && 'serviceWorker' in navigator) {
+  try { navigator.serviceWorker.register = function () { return Promise.resolve(null); }; } catch (e) {}
+}
 /** true si la página está incrustada en un iframe que NO es el escaparate. */
 function isEmbeddedFrame() { return window.self !== window.top && !KEHAL_SHOWCASE; }
 
