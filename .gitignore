@@ -38,3 +38,4 @@ android/*.keystore
 
 # Salida del build
 dist/
+.vercel

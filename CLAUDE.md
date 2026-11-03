@@ -79,6 +79,12 @@ dentro de `onclick="…"` → JS y luego HTML; `.json` → JSON. Un nombre con `
 (probado). Los valores deben ser simples (texto, número, booleano), no listas ni objetos:
 para listas (p. ej. `team`) la página lee `window.COMMUNITY`.
 
+## Despliegue
+
+`vercel.json` (raíz) construye la demo: `node tools/build.mjs demo` → `dist/demo`. Proyecto Vercel
+`chaiactive-demo` (equipo personal «isaac's projects», conectado al repo): **cada push a `main` despliega**
+https://chaiactive-demo.vercel.app. Para otra comunidad: otro proyecto Vercel con su `buildCommand`/`outputDirectory`.
+
 ## Reglas del repo
 
 1. **Nada de comunidades reales en `src/`, `tools/` ni `community/`**: ni nombres, ni correos, ni teléfonos,
@@ -122,7 +128,7 @@ Viene de la app original y no se ha tocado en las fases 0–2:
 | 2. Configuración por comunidad + build + módulos + tema + iconos | ✅ |
 | 3. Nueva base Next.js (App Router + TypeScript), portar módulos uno a uno | pendiente |
 | 4. Capa de datos con adaptadores `mock` / `supabase` + modo demo (sin backend, panel para activar secciones en vivo) | pendiente |
-| 5. Despliegue por comunidad (enlace de demo para enviar) | pendiente |
+| 5. Despliegue por comunidad (enlace de demo para enviar) | demo ✅ https://chaiactive-demo.vercel.app · resto pendiente |
 | 6. Móvil con Capacitor empaquetando la app (iOS/Android por comunidad) | pendiente |
 | 7. Backend por comunidad: parametrizar funciones edge (`supabase/README.md`), decidir un Supabase por comunidad o uno compartido | pendiente |
 
