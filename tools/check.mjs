@@ -51,7 +51,7 @@ if (b.status !== 0) { process.stdout.write(b.stderr); bad('el build ha fallado')
 
 // 2. Restos de comunidades reales
 console.log('2. Buscando restos de comunidades reales…');
-const roots = ['src', 'tools', 'community', 'dist'].map((d) => path.join(ROOT, d)).filter((d) => fs.existsSync(d));
+const roots = ['src', 'tools', 'community', 'showcase', 'dist'].map((d) => path.join(ROOT, d)).filter((d) => fs.existsSync(d));
 const sbMsg = new Set();
 for (const root of roots) {
   for (const f of walk(root)) {

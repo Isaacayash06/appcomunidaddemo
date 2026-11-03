@@ -40,6 +40,19 @@ tienes autocompletado gracias a `community/community.schema.json`.
 | `app`, `stores` | Identificadores de la app móvil y enlaces a las tiendas |
 | `integrations` | Supabase y Stripe de **esa** comunidad |
 
+## Demo dentro de un iPhone / portátil (para la web de la empresa)
+
+`showcase/demo-frame.js` es un componente sin dependencias, `<chai-demo-frame>`, que muestra la demo en vivo
+dentro de un iPhone dibujado en CSS, con interruptor a MacBook y botón de pantalla completa (en móvil, un botón
+grande "Probar la demo"). Con `npm run dev -- demo` lo ves en `http://localhost:8080/showcase/`.
+
+```html
+<script src="demo-frame.js"></script>
+<chai-demo-frame src="https://URL-DE-LA-DEMO/"></chai-demo-frame>
+```
+
+Atributos: `src`, `device` (`phone`|`laptop`), `max-height`, `no-toggle`, `cta`, `label`. Color: `--cdf-accent`.
+
 ## Comandos
 
 | Comando | Qué hace |

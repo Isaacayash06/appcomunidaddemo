@@ -5,6 +5,7 @@
  *   node tools/serve.mjs <slug> [--port 8080] [--no-build]
  *
  * Servidor estático mínimo, sin dependencias. Los .html se sirven también sin extensión.
+ * Además sirve showcase/ en /showcase/ (la demo dentro de un iPhone / portátil).
  */
 import fs from 'node:fs';
 import http from 'node:http';
@@ -34,11 +35,14 @@ const MIME = {
 
 http.createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  let base = dir;
+  if (p === '/showcase') { res.writeHead(301, { Location: '/showcase/' }).end(); return; }
+  if (p.startsWith('/showcase/')) { base = path.join(ROOT, 'showcase'); p = p.slice('/showcase'.length); }
   if (p.endsWith('/')) p += 'index.html';
-  let file = path.join(dir, p);
-  if (!file.startsWith(dir)) { res.writeHead(403).end('403'); return; }
+  let file = path.join(base, p);
+  if (!file.startsWith(base)) { res.writeHead(403).end('403'); return; }
   if (!fs.existsSync(file) && fs.existsSync(file + '.html')) file += '.html';
   if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('404'); return; }
   res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
   fs.createReadStream(file).pipe(res);
-}).listen(port, () => console.log(`\n▶ http://localhost:${port}/   (${slug})   Ctrl+C para parar`));
+}).listen(port, () => { console.log(`\n▶ http://localhost:${port}/            la app (${slug})`); console.log(`▶ http://localhost:${port}/showcase/   la demo dentro del iPhone / portátil`); console.log('  Ctrl+C para parar\n'); });
