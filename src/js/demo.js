@@ -852,6 +852,12 @@
     document.body.appendChild(push);
 
     const u = currentUser();
+    // Mosaico del login: fotos de la comunidad en vez del placeholder
+    const MOSAICO = ['momento-2', 'servicio-bodas', 'momento-4', 'momento-5', 'donativo-religioso', 'momento-3', 'servicio-britmila', 'donativo-social', 'momento-1'];
+    document.querySelectorAll('.mosaic-cell').forEach((c, i) => {
+      c.style.backgroundImage = `url('img/demo/${MOSAICO[i % MOSAICO.length]}.jpg')`;
+      c.style.backgroundPosition = 'center';
+    });
     if (/^(index\.html|reset-password\.html)$/.test(page)) {
       // Login: entrar con un clic como miembro o como administrador
       const form = document.getElementById('login-form');
