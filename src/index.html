@@ -16,6 +16,24 @@
       // Escaparate (?showcase=1, ver auth.js): guardarlo YA, antes de la
       // redirección de abajo, que salta antes de que cargue auth.js.
       try { if (/[?&]showcase=1(&|$)/.test(location.search)) sessionStorage.setItem('kehal_showcase', '1'); } catch (e) {}
+      // Escaparate con ?as=member|admin: entra directo con la sesión de demo
+      // (la misma que crea login() en modo demo), sin pasar por el login.
+      // Solo en builds de demo.
+      try {
+        var asRole = /[?&]as=(member|admin)(&|$)/.exec(location.search);
+        if ({{integrations.demoLogin}} && asRole && !localStorage.getItem('kehila_user')) {
+          var qLang = /[?&]lang=(es|en)(&|$)/.exec(location.search);
+          var en = (qLang ? qLang[1] : localStorage.getItem('kehila_lang')) === 'en';
+          localStorage.setItem('kehila_user', JSON.stringify({
+            userId: '00000000-0000-0000-0000-000000000000',
+            name: en ? 'Demo User' : 'Usuario Demo',
+            email: asRole[1] === 'admin' ? 'admin@example.com' : 'demo@example.com',
+            role: asRole[1] === 'admin' ? 'admin' : 'miembro',
+            status: 'active', comunidad: '{{name}}', initials: 'UD', areas: [],
+            loginAt: new Date().toISOString(), source: 'demo'
+          }));
+        }
+      } catch (e) {}
       try {
         const raw = localStorage.getItem('kehila_user');
         if (!raw) return;
