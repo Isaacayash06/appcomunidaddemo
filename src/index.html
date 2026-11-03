@@ -20,10 +20,15 @@
       // (la misma que crea login() en modo demo), sin pasar por el login.
       // Solo en builds de demo.
       try {
+        // ?lang= también aquí: la redirección de abajo salta antes de lang-en.js.
+        var qLang = /[?&]lang=(es|en)(&|$)/.exec(location.search);
+        if (qLang) localStorage.setItem('kehila_lang', qLang[1]);
         var asRole = /[?&]as=(member|admin)(&|$)/.exec(location.search);
-        if ({{integrations.demoLogin}} && asRole && !localStorage.getItem('kehila_user')) {
-          var qLang = /[?&]lang=(es|en)(&|$)/.exec(location.search);
-          var en = (qLang ? qLang[1] : localStorage.getItem('kehila_lang')) === 'en';
+        // Siempre que la web lo pida (solo en la primera carga del iframe, que es
+        // la única con ?as=), aunque quede una sesión de demo de otra visita.
+        var prev = null; try { prev = JSON.parse(localStorage.getItem('kehila_user') || 'null'); } catch (e2) {}
+        if ({{integrations.demoLogin}} && asRole && (!prev || prev.source === 'demo')) {
+          var en = localStorage.getItem('kehila_lang') === 'en';
           localStorage.setItem('kehila_user', JSON.stringify({
             userId: '00000000-0000-0000-0000-000000000000',
             name: en ? 'Demo User' : 'Usuario Demo',
