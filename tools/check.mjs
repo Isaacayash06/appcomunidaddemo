@@ -22,7 +22,7 @@ const SELF = path.join('tools', 'check.mjs');
 const FORBIDDEN = [
   [/jabad|chabad|lubavitch/i, 'marca de Jabad'],
   [/libersohn|montnegre|benveniste/i, 'persona o dirección real'],
-  [/bcnkehila|kehilabcn|vvrvuhugpvqytelhsdnk/i, 'dominio, app o proyecto de producción'],
+  [/bcnkehila|kehilabcn|vvrvuhugpvqytelhsdnk|6781786203/i, 'dominio, app o proyecto de producción'],
   [/pk_live_|sk_live_|sk_test_/i, 'clave de pago escrita en el código'],
   [/eyJ[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{15,}/, 'clave JWT (Supabase) escrita en el código'],
   [/@gmail\.com|@hotmail\.|@yahoo\./i, 'correo personal'],

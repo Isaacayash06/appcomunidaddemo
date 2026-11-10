@@ -271,8 +271,8 @@
   </script>
   <script>
     // Smart App Banner de Safari (iOS): «Abrir» en la app en esta misma página
-    (function(){ try { if (window.Capacitor) return; var m=document.createElement('meta'); m.name='apple-itunes-app';
-      m.content='app-id=6781786203, app-argument='+location.href; document.head.appendChild(m); } catch(e){} })();
+    (function(){ try { if (!{{app.openInAppBanner}} || window.Capacitor) return; var m=document.createElement('meta'); m.name='apple-itunes-app';
+      m.content='app-id={{stores.appStoreId}}, app-argument='+location.href; document.head.appendChild(m); } catch(e){} })();
   </script>
   <script src="js/lang-en.js"></script>
 </head>

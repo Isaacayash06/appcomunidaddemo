@@ -89,11 +89,13 @@
   "app": {
     "scheme": "comunidad",
     "androidPackage": "com.example.comunidad",
-    "iosBundleId": "com.example.comunidad"
+    "iosBundleId": "com.example.comunidad",
+    "openInAppBanner": false
   },
 
   "stores": {
     "appStore": "https://apps.apple.com/app/id0000000000",
+    "appStoreId": "0000000000",
     "playStore": "https://play.google.com/store/apps/details?id=com.example.comunidad"
   },
 

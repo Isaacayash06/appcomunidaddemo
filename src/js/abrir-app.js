@@ -13,13 +13,17 @@
  *  · En Safari, además, el Smart App Banner de Apple (meta apple-itunes-app).
  *
  * No se muestra dentro de la app, en ordenador ni si el usuario la cerró
- * (se recuerda 7 días).
+ * (se recuerda 7 días). Desactivada por defecto: se activa con
+ * "app.openInAppBanner": true en la configuración de la comunidad (cuando ya
+ * tiene la app publicada y sus enlaces de tienda reales).
  */
 (function () {
   const APP_STORE = '{{stores.appStore}}';
   const PLAY = '{{stores.playStore}}';
   const CERRADA_KEY = 'kehila_abrir_app_cerrada';
 
+  // Solo si la comunidad lo activa (app.openInAppBanner). En la demo no se muestra.
+  if (!{{app.openInAppBanner}}) return;
   if (window.Capacitor?.isNativePlatform?.()) return;
   if (window.self !== window.top) return;
   const ua = navigator.userAgent || '';
@@ -31,7 +35,7 @@
   if (ios && !document.querySelector('meta[name="apple-itunes-app"]')) {
     const m = document.createElement('meta');
     m.name = 'apple-itunes-app';
-    m.content = `app-id=6781786203, app-argument=${location.href}`;
+    m.content = `app-id={{stores.appStoreId}}, app-argument=${location.href}`;
     document.head.appendChild(m);
   }
 
@@ -64,7 +68,7 @@
     try {
       const c = sessionStorage.getItem('kehila_app_esquema');
       if (c) return c === '1';
-      const r = await fetch('https://itunes.apple.com/lookup?id=6781786203&country=es', { signal: AbortSignal.timeout(4000) });
+      const r = await fetch('https://itunes.apple.com/lookup?id={{stores.appStoreId}}&country=es', { signal: AbortSignal.timeout(4000) });
       const fecha = (await r.json()).results?.[0]?.currentVersionReleaseDate || '';
       const si = fecha > ESQUEMA_DESDE;
       sessionStorage.setItem('kehila_app_esquema', si ? '1' : '0');
